@@ -1,2 +1,5 @@
 #!/bin/sh
-indent -i4 -br -npcs -nut *.c Extras/*.c
+indent -bad -bap -bbb -bli4 -br -brs -c40 -cbi4 -c40 -cdw -ce -ci4 -cli4 \
+       -cp40 -cs -d0 -di0 -fca -i4 -l78 -lc78 -lp -nbbo -nbc -nbfda -nhnl \
+       -npcs -nprs -npsl -pi0 -saf -sai -saw -sob -ss -ts8 -ut \
+       *.c Extras/*.c
