@@ -39,9 +39,14 @@ Solaris: 	compiles and runs, survives light testing
 NetBSD: 	compiles and runs, but there are compatibility
 		problems with the in-kernel NFS client
 
+AIX:		compiles
 
-Note that Solaris and NetBSD support is not checked for all releases,
-so it may break at any time. If it does, a bug report is appreciated.
+Irix:		compiles (with gcc and native compiler)
+
+OS X:		compiles
+
+Note that only Linux support is checked for all releases. If unfs3
+breaks on other platforms, a bug report is appreciated.
 
 
 INSTALLATION
