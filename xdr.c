@@ -12,8 +12,10 @@
 typedef int32_t rpc_inline_t;
 #endif
 
-#if HAVE_XDR_UINT64_T == 0 && HAVE_XDR_U_INT64_T == 1
-# define xdr_uint64_t xdr_u_int64_t
+#if HAVE_XDR_U_INT64_T == 1
+#define xdr_uint64_t xdr_u_int64_t
+#undef HAVE_XDR_UINT64_T
+#define HAVE_XDR_UINT64_T 1
 #endif
 
 #include "mount.h"
@@ -149,33 +151,41 @@ bool_t xdr_nfspath(XDR * xdrs, nfspath * objp)
     return TRUE;
 }
 
+#if HAVE_XDR_UINT64 == 0 && HAVE_XDR_UINT64_T == 1
 bool_t xdr_uint64(XDR * xdrs, uint64 * objp)
 {
     if (!xdr_uint64_t(xdrs, objp))
 	return FALSE;
     return TRUE;
 }
+#endif
 
+#if HAVE_XDR_INT64 == 0 && HAVE_XDR_INT64_T == 1
 bool_t xdr_int64(XDR * xdrs, int64 * objp)
 {
     if (!xdr_int64_t(xdrs, objp))
 	return FALSE;
     return TRUE;
 }
+#endif
 
+#if HAVE_XDR_UINT32 == 0 && HAVE_XDR_U_LONG == 1
 bool_t xdr_uint32(XDR * xdrs, uint32 * objp)
 {
     if (!xdr_u_long(xdrs, objp))
 	return FALSE;
     return TRUE;
 }
+#endif
 
+#if HAVE_XDR_INT32 == 0 && HAVE_XDR_LONG == 1
 bool_t xdr_int32(XDR * xdrs, int32 * objp)
 {
     if (!xdr_long(xdrs, objp))
 	return FALSE;
     return TRUE;
 }
+#endif
 
 bool_t xdr_filename3(XDR * xdrs, filename3 * objp)
 {
