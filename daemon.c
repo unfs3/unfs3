@@ -94,28 +94,14 @@ struct in_addr get_remote(struct svc_req *rqstp)
 static void parse_options(int argc, char **argv)
 {
     int opt = 0;
-    char *optstring = "dhwue:cC:n:m:tps";
+
+    char *optstring = "cC:de:hm:n:pstuw";
 
     while (opt != -1) {
 	opt = getopt(argc, argv, optstring);
 	switch (opt) {
-	    case 'u':
-		opt_nfs_port = 0;
-		opt_mount_port = 0;
-		break;
-	    case 'w':
-		opt_expire_writers = TRUE;
-		break;
-	    case 'd':
-		printf(UNFS_NAME);
-		opt_detach = FALSE;
-		break;
-	    case 'e':
-		if (optarg[0] != '/') {
-		    fprintf(stderr, "Error: relative path to exports file\n");
-		    exit(1);
-		}
-		opt_exports = optarg;
+	    case 'b':
+		opt_brute_force = TRUE;
 		break;
 #ifdef WANT_CLUSTER
 	    case 'c':
@@ -125,37 +111,16 @@ static void parse_options(int argc, char **argv)
 		opt_cluster_path = optarg;
 		break;
 #endif
-	    case 'n':
-		opt_nfs_port = strtol(optarg, NULL, 10);
-		if (opt_nfs_port == 0) {
-		    fprintf(stderr, "Invalid port\n");
+	    case 'd':
+		printf(UNFS_NAME);
+		opt_detach = FALSE;
+		break;	    
+	    case 'e':
+		if (optarg[0] != '/') {
+		    fprintf(stderr, "Error: relative path to exports file\n");
 		    exit(1);
 		}
-		break;
-	    case 'm':
-		opt_mount_port = strtol(optarg, NULL, 10);
-		if (opt_mount_port == 0) {
-		    fprintf(stderr, "Invalid port\n");
-		    exit(1);
-		}
-		break;
-	    case 't':
-		opt_tcponly = TRUE;
-		break;
-	    case 'p':
-		opt_portmapper = FALSE;
-		break;
-	    case 's':
-		opt_singleuser = TRUE;
-		if (getuid() == 0) {
-		    putmsg(LOG_WARNING,
-			   "Warning: running as root with -s is dangerous");
-		    putmsg(LOG_WARNING,
-			   "All clients will have root access to all exported files!");
-		}
-		break;
-	    case 'b':
-		opt_brute_force = TRUE;
+		opt_exports = optarg;
 		break;
 	    case 'h':
 		printf(UNFS_NAME);
@@ -177,6 +142,42 @@ static void parse_options(int argc, char **argv)
 		printf("\t-s          single user mode\n");
 		printf("\t-b          enable brute force file searching\n");
 		exit(0);
+		break;
+	    case 'm':
+		opt_mount_port = strtol(optarg, NULL, 10);
+		if (opt_mount_port == 0) {
+		    fprintf(stderr, "Invalid port\n");
+		    exit(1);
+		}
+		break;
+	    case 'n':
+		opt_nfs_port = strtol(optarg, NULL, 10);
+		if (opt_nfs_port == 0) {
+		    fprintf(stderr, "Invalid port\n");
+		    exit(1);
+		}
+		break;
+	    case 'p':
+		opt_portmapper = FALSE;
+		break;
+	    case 's':
+		opt_singleuser = TRUE;
+		if (getuid() == 0) {
+		    putmsg(LOG_WARNING,
+			   "Warning: running as root with -s is dangerous");
+		    putmsg(LOG_WARNING,
+			   "All clients will have root access to all exported files!");
+		}
+		break;
+	    case 't':
+		opt_tcponly = TRUE;
+		break;
+	    case 'u':
+		opt_nfs_port = 0;
+		opt_mount_port = 0;
+		break;
+	    case 'w':
+		opt_expire_writers = TRUE;
 		break;
 	    case '?':
 		exit(1);
