@@ -1,5 +1,5 @@
 CC = @CC@
-CFLAGS = @CFLAGS@ -Wall -W -Wno-unused
+CFLAGS = @CFLAGS@
 AR = ar
 RM = rm -f
 LEX = @LEX@
