@@ -1,6 +1,7 @@
 CC = @CC@
 CFLAGS = @CFLAGS@ -Wall -W
 INSTALL = @INSTALL@
+INSTALL_DATA = @INSTALL_DATA@
 RM = rm -f
 
 SOURCES = attr.c daemon.c error.c fd_cache.c fh.c fh_cache.c locate.c \
@@ -33,8 +34,8 @@ install: unfsd
 	$(INSTALL) -d $(DESTDIR)$(mandir)/man7
 	$(INSTALL) -d $(DESTDIR)$(mandir)/man8
 	$(INSTALL) unfsd         $(DESTDIR)$(sbindir)/unfsd
-	$(INSTALL) Extras/tags.7 $(DESTDIR)$(mandir)/man7/tags.7
-	$(INSTALL) unfsd.8       $(DESTDIR)$(mandir)/man8/unfsd.8
+	$(INSTALL_DATA) Extras/tags.7 $(DESTDIR)$(mandir)/man7/tags.7
+	$(INSTALL_DATA) unfsd.8       $(DESTDIR)$(mandir)/man8/unfsd.8
 
 install-strip: install
 	strip $(DESTDIR)$(sbindir)/unfsd
