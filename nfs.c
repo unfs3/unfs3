@@ -280,6 +280,9 @@ READ3res *nfsproc3_read_3_svc(READ3args * argp, struct svc_req * rqstp)
     PREP(path, argp->file);
     result.status = is_reg();
 
+    /* handle reading of executable files */
+    execute_check(rqstp, st_cache);
+
     /* if bigger than rtmax, truncate length */
     if (argp->count > 8192)
 	argp->count = 8192;
