@@ -276,7 +276,7 @@ int fd_open(const char *path, nfs_fh3 nfh, int kind)
  */
 int fd_close(int fd, int kind, int really_close)
 {
-    int idx, res1, res2;
+    int idx, res1 = 0, res2 = 0;
 
     idx = idx_by_fd(fd, kind);
     if (idx != -1) {
@@ -290,7 +290,9 @@ int fd_close(int fd, int kind, int really_close)
 	    return 0;
     } else {
 	/* not in cache, sync and close directly */
-	res1 = fsync(fd);
+	if (kind == FD_WRITE)
+	    res1 = fsync(fd);
+
 	res2 = close(fd);
 
 	if (res1 != 0)
