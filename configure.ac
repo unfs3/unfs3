@@ -17,6 +17,9 @@ AC_CHECK_TYPES(rpc_inline_t,,,[#include <rpc/types.h>])
 AC_CHECK_MEMBERS([struct stat.st_gen],,,[#include <sys/stat.h>])
 AC_CHECK_FUNCS(xdr_u_int64_t)
 AC_CHECK_FUNCS(statvfs)
+AC_CHECK_FUNCS(seteuid setegid)
+AC_CHECK_FUNCS(setresuid setresgid)
+AC_CHECK_FUNCS(vsyslog)
 AC_ARG_ENABLE(cluster,[  --enable-cluster        include clustering extensions],[AC_DEFINE([WANT_CLUSTER], [], [Cluster extensions]) AC_SUBST([SUBDIRS],[Extras]) AC_SUBST([EXTRAOBJ],[Extras/lib.a])])
 
 AC_CHECK_FUNC(svc_tli_create, [

@@ -10,6 +10,14 @@
 /* exit status for internal errors */
 #define CRISIS	99
 
+/* HP-UX does not have seteuid() and setegid() */
+#if HAVE_SETEUID == 0 && HAVE_SETRESUID == 1
+#define seteuid(u) setresuid(-1, u, -1)
+#endif
+#if HAVE_SETEGID == 0 && HAVE_SETRESGID == 1
+#define setegid(g) setresgid(-1, g, -1)
+#endif
+
 /* error handling */
 void daemon_exit(int);
 void putmsg(int, const char *, ...);
