@@ -1,4 +1,4 @@
-#!/usr/bin/env python-thinlinc
+#!/usr/bin/env python
 # -*-mode: python; coding: iso-8859-1 -*-
 #
 # Copyright (c) 2002-2004 Cendio AB. All rights reserved.
