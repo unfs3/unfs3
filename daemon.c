@@ -676,8 +676,13 @@ int main(int argc, char **argv)
     *(wverf + 0) = (uint32) getpid();
     *(wverf + 4) = (uint32) time(NULL);
 
-    /* prepare syslog access */
-    openlog("unfsd", LOG_CONS | LOG_PID, LOG_DAEMON);
+    if (opt_detach) {
+	/* prepare syslog access */
+	openlog("unfsd", LOG_CONS | LOG_PID, LOG_DAEMON);
+    } else {
+	/* flush stdout after each newline */
+	setvbuf(stdout, NULL, _IOLBF, 0);
+    }
 
     /* NFS transports */
     if (!opt_tcponly)
