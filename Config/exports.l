@@ -36,6 +36,7 @@ WHITE [ \t]
 NOWHITE [^ \n\t]
 PATH "/"{NOWHITE}*
 ID [a-z][\._a-z0-9]*
+OPTVAL [^ \n\t,)]*
 
 IPCOMP [0-9]{1,3}
 IP {IPCOMP}"."{IPCOMP}"."{IPCOMP}"."{IPCOMP}
@@ -54,9 +55,11 @@ OLDNET {IP}"/"{IP}
 {NET}			{ copy_text(yytext, yyleng); return NET; }
 {OLDNET}		{ copy_text(yytext, yyleng); return OLDNET; }
 "\"".*"\""		{ copy_text(yytext+1, yyleng-2); return PATH; }
+"="{OPTVAL}	        { copy_text(yytext+1, yyleng-1); return OPTVAL; }
 {PATH}			{ copy_text(yytext, yyleng); return PATH; }
 {WHITE}+		{ copy_text(yytext, yyleng); return WHITE; }
 {ID}			{ copy_text(yytext, yyleng); return ID; }
 
 .			{ return *yytext; }
 \n			{ return '\n'; }
+   
