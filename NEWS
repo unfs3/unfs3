@@ -11,6 +11,14 @@ compile fixes that should make it possible to compile unfs3
 under AIX, Irix (gcc and native compiler), and Mac OS X. They
 also provided some fixes for the existing Solaris support.
 
+Preparations have been made to allow redirection of operating
+system calls, so that it becomes easy to redirect syscalls like
+stat() or read() to different functions. Take a look at the
+files backend.h and backend_unix.h if you are interested in the
+concept. This feature is only useful for people who want to do
+some hacking on the unfs3 source. No real documentation yet,
+please feel free to ask questions per email.
+
 
 ChangeLog
 =========
@@ -19,6 +27,7 @@ Version 0.9.12
 
   - add option for binding to a specified interface
   - lots of compile fixes for Solaris/AIX/Irix/Mac OS X
+  - make redirection of operating system calls possible
 
 Version 0.9.11
 
