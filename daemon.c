@@ -113,7 +113,7 @@ static void parse_options(int argc, char **argv)
 	    case 'd':
 		printf(UNFS_NAME);
 		opt_detach = FALSE;
-		break;	    
+		break;
 	    case 'e':
 		if (optarg[0] != '/') {
 		    fprintf(stderr, "Error: relative path to exports file\n");
@@ -528,7 +528,7 @@ static void register_nfs_service(SVCXPRT * udptransp, SVCXPRT * tcptransp)
 	    (udptransp, NFS3_PROGRAM, NFS_V3, nfs3_program_3,
 	     opt_portmapper ? IPPROTO_UDP : 0)) {
 	    fprintf(stderr, "%s\n",
-		    "unable to register (NFS3_PROGRAM, NFS_V3, udp).\n");
+		    "unable to register (NFS3_PROGRAM, NFS_V3, udp).");
 	    daemon_exit(0);
 	}
     }
