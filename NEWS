@@ -1,6 +1,9 @@
 What's new or changed in 0.9.7
 ==============================
 
+Renaming of files across directory boundaries should no longer result
+in stale filehandle errors. There is a performance penalty for doing
+such renames, though.
 
 
 Old news

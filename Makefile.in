@@ -3,10 +3,10 @@ CFLAGS = @CFLAGS@ -Wall -W
 INSTALL = @INSTALL@
 RM = rm -f
 
-SOURCES = attr.c daemon.c error.c fd_cache.c fh.c fh_cache.c \
-          mount.c nfs.c readdir.c user.c xdr.c md5.c password.c
-OBJS = attr.o daemon.o error.o fd_cache.o fh.o fh_cache.o \
-       mount.o nfs.o readdir.o user.o xdr.o md5.o password.o
+SOURCES = attr.c daemon.c error.c fd_cache.c fh.c fh_cache.c locate.c \
+          md5.c mount.c nfs.c password.c readdir.c user.c xdr.c
+OBJS = attr.o daemon.o error.o fd_cache.o fh.o fh_cache.o locate.o \
+       md5.o mount.o nfs.o password.o readdir.o user.o xdr.o
 CONFOBJ = Config/lib.a
 EXTRAOBJ = @EXTRAOBJ@
 LDFLAGS = @LDFLAGS@ @LIBS@@LEXLIB@
