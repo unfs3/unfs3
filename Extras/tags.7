@@ -20,8 +20,18 @@ way to specify which file should be served to which client(s).
 Tags are appended to the end of a filename and are seperated from the
 rest of the name by beginning and ending with $$. For each file, there
 can be multiple tagged variants. The normal file, without a tag, is
-only served to clients when no tagged file matching the client is
+only served to clients by default when no tagged file matching the client is
 found. The following tags exist:
+.TP
+.B file$$$$
+If a client attempts to access this file, it will be redirected to the
+normal file instead, no matter what other tagged files exist. This
+is mainly useful for use inside symlinks that need to point to a normal
+file although other access to the normal file should be redirected. In
+this special case, the tagged file
+.B file$$$$
+does not even need to exist (the symlink will then seem to be dangling
+on the server).
 .TP
 .B file$$IP=a.b.c.d$$
 If a client with an IP address of
