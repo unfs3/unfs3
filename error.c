@@ -66,6 +66,10 @@ nfsstat3 lookup_err(void)
 {
     if (errno == ENOENT)
 	return NFS3ERR_NOENT;
+#ifdef ENOMEDIUM
+    else if (errno == ENOMEDIUM)
+	return NFS3ERR_NOENT;
+#endif
     else if (errno == EACCES)
 	return NFS3ERR_ACCES;
     else if (errno == ENOTDIR || errno == ELOOP || errno == ENAMETOOLONG)
