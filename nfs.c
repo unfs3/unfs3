@@ -201,7 +201,7 @@ ACCESS3res *nfsproc3_access_3_svc(ACCESS3args * argp, struct svc_req * rqstp)
 	if (mode & S_IWUSR)
 	    access |= ACCESS3_MODIFY | ACCESS3_EXTEND;
 	if (mode & S_IXUSR)
-	    access |= ACCESS3_EXECUTE;
+	    access |= ACCESS3_EXECUTE | ACCESS3_READ;
     }
 
     /* group permissions */
@@ -211,7 +211,7 @@ ACCESS3res *nfsproc3_access_3_svc(ACCESS3args * argp, struct svc_req * rqstp)
 	if (mode & S_IWGRP)
 	    access |= ACCESS3_MODIFY | ACCESS3_EXTEND;
 	if (mode & S_IXGRP)
-	    access |= ACCESS3_EXECUTE;
+	    access |= ACCESS3_EXECUTE | ACCESS3_READ;
     }
 
     /* other permissions */
@@ -220,7 +220,7 @@ ACCESS3res *nfsproc3_access_3_svc(ACCESS3args * argp, struct svc_req * rqstp)
     if (mode & S_IWOTH)
 	access |= ACCESS3_MODIFY | ACCESS3_EXTEND;
     if (mode & S_IXOTH)
-	access |= ACCESS3_EXECUTE;
+	access |= ACCESS3_EXECUTE | ACCESS3_READ;
 
     /* root is allowed everything */
     if (get_uid(rqstp) == 0)
@@ -279,6 +279,9 @@ READ3res *nfsproc3_read_3_svc(READ3args * argp, struct svc_req * rqstp)
 
     PREP(path, argp->file);
     result.status = is_reg();
+
+    /* handle reading of executables */
+    read_executable(rqstp, st_cache);
 
     /* if bigger than rtmax, truncate length */
     if (argp->count > 8192)

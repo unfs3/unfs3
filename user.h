@@ -16,4 +16,6 @@ void get_squash_ids(void);
 
 void switch_user(struct svc_req *req);
 
+void read_executable(struct svc_req *req, struct stat buf);
+
 #endif

@@ -123,6 +123,14 @@ post_op_attr get_post_buf(struct stat buf)
     else
 	result.post_op_attr_u.attributes.type = NF3REG;
 
+    /* adapt permissions for executable files */
+    if (buf.st_mode & S_IXUSR)
+	buf.st_mode |= S_IRUSR;
+    if (buf.st_mode & S_IXGRP)
+	buf.st_mode |= S_IRGRP;
+    if (buf.st_mode & S_IXOTH)
+	buf.st_mode |= S_IROTH;
+
     result.post_op_attr_u.attributes.mode = buf.st_mode & 0xFFFF;
     result.post_op_attr_u.attributes.nlink = buf.st_nlink;
     result.post_op_attr_u.attributes.uid = buf.st_uid;

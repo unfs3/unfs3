@@ -151,3 +151,23 @@ void switch_user(struct svc_req *req)
 	daemon_exit(CRISIS);
     }
 }
+
+/*
+ * re-switch to root for reading executable files
+ */
+void read_executable(struct svc_req *req, struct stat buf)
+{
+    int have_exec = 0;
+	
+    if (buf.st_mode & S_IXOTH)
+	have_exec = 1;
+    else if ((buf.st_mode & S_IXUSR) && is_owner(buf.st_uid, req))
+	have_exec = 1;
+    else if ((buf.st_mode & S_IXGRP) && has_group(buf.st_gid, req))
+	have_exec = 1;
+
+    if (have_exec) {
+	setegid(0);
+	seteuid(0);
+    }
+}
