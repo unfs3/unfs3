@@ -507,7 +507,7 @@ static void register_nfs_service(SVCXPRT * udptransp, SVCXPRT * tcptransp)
 	if (!svc_register
 	    (udptransp, NFS3_PROGRAM, NFS_V3, nfs3_program_3,
 	     opt_portmapper ? IPPROTO_UDP : 0)) {
-	    fprintf(stderr, "%s",
+	    fprintf(stderr, "%s\n",
 		    "unable to register (NFS3_PROGRAM, NFS_V3, udp).");
 	    daemon_exit(0);
 	}
@@ -518,7 +518,7 @@ static void register_nfs_service(SVCXPRT * udptransp, SVCXPRT * tcptransp)
 	if (!svc_register
 	    (tcptransp, NFS3_PROGRAM, NFS_V3, nfs3_program_3,
 	     opt_portmapper ? IPPROTO_TCP : 0)) {
-	    fprintf(stderr, "%s",
+	    fprintf(stderr, "%s\n",
 		    "unable to register (NFS3_PROGRAM, NFS_V3, tcp).");
 	    daemon_exit(0);
 	}
@@ -537,7 +537,7 @@ static void register_mount_service(SVCXPRT * udptransp, SVCXPRT * tcptransp)
 	if (!svc_register
 	    (udptransp, MOUNTPROG, MOUNTVERS1, mountprog_3,
 	     opt_portmapper ? IPPROTO_UDP : 0)) {
-	    fprintf(stderr, "%s",
+	    fprintf(stderr, "%s\n",
 		    "unable to register (MOUNTPROG, MOUNTVERS1, udp).");
 	    daemon_exit(0);
 	}
@@ -546,7 +546,7 @@ static void register_mount_service(SVCXPRT * udptransp, SVCXPRT * tcptransp)
 	if (!svc_register
 	    (udptransp, MOUNTPROG, MOUNTVERS3, mountprog_3,
 	     opt_portmapper ? IPPROTO_UDP : 0)) {
-	    fprintf(stderr, "%s",
+	    fprintf(stderr, "%s\n",
 		    "unable to register (MOUNTPROG, MOUNTVERS3, udp).");
 	    daemon_exit(0);
 	}
@@ -557,7 +557,7 @@ static void register_mount_service(SVCXPRT * udptransp, SVCXPRT * tcptransp)
 	if (!svc_register
 	    (tcptransp, MOUNTPROG, MOUNTVERS1, mountprog_3,
 	     opt_portmapper ? IPPROTO_TCP : 0)) {
-	    fprintf(stderr, "%s",
+	    fprintf(stderr, "%s\n",
 		    "unable to register (MOUNTPROG, MOUNTVERS1, tcp).");
 	    daemon_exit(0);
 	}
@@ -566,7 +566,7 @@ static void register_mount_service(SVCXPRT * udptransp, SVCXPRT * tcptransp)
 	if (!svc_register
 	    (tcptransp, MOUNTPROG, MOUNTVERS3, mountprog_3,
 	     opt_portmapper ? IPPROTO_TCP : 0)) {
-	    fprintf(stderr, "%s",
+	    fprintf(stderr, "%s\n",
 		    "unable to register (MOUNTPROG, MOUNTVERS3, tcp).");
 	    daemon_exit(0);
 	}
