@@ -19,7 +19,7 @@ typedef struct {
 	uint32			gen;
 	unsigned char	len;
 	unsigned char	inos[FH_MAXLEN];
-} unfs3_fh_t __attribute__((packed));
+} __attribute__((packed)) unfs3_fh_t;
 
 #define FH_ANY 0
 #define FH_DIR 1
