@@ -46,9 +46,9 @@ typedef struct {
 	char		path[NFS_MAXPATHLEN];
 	char		orig[NFS_MAXPATHLEN];
 	e_host		*hosts;
-        uint32          fsid; /* export point fsid (for removables) */
-        time_t          last_mtime; /* Last returned mtime (for removables) */
-        uint32          dir_hash; /* Hash of dir contents (for removables) */
+	uint32          fsid; /* export point fsid (for removables) */
+	time_t          last_mtime; /* Last returned mtime (for removables) */
+	uint32          dir_hash; /* Hash of dir contents (for removables) */
 	struct e_item	*next;
 } e_item;
 
