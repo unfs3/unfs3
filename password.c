@@ -1,3 +1,4 @@
+
 /*
  * UNFS3 mount password support routines
  * (C) 2004, Peter Astrand <peter@cendio.se>
@@ -13,12 +14,11 @@
 #include <syslog.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <sys/time.h>           /* gettimeofday */
-#include <sys/times.h>          /* times */
+#include <sys/time.h>		       /* gettimeofday */
+#include <sys/times.h>		       /* times */
 #include "md5.h"
 
-void
-gen_nonce(char *nonce)
+void gen_nonce(char *nonce)
 {
     struct stat st;
     struct tms tmsbuf;
@@ -27,11 +27,11 @@ gen_nonce(char *nonce)
     int bytes_read, fd;
 
     if (((fd = open("/dev/urandom", O_RDONLY)) != -1)
-        || ((fd = open("/dev/random", O_RDONLY)) != -1)) {
-        bytes_read = read(fd, nonce, 32);
-        close(fd);
-        if (bytes_read == 32)
-            return;
+	|| ((fd = open("/dev/random", O_RDONLY)) != -1)) {
+	bytes_read = read(fd, nonce, 32);
+	close(fd);
+	if (bytes_read == 32)
+	    return;
     }
 
     /* No /dev/random; do it by hand */
@@ -50,28 +50,27 @@ gen_nonce(char *nonce)
     md5_finish(&state, nonce);
 }
 
-static unsigned char
-nibble_as_hexchar(unsigned char c)
+static unsigned char nibble_as_hexchar(unsigned char c)
 {
     if (c <= 9)
-        return c + '0';
+	return c + '0';
 
     return c - 10 + 'a';
 }
 
-static void
-hexify(unsigned char digest[16], unsigned char hexdigest[32])
+static void hexify(unsigned char digest[16], unsigned char hexdigest[32])
 {
     int i, j;
 
     for (i = j = 0; i < 16; i++) {
-        char c;
-        /* The first four bits */
-        c = (digest[i] >> 4) & 0xf;
-        hexdigest[j++] = nibble_as_hexchar(c);
-        /* The next four bits */
-        c = (digest[i] & 0xf);
-        hexdigest[j++] = nibble_as_hexchar(c);
+	char c;
+
+	/* The first four bits */
+	c = (digest[i] >> 4) & 0xf;
+	hexdigest[j++] = nibble_as_hexchar(c);
+	/* The next four bits */
+	c = (digest[i] & 0xf);
+	hexdigest[j++] = nibble_as_hexchar(c);
     }
 }
 
@@ -79,8 +78,7 @@ hexify(unsigned char digest[16], unsigned char hexdigest[32])
  * Advance dpath to first slash
  * Copy command arguments to arg. 
 */
-void
-mnt_cmd_argument(char **dpath, const char *cmd, char *arg, size_t maxlen)
+void mnt_cmd_argument(char **dpath, const char *cmd, char *arg, size_t maxlen)
 {
     char *slash;
 
@@ -90,18 +88,17 @@ mnt_cmd_argument(char **dpath, const char *cmd, char *arg, size_t maxlen)
 
     slash = strchr(arg, '/');
     if (slash != NULL)
-        *slash = '\0';
+	*slash = '\0';
 
     *dpath += strlen(arg);
 }
 
-void otp_digest(char nonce[32], 
-		unsigned char *password, 
+void otp_digest(char nonce[32], unsigned char *password,
 		unsigned char hexdigest[32])
 {
     md5_state_t state;
     unsigned char digest[16];
-    
+
     /* Calculate the digest, in the same way as the client did */
     md5_init(&state);
     md5_append(&state, nonce, 32);

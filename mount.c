@@ -1,3 +1,4 @@
+
 /*
  * UNFS3 mount protocol procedures
  * (C) 2004, Pascal Schmidt <der.eremit@email.de>
@@ -46,8 +47,7 @@ static char nonce[32] = "";
 /*
  * add entry to mount list
  */
-static void
-add_mount(const char *path, struct svc_req *rqstp)
+static void add_mount(const char *path, struct svc_req *rqstp)
 {
     mountlist new;
     mountlist iter;
@@ -55,15 +55,15 @@ add_mount(const char *path, struct svc_req *rqstp)
 
     new = malloc(sizeof(struct mountbody));
     if (!new)
-        return;
+	return;
 
     host = inet_ntoa(get_remote(rqstp));
     new->ml_hostname = malloc(strlen(host) + 1);
     new->ml_directory = malloc(strlen(path) + 1);
 
     if (!new->ml_hostname || !new->ml_directory) {
-        free(new);
-        return;
+	free(new);
+	return;
     }
 
     /* initialize the new entry */
@@ -73,12 +73,11 @@ add_mount(const char *path, struct svc_req *rqstp)
 
     iter = mount_list;
     if (iter) {
-        while (iter->ml_next)
-            iter = iter->ml_next;
-        iter->ml_next = new;
-    }
-    else
-        mount_list = new;
+	while (iter->ml_next)
+	    iter = iter->ml_next;
+	iter->ml_next = new;
+    } else
+	mount_list = new;
 
     mount_cnt++;
 }
@@ -86,8 +85,7 @@ add_mount(const char *path, struct svc_req *rqstp)
 /*
  * remove entries from mount list
  */
-static void
-remove_mount(const char *path, struct svc_req *rqstp)
+static void remove_mount(const char *path, struct svc_req *rqstp)
 {
     mountlist iter, next, prev = NULL;
     char *host;
@@ -96,126 +94,119 @@ remove_mount(const char *path, struct svc_req *rqstp)
 
     iter = mount_list;
     while (iter) {
-        if (strcmp(iter->ml_hostname, host) == 0 &&
-            (!path || strcmp(iter->ml_directory, path) == 0)) {
-            if (prev)
-                prev->ml_next = iter->ml_next;
-            else
-                mount_list = iter->ml_next;
+	if (strcmp(iter->ml_hostname, host) == 0 &&
+	    (!path || strcmp(iter->ml_directory, path) == 0)) {
+	    if (prev)
+		prev->ml_next = iter->ml_next;
+	    else
+		mount_list = iter->ml_next;
 
-            next = iter->ml_next;
+	    next = iter->ml_next;
 
-            free(iter->ml_hostname);
-            free(iter->ml_directory);
-            free(iter);
+	    free(iter->ml_hostname);
+	    free(iter->ml_directory);
+	    free(iter);
 
-            iter = next;
+	    iter = next;
 
-            /* adjust mount count */
-            if (mount_cnt > 0)
-                mount_cnt--;
-        }
-        else {
-            prev = iter;
-            iter = iter->ml_next;
-        }
+	    /* adjust mount count */
+	    if (mount_cnt > 0)
+		mount_cnt--;
+	} else {
+	    prev = iter;
+	    iter = iter->ml_next;
+	}
     }
 }
 
-
-
-void *
-mountproc_null_3_svc(U(void *argp), U(struct svc_req *rqstp))
+void *mountproc_null_3_svc(U(void *argp), U(struct svc_req *rqstp))
 {
     static void *result = NULL;
 
     return &result;
 }
 
-mountres3 *
-mountproc_mnt_3_svc(dirpath * argp, struct svc_req * rqstp)
+mountres3 *mountproc_mnt_3_svc(dirpath * argp, struct svc_req * rqstp)
 {
     char buf[PATH_MAX];
     static unfs3_fh_t fh;
     static mountres3 result;
     static int auth = AUTH_UNIX;
     int authenticated = 1;
+
     /* We need to modify the *argp pointer. Make a copy. */
     char *dpath = *argp;
 
     /* error out if not version 3 */
     if (rqstp->rq_vers != 3) {
-        putmsg(LOG_INFO,
-               "%s attempted mount with unsupported protocol version",
-               inet_ntoa(get_remote(rqstp)));
-        result.fhs_status = MNT3ERR_INVAL;
-        return &result;
+	putmsg(LOG_INFO,
+	       "%s attempted mount with unsupported protocol version",
+	       inet_ntoa(get_remote(rqstp)));
+	result.fhs_status = MNT3ERR_INVAL;
+	return &result;
     }
 
     if (password[0])
-        /* If a password is defined, the user must authenticate */
-        authenticated = 0;
+	/* If a password is defined, the user must authenticate */
+	authenticated = 0;
 
     /* Check for "mount commands" */
     if (strncmp(dpath, "@getnonce", sizeof("@getnonce") - 1) == 0) {
-        gen_nonce(nonce);
-        result.fhs_status = MNT3_OK;
-        result.mountres3_u.mountinfo.fhandle.fhandle3_len = 32;
-        result.mountres3_u.mountinfo.fhandle.fhandle3_val = nonce;
-        result.mountres3_u.mountinfo.auth_flavors.auth_flavors_len = 1;
-        result.mountres3_u.mountinfo.auth_flavors.auth_flavors_val = &auth;
-        return &result;
-    }
-    else if (strncmp(dpath, "@password:", sizeof("@password:") - 1) == 0) {
-        char pw[PASSWORD_MAXLEN + 1];
+	gen_nonce(nonce);
+	result.fhs_status = MNT3_OK;
+	result.mountres3_u.mountinfo.fhandle.fhandle3_len = 32;
+	result.mountres3_u.mountinfo.fhandle.fhandle3_val = nonce;
+	result.mountres3_u.mountinfo.auth_flavors.auth_flavors_len = 1;
+	result.mountres3_u.mountinfo.auth_flavors.auth_flavors_val = &auth;
+	return &result;
+    } else if (strncmp(dpath, "@password:", sizeof("@password:") - 1) == 0) {
+	char pw[PASSWORD_MAXLEN + 1];
 
-        mnt_cmd_argument(&dpath, "@password:", pw, PASSWORD_MAXLEN);
-        authenticated = !strcmp(password, pw);
-    }
-    else if (strncmp(dpath, "@otp:", sizeof("@otp:") - 1) == 0) {
-        /* The otp from the client */
-        char otp[PASSWORD_MAXLEN + 1];
+	mnt_cmd_argument(&dpath, "@password:", pw, PASSWORD_MAXLEN);
+	authenticated = !strcmp(password, pw);
+    } else if (strncmp(dpath, "@otp:", sizeof("@otp:") - 1) == 0) {
+	/* The otp from the client */
+	char otp[PASSWORD_MAXLEN + 1];
 
-        /* Our calculated otp */
-        unsigned char hexdigest[32];
+	/* Our calculated otp */
+	unsigned char hexdigest[32];
 
-        mnt_cmd_argument(&dpath, "@otp:", otp, PASSWORD_MAXLEN);
+	mnt_cmd_argument(&dpath, "@otp:", otp, PASSWORD_MAXLEN);
 	otp_digest(nonce, password, hexdigest);
 
-        /* Compare our calculated digest with what the client
-           submitted */
-        authenticated = !strncmp(hexdigest, otp, 32);
+	/* Compare our calculated digest with what the client submitted */
+	authenticated = !strncmp(hexdigest, otp, 32);
 
-        /* Change nonce */
-        gen_nonce(nonce);
+	/* Change nonce */
+	gen_nonce(nonce);
     }
 
     if (!realpath(dpath, buf)) {
-        /* the given path does not exist */
-        result.fhs_status = MNT3ERR_NOENT;
-        return &result;
+	/* the given path does not exist */
+	result.fhs_status = MNT3ERR_NOENT;
+	return &result;
     }
 
     if (strlen(buf) + 1 > NFS_MAXPATHLEN) {
-        putmsg(LOG_INFO, "%s attempted to mount jumbo path",
-               inet_ntoa(get_remote(rqstp)));
-        result.fhs_status = MNT3ERR_NAMETOOLONG;
-        return &result;
+	putmsg(LOG_INFO, "%s attempted to mount jumbo path",
+	       inet_ntoa(get_remote(rqstp)));
+	result.fhs_status = MNT3ERR_NAMETOOLONG;
+	return &result;
     }
 
     if (!authenticated || exports_options(buf, rqstp) == -1) {
-        /* not exported to this host or at all */
-        result.fhs_status = MNT3ERR_ACCES;
-        return &result;
+	/* not exported to this host or at all */
+	result.fhs_status = MNT3ERR_ACCES;
+	return &result;
     }
 
     fh = fh_comp(buf, FH_DIR);
 
     if (!fh_valid(fh)) {
-        putmsg(LOG_INFO, "%s attempted to mount non-directory",
-               inet_ntoa(get_remote(rqstp)));
-        result.fhs_status = MNT3ERR_NOTDIR;
-        return &result;
+	putmsg(LOG_INFO, "%s attempted to mount non-directory",
+	       inet_ntoa(get_remote(rqstp)));
+	result.fhs_status = MNT3ERR_NOTDIR;
+	return &result;
     }
 
     add_mount(dpath, rqstp);
@@ -229,14 +220,12 @@ mountproc_mnt_3_svc(dirpath * argp, struct svc_req * rqstp)
     return &result;
 }
 
-mountlist *
-mountproc_dump_3_svc(U(void *argp), U(struct svc_req *rqstp))
+mountlist *mountproc_dump_3_svc(U(void *argp), U(struct svc_req *rqstp))
 {
     return &mount_list;
 }
 
-void *
-mountproc_umnt_3_svc(dirpath * argp, struct svc_req *rqstp)
+void *mountproc_umnt_3_svc(dirpath * argp, struct svc_req *rqstp)
 {
     /* RPC times out if we use a NULL pointer */
     static void *result = NULL;
@@ -245,13 +234,12 @@ mountproc_umnt_3_svc(dirpath * argp, struct svc_req *rqstp)
 
     /* if no more mounts are active, flush all open file descriptors */
     if (mount_cnt == 0)
-        fd_cache_purge();
+	fd_cache_purge();
 
     return &result;
 }
 
-void *
-mountproc_umntall_3_svc(U(void *argp), struct svc_req *rqstp)
+void *mountproc_umntall_3_svc(U(void *argp), struct svc_req *rqstp)
 {
     /* RPC times out if we use a NULL pointer */
     static void *result = NULL;
@@ -260,13 +248,12 @@ mountproc_umntall_3_svc(U(void *argp), struct svc_req *rqstp)
 
     /* if no more mounts are active, flush all open file descriptors */
     if (mount_cnt == 0)
-        fd_cache_purge();
+	fd_cache_purge();
 
     return &result;
 }
 
-exports *
-mountproc_export_3_svc(U(void *argp), U(struct svc_req *rqstp))
+exports *mountproc_export_3_svc(U(void *argp), U(struct svc_req *rqstp))
 {
     return &exports_nfslist;
 }

@@ -1,3 +1,4 @@
+
 /*
  * UNFS3 server framework
  * Originally generated using rpcgen
@@ -58,17 +59,16 @@ char *opt_cluster_path = "/";
 /*
  * output message to syslog or stdout
  */
-void
-putmsg(int prio, const char *fmt, ...)
+void putmsg(int prio, const char *fmt, ...)
 {
     va_list ap;
 
     va_start(ap, fmt);
     if (opt_detach)
-        vsyslog(prio, fmt, ap);
+	vsyslog(prio, fmt, ap);
     else {
-        vprintf(fmt, ap);
-        putchar('\n');
+	vprintf(fmt, ap);
+	putchar('\n');
     }
     va_end(ap);
 }
@@ -76,8 +76,7 @@ putmsg(int prio, const char *fmt, ...)
 /*
  * return remote address from svc_req structure
  */
-struct in_addr
-get_remote(struct svc_req *rqstp)
+struct in_addr get_remote(struct svc_req *rqstp)
 {
     return (svc_getcaller(rqstp->rq_xprt))->sin_addr;
 }
@@ -85,83 +84,81 @@ get_remote(struct svc_req *rqstp)
 /*
  * parse command line options
  */
-static void
-parse_options(int argc, char **argv)
+static void parse_options(int argc, char **argv)
 {
     int opt = 0;
 
     char *optstring = "dhwue:cC:";
 
     while (opt != -1) {
-        opt = getopt(argc, argv, optstring);
-        switch (opt) {
-        case 'u':
-            opt_anysock = TRUE;
-            break;
-        case 'w':
-            opt_expire_writers = TRUE;
-            break;
-        case 'd':
-            printf(UNFS_NAME);
-            opt_detach = FALSE;
-            break;
-        case 'e':
-            if (optarg[0] != '/') {
-                fprintf(stderr, "Error: relative path to exports file\n");
-                exit(1);
-            }
-            opt_exports = optarg;
-            break;
+	opt = getopt(argc, argv, optstring);
+	switch (opt) {
+	    case 'u':
+		opt_anysock = TRUE;
+		break;
+	    case 'w':
+		opt_expire_writers = TRUE;
+		break;
+	    case 'd':
+		printf(UNFS_NAME);
+		opt_detach = FALSE;
+		break;
+	    case 'e':
+		if (optarg[0] != '/') {
+		    fprintf(stderr, "Error: relative path to exports file\n");
+		    exit(1);
+		}
+		opt_exports = optarg;
+		break;
 #if WANT_CLUSTER == 1
-        case 'c':
-            opt_cluster = TRUE;
-            break;
-        case 'C':
-            opt_cluster_path = optarg;
-            break;
+	    case 'c':
+		opt_cluster = TRUE;
+		break;
+	    case 'C':
+		opt_cluster_path = optarg;
+		break;
 #endif
-        case 'h':
-            printf(UNFS_NAME);
-            printf("Usage: %s [options]\n", argv[0]);
-            printf("\t-h          display this short option summary\n");
-            printf("\t-w          expire writers from fd cache\n");
-            printf("\t-u          use unprivileged port for NFS service\n");
-            printf("\t-d          do not detach from terminal\n");
-            printf("\t-e <file>   file to use instead of /etc/exports\n");
+	    case 'h':
+		printf(UNFS_NAME);
+		printf("Usage: %s [options]\n", argv[0]);
+		printf("\t-h          display this short option summary\n");
+		printf("\t-w          expire writers from fd cache\n");
+		printf
+		    ("\t-u          use unprivileged port for NFS service\n");
+		printf("\t-d          do not detach from terminal\n");
+		printf("\t-e <file>   file to use instead of /etc/exports\n");
 #if WANT_CLUSTER == 1
-            printf("\t-c          enable cluster extensions\n");
-            printf("\t-C <path>   set path for cluster extensions\n");
+		printf("\t-c          enable cluster extensions\n");
+		printf("\t-C <path>   set path for cluster extensions\n");
 #endif
-            exit(0);
-            break;
-        }
+		exit(0);
+		break;
+	}
     }
 }
 
 /*
  * signal handler and error exit function
  */
-void
-daemon_exit(int error)
+void daemon_exit(int error)
 {
     if (error == SIGHUP) {
-        get_squash_ids();
-        exports_parse();
-        return;
+	get_squash_ids();
+	exports_parse();
+	return;
     }
 
     if (error == SIGUSR1) {
-        if (fh_cache_use > 0)
-            putmsg(LOG_INFO,
-                   "fh entries %i access %i hit %i%s miss %i%s",
-                   fh_cache_max, fh_cache_use,
-                   fh_cache_hit * 100 / fh_cache_use,
-                   "%", 100 - fh_cache_hit * 100 / fh_cache_use, "%");
-        else
-            putmsg(LOG_INFO, "fh cache unused");
-        putmsg(LOG_INFO, "open file descriptors: read %i, write %i",
-               fd_cache_readers, fd_cache_writers);
-        return;
+	if (fh_cache_use > 0)
+	    putmsg(LOG_INFO, "fh entries %i access %i hit %i%s miss %i%s",
+		   fh_cache_max, fh_cache_use,
+		   fh_cache_hit * 100 / fh_cache_use, "%",
+		   100 - fh_cache_hit * 100 / fh_cache_use, "%");
+	else
+	    putmsg(LOG_INFO, "fh cache unused");
+	putmsg(LOG_INFO, "open file descriptors: read %i, write %i",
+	       fd_cache_readers, fd_cache_writers);
+	return;
     }
     svc_unregister(MOUNTPROG, MOUNTVERS1);
     svc_unregister(MOUNTPROG, MOUNTVERS3);
@@ -172,7 +169,7 @@ daemon_exit(int error)
     pmap_unset(NFS3_PROGRAM, NFS_V3);
 
     if (error == SIGSEGV)
-        putmsg(LOG_EMERG, "segmentation fault");
+	putmsg(LOG_EMERG, "segmentation fault");
 
     fd_cache_purge();
     closelog();
@@ -183,189 +180,206 @@ daemon_exit(int error)
  * NFS service dispatch function
  * generated by rpcgen
  */
-static void
-nfs3_program_3(struct svc_req *rqstp, register SVCXPRT * transp)
+static void nfs3_program_3(struct svc_req *rqstp, register SVCXPRT * transp)
 {
-    union
-    {
-        GETATTR3args nfsproc3_getattr_3_arg;
-        SETATTR3args nfsproc3_setattr_3_arg;
-        LOOKUP3args nfsproc3_lookup_3_arg;
-        ACCESS3args nfsproc3_access_3_arg;
-        READLINK3args nfsproc3_readlink_3_arg;
-        READ3args nfsproc3_read_3_arg;
-        WRITE3args nfsproc3_write_3_arg;
-        CREATE3args nfsproc3_create_3_arg;
-        MKDIR3args nfsproc3_mkdir_3_arg;
-        SYMLINK3args nfsproc3_symlink_3_arg;
-        MKNOD3args nfsproc3_mknod_3_arg;
-        REMOVE3args nfsproc3_remove_3_arg;
-        RMDIR3args nfsproc3_rmdir_3_arg;
-        RENAME3args nfsproc3_rename_3_arg;
-        LINK3args nfsproc3_link_3_arg;
-        READDIR3args nfsproc3_readdir_3_arg;
-        READDIRPLUS3args nfsproc3_readdirplus_3_arg;
-        FSSTAT3args nfsproc3_fsstat_3_arg;
-        FSINFO3args nfsproc3_fsinfo_3_arg;
-        PATHCONF3args nfsproc3_pathconf_3_arg;
-        COMMIT3args nfsproc3_commit_3_arg;
+    union {
+	GETATTR3args nfsproc3_getattr_3_arg;
+	SETATTR3args nfsproc3_setattr_3_arg;
+	LOOKUP3args nfsproc3_lookup_3_arg;
+	ACCESS3args nfsproc3_access_3_arg;
+	READLINK3args nfsproc3_readlink_3_arg;
+	READ3args nfsproc3_read_3_arg;
+	WRITE3args nfsproc3_write_3_arg;
+	CREATE3args nfsproc3_create_3_arg;
+	MKDIR3args nfsproc3_mkdir_3_arg;
+	SYMLINK3args nfsproc3_symlink_3_arg;
+	MKNOD3args nfsproc3_mknod_3_arg;
+	REMOVE3args nfsproc3_remove_3_arg;
+	RMDIR3args nfsproc3_rmdir_3_arg;
+	RENAME3args nfsproc3_rename_3_arg;
+	LINK3args nfsproc3_link_3_arg;
+	READDIR3args nfsproc3_readdir_3_arg;
+	READDIRPLUS3args nfsproc3_readdirplus_3_arg;
+	FSSTAT3args nfsproc3_fsstat_3_arg;
+	FSINFO3args nfsproc3_fsinfo_3_arg;
+	PATHCONF3args nfsproc3_pathconf_3_arg;
+	COMMIT3args nfsproc3_commit_3_arg;
     } argument;
     char *result;
     xdrproc_t _xdr_argument, _xdr_result;
     char *(*local) (char *, struct svc_req *);
 
     switch (rqstp->rq_proc) {
-    case NFSPROC3_NULL:
-        _xdr_argument = (xdrproc_t) xdr_void;
-        _xdr_result = (xdrproc_t) xdr_void;
-        local = (char *(*)(char *, struct svc_req *)) nfsproc3_null_3_svc;
-        break;
+	case NFSPROC3_NULL:
+	    _xdr_argument = (xdrproc_t) xdr_void;
+	    _xdr_result = (xdrproc_t) xdr_void;
+	    local = (char *(*)(char *, struct svc_req *)) nfsproc3_null_3_svc;
+	    break;
 
-    case NFSPROC3_GETATTR:
-        _xdr_argument = (xdrproc_t) xdr_GETATTR3args;
-        _xdr_result = (xdrproc_t) xdr_GETATTR3res;
-        local = (char *(*)(char *, struct svc_req *)) nfsproc3_getattr_3_svc;
-        break;
+	case NFSPROC3_GETATTR:
+	    _xdr_argument = (xdrproc_t) xdr_GETATTR3args;
+	    _xdr_result = (xdrproc_t) xdr_GETATTR3res;
+	    local =
+		(char *(*)(char *, struct svc_req *)) nfsproc3_getattr_3_svc;
+	    break;
 
-    case NFSPROC3_SETATTR:
-        _xdr_argument = (xdrproc_t) xdr_SETATTR3args;
-        _xdr_result = (xdrproc_t) xdr_SETATTR3res;
-        local = (char *(*)(char *, struct svc_req *)) nfsproc3_setattr_3_svc;
-        break;
+	case NFSPROC3_SETATTR:
+	    _xdr_argument = (xdrproc_t) xdr_SETATTR3args;
+	    _xdr_result = (xdrproc_t) xdr_SETATTR3res;
+	    local =
+		(char *(*)(char *, struct svc_req *)) nfsproc3_setattr_3_svc;
+	    break;
 
-    case NFSPROC3_LOOKUP:
-        _xdr_argument = (xdrproc_t) xdr_LOOKUP3args;
-        _xdr_result = (xdrproc_t) xdr_LOOKUP3res;
-        local = (char *(*)(char *, struct svc_req *)) nfsproc3_lookup_3_svc;
-        break;
+	case NFSPROC3_LOOKUP:
+	    _xdr_argument = (xdrproc_t) xdr_LOOKUP3args;
+	    _xdr_result = (xdrproc_t) xdr_LOOKUP3res;
+	    local =
+		(char *(*)(char *, struct svc_req *)) nfsproc3_lookup_3_svc;
+	    break;
 
-    case NFSPROC3_ACCESS:
-        _xdr_argument = (xdrproc_t) xdr_ACCESS3args;
-        _xdr_result = (xdrproc_t) xdr_ACCESS3res;
-        local = (char *(*)(char *, struct svc_req *)) nfsproc3_access_3_svc;
-        break;
+	case NFSPROC3_ACCESS:
+	    _xdr_argument = (xdrproc_t) xdr_ACCESS3args;
+	    _xdr_result = (xdrproc_t) xdr_ACCESS3res;
+	    local =
+		(char *(*)(char *, struct svc_req *)) nfsproc3_access_3_svc;
+	    break;
 
-    case NFSPROC3_READLINK:
-        _xdr_argument = (xdrproc_t) xdr_READLINK3args;
-        _xdr_result = (xdrproc_t) xdr_READLINK3res;
-        local = (char *(*)(char *, struct svc_req *)) nfsproc3_readlink_3_svc;
-        break;
+	case NFSPROC3_READLINK:
+	    _xdr_argument = (xdrproc_t) xdr_READLINK3args;
+	    _xdr_result = (xdrproc_t) xdr_READLINK3res;
+	    local =
+		(char *(*)(char *, struct svc_req *)) nfsproc3_readlink_3_svc;
+	    break;
 
-    case NFSPROC3_READ:
-        _xdr_argument = (xdrproc_t) xdr_READ3args;
-        _xdr_result = (xdrproc_t) xdr_READ3res;
-        local = (char *(*)(char *, struct svc_req *)) nfsproc3_read_3_svc;
-        break;
+	case NFSPROC3_READ:
+	    _xdr_argument = (xdrproc_t) xdr_READ3args;
+	    _xdr_result = (xdrproc_t) xdr_READ3res;
+	    local = (char *(*)(char *, struct svc_req *)) nfsproc3_read_3_svc;
+	    break;
 
-    case NFSPROC3_WRITE:
-        _xdr_argument = (xdrproc_t) xdr_WRITE3args;
-        _xdr_result = (xdrproc_t) xdr_WRITE3res;
-        local = (char *(*)(char *, struct svc_req *)) nfsproc3_write_3_svc;
-        break;
+	case NFSPROC3_WRITE:
+	    _xdr_argument = (xdrproc_t) xdr_WRITE3args;
+	    _xdr_result = (xdrproc_t) xdr_WRITE3res;
+	    local =
+		(char *(*)(char *, struct svc_req *)) nfsproc3_write_3_svc;
+	    break;
 
-    case NFSPROC3_CREATE:
-        _xdr_argument = (xdrproc_t) xdr_CREATE3args;
-        _xdr_result = (xdrproc_t) xdr_CREATE3res;
-        local = (char *(*)(char *, struct svc_req *)) nfsproc3_create_3_svc;
-        break;
+	case NFSPROC3_CREATE:
+	    _xdr_argument = (xdrproc_t) xdr_CREATE3args;
+	    _xdr_result = (xdrproc_t) xdr_CREATE3res;
+	    local =
+		(char *(*)(char *, struct svc_req *)) nfsproc3_create_3_svc;
+	    break;
 
-    case NFSPROC3_MKDIR:
-        _xdr_argument = (xdrproc_t) xdr_MKDIR3args;
-        _xdr_result = (xdrproc_t) xdr_MKDIR3res;
-        local = (char *(*)(char *, struct svc_req *)) nfsproc3_mkdir_3_svc;
-        break;
+	case NFSPROC3_MKDIR:
+	    _xdr_argument = (xdrproc_t) xdr_MKDIR3args;
+	    _xdr_result = (xdrproc_t) xdr_MKDIR3res;
+	    local =
+		(char *(*)(char *, struct svc_req *)) nfsproc3_mkdir_3_svc;
+	    break;
 
-    case NFSPROC3_SYMLINK:
-        _xdr_argument = (xdrproc_t) xdr_SYMLINK3args;
-        _xdr_result = (xdrproc_t) xdr_SYMLINK3res;
-        local = (char *(*)(char *, struct svc_req *)) nfsproc3_symlink_3_svc;
-        break;
+	case NFSPROC3_SYMLINK:
+	    _xdr_argument = (xdrproc_t) xdr_SYMLINK3args;
+	    _xdr_result = (xdrproc_t) xdr_SYMLINK3res;
+	    local =
+		(char *(*)(char *, struct svc_req *)) nfsproc3_symlink_3_svc;
+	    break;
 
-    case NFSPROC3_MKNOD:
-        _xdr_argument = (xdrproc_t) xdr_MKNOD3args;
-        _xdr_result = (xdrproc_t) xdr_MKNOD3res;
-        local = (char *(*)(char *, struct svc_req *)) nfsproc3_mknod_3_svc;
-        break;
+	case NFSPROC3_MKNOD:
+	    _xdr_argument = (xdrproc_t) xdr_MKNOD3args;
+	    _xdr_result = (xdrproc_t) xdr_MKNOD3res;
+	    local =
+		(char *(*)(char *, struct svc_req *)) nfsproc3_mknod_3_svc;
+	    break;
 
-    case NFSPROC3_REMOVE:
-        _xdr_argument = (xdrproc_t) xdr_REMOVE3args;
-        _xdr_result = (xdrproc_t) xdr_REMOVE3res;
-        local = (char *(*)(char *, struct svc_req *)) nfsproc3_remove_3_svc;
-        break;
+	case NFSPROC3_REMOVE:
+	    _xdr_argument = (xdrproc_t) xdr_REMOVE3args;
+	    _xdr_result = (xdrproc_t) xdr_REMOVE3res;
+	    local =
+		(char *(*)(char *, struct svc_req *)) nfsproc3_remove_3_svc;
+	    break;
 
-    case NFSPROC3_RMDIR:
-        _xdr_argument = (xdrproc_t) xdr_RMDIR3args;
-        _xdr_result = (xdrproc_t) xdr_RMDIR3res;
-        local = (char *(*)(char *, struct svc_req *)) nfsproc3_rmdir_3_svc;
-        break;
+	case NFSPROC3_RMDIR:
+	    _xdr_argument = (xdrproc_t) xdr_RMDIR3args;
+	    _xdr_result = (xdrproc_t) xdr_RMDIR3res;
+	    local =
+		(char *(*)(char *, struct svc_req *)) nfsproc3_rmdir_3_svc;
+	    break;
 
-    case NFSPROC3_RENAME:
-        _xdr_argument = (xdrproc_t) xdr_RENAME3args;
-        _xdr_result = (xdrproc_t) xdr_RENAME3res;
-        local = (char *(*)(char *, struct svc_req *)) nfsproc3_rename_3_svc;
-        break;
+	case NFSPROC3_RENAME:
+	    _xdr_argument = (xdrproc_t) xdr_RENAME3args;
+	    _xdr_result = (xdrproc_t) xdr_RENAME3res;
+	    local =
+		(char *(*)(char *, struct svc_req *)) nfsproc3_rename_3_svc;
+	    break;
 
-    case NFSPROC3_LINK:
-        _xdr_argument = (xdrproc_t) xdr_LINK3args;
-        _xdr_result = (xdrproc_t) xdr_LINK3res;
-        local = (char *(*)(char *, struct svc_req *)) nfsproc3_link_3_svc;
-        break;
+	case NFSPROC3_LINK:
+	    _xdr_argument = (xdrproc_t) xdr_LINK3args;
+	    _xdr_result = (xdrproc_t) xdr_LINK3res;
+	    local = (char *(*)(char *, struct svc_req *)) nfsproc3_link_3_svc;
+	    break;
 
-    case NFSPROC3_READDIR:
-        _xdr_argument = (xdrproc_t) xdr_READDIR3args;
-        _xdr_result = (xdrproc_t) xdr_READDIR3res;
-        local = (char *(*)(char *, struct svc_req *)) nfsproc3_readdir_3_svc;
-        break;
+	case NFSPROC3_READDIR:
+	    _xdr_argument = (xdrproc_t) xdr_READDIR3args;
+	    _xdr_result = (xdrproc_t) xdr_READDIR3res;
+	    local =
+		(char *(*)(char *, struct svc_req *)) nfsproc3_readdir_3_svc;
+	    break;
 
-    case NFSPROC3_READDIRPLUS:
-        _xdr_argument = (xdrproc_t) xdr_READDIRPLUS3args;
-        _xdr_result = (xdrproc_t) xdr_READDIRPLUS3res;
-        local =
-            (char *(*)(char *, struct svc_req *)) nfsproc3_readdirplus_3_svc;
-        break;
+	case NFSPROC3_READDIRPLUS:
+	    _xdr_argument = (xdrproc_t) xdr_READDIRPLUS3args;
+	    _xdr_result = (xdrproc_t) xdr_READDIRPLUS3res;
+	    local =
+		(char *(*)(char *, struct svc_req *))
+		nfsproc3_readdirplus_3_svc;
+	    break;
 
-    case NFSPROC3_FSSTAT:
-        _xdr_argument = (xdrproc_t) xdr_FSSTAT3args;
-        _xdr_result = (xdrproc_t) xdr_FSSTAT3res;
-        local = (char *(*)(char *, struct svc_req *)) nfsproc3_fsstat_3_svc;
-        break;
+	case NFSPROC3_FSSTAT:
+	    _xdr_argument = (xdrproc_t) xdr_FSSTAT3args;
+	    _xdr_result = (xdrproc_t) xdr_FSSTAT3res;
+	    local =
+		(char *(*)(char *, struct svc_req *)) nfsproc3_fsstat_3_svc;
+	    break;
 
-    case NFSPROC3_FSINFO:
-        _xdr_argument = (xdrproc_t) xdr_FSINFO3args;
-        _xdr_result = (xdrproc_t) xdr_FSINFO3res;
-        local = (char *(*)(char *, struct svc_req *)) nfsproc3_fsinfo_3_svc;
-        break;
+	case NFSPROC3_FSINFO:
+	    _xdr_argument = (xdrproc_t) xdr_FSINFO3args;
+	    _xdr_result = (xdrproc_t) xdr_FSINFO3res;
+	    local =
+		(char *(*)(char *, struct svc_req *)) nfsproc3_fsinfo_3_svc;
+	    break;
 
-    case NFSPROC3_PATHCONF:
-        _xdr_argument = (xdrproc_t) xdr_PATHCONF3args;
-        _xdr_result = (xdrproc_t) xdr_PATHCONF3res;
-        local = (char *(*)(char *, struct svc_req *)) nfsproc3_pathconf_3_svc;
-        break;
+	case NFSPROC3_PATHCONF:
+	    _xdr_argument = (xdrproc_t) xdr_PATHCONF3args;
+	    _xdr_result = (xdrproc_t) xdr_PATHCONF3res;
+	    local =
+		(char *(*)(char *, struct svc_req *)) nfsproc3_pathconf_3_svc;
+	    break;
 
-    case NFSPROC3_COMMIT:
-        _xdr_argument = (xdrproc_t) xdr_COMMIT3args;
-        _xdr_result = (xdrproc_t) xdr_COMMIT3res;
-        local = (char *(*)(char *, struct svc_req *)) nfsproc3_commit_3_svc;
-        break;
+	case NFSPROC3_COMMIT:
+	    _xdr_argument = (xdrproc_t) xdr_COMMIT3args;
+	    _xdr_result = (xdrproc_t) xdr_COMMIT3res;
+	    local =
+		(char *(*)(char *, struct svc_req *)) nfsproc3_commit_3_svc;
+	    break;
 
-    default:
-        svcerr_noproc(transp);
-        return;
+	default:
+	    svcerr_noproc(transp);
+	    return;
     }
     memset((char *) &argument, 0, sizeof(argument));
     if (!svc_getargs(transp, (xdrproc_t) _xdr_argument, (caddr_t) & argument)) {
-        svcerr_decode(transp);
-        return;
+	svcerr_decode(transp);
+	return;
     }
     result = (*local) ((char *) &argument, rqstp);
-    if (result != NULL
-        && !svc_sendreply(transp, (xdrproc_t) _xdr_result, result)) {
-        svcerr_systemerr(transp);
+    if (result != NULL &&
+	!svc_sendreply(transp, (xdrproc_t) _xdr_result, result)) {
+	svcerr_systemerr(transp);
     }
     if (!svc_freeargs
-        (transp, (xdrproc_t) _xdr_argument, (caddr_t) & argument)) {
-        putmsg(LOG_CRIT, "unable to free XDR arguments");
-        daemon_exit(CRISIS);
+	(transp, (xdrproc_t) _xdr_argument, (caddr_t) & argument)) {
+	putmsg(LOG_CRIT, "unable to free XDR arguments");
+	daemon_exit(CRISIS);
     }
     return;
 }
@@ -374,73 +388,76 @@ nfs3_program_3(struct svc_req *rqstp, register SVCXPRT * transp)
  * mount protocol dispatcher
  * generated by rpcgen
  */
-static void
-mountprog_3(struct svc_req *rqstp, register SVCXPRT * transp)
+static void mountprog_3(struct svc_req *rqstp, register SVCXPRT * transp)
 {
-    union
-    {
-        dirpath mountproc_mnt_3_arg;
-        dirpath mountproc_umnt_3_arg;
+    union {
+	dirpath mountproc_mnt_3_arg;
+	dirpath mountproc_umnt_3_arg;
     } argument;
     char *result;
     xdrproc_t _xdr_argument, _xdr_result;
     char *(*local) (char *, struct svc_req *);
 
     switch (rqstp->rq_proc) {
-    case MOUNTPROC_NULL:
-        _xdr_argument = (xdrproc_t) xdr_void;
-        _xdr_result = (xdrproc_t) xdr_void;
-        local = (char *(*)(char *, struct svc_req *)) mountproc_null_3_svc;
-        break;
+	case MOUNTPROC_NULL:
+	    _xdr_argument = (xdrproc_t) xdr_void;
+	    _xdr_result = (xdrproc_t) xdr_void;
+	    local =
+		(char *(*)(char *, struct svc_req *)) mountproc_null_3_svc;
+	    break;
 
-    case MOUNTPROC_MNT:
-        _xdr_argument = (xdrproc_t) xdr_dirpath;
-        _xdr_result = (xdrproc_t) xdr_mountres3;
-        local = (char *(*)(char *, struct svc_req *)) mountproc_mnt_3_svc;
-        break;
+	case MOUNTPROC_MNT:
+	    _xdr_argument = (xdrproc_t) xdr_dirpath;
+	    _xdr_result = (xdrproc_t) xdr_mountres3;
+	    local = (char *(*)(char *, struct svc_req *)) mountproc_mnt_3_svc;
+	    break;
 
-    case MOUNTPROC_DUMP:
-        _xdr_argument = (xdrproc_t) xdr_void;
-        _xdr_result = (xdrproc_t) xdr_mountlist;
-        local = (char *(*)(char *, struct svc_req *)) mountproc_dump_3_svc;
-        break;
+	case MOUNTPROC_DUMP:
+	    _xdr_argument = (xdrproc_t) xdr_void;
+	    _xdr_result = (xdrproc_t) xdr_mountlist;
+	    local =
+		(char *(*)(char *, struct svc_req *)) mountproc_dump_3_svc;
+	    break;
 
-    case MOUNTPROC_UMNT:
-        _xdr_argument = (xdrproc_t) xdr_dirpath;
-        _xdr_result = (xdrproc_t) xdr_void;
-        local = (char *(*)(char *, struct svc_req *)) mountproc_umnt_3_svc;
-        break;
+	case MOUNTPROC_UMNT:
+	    _xdr_argument = (xdrproc_t) xdr_dirpath;
+	    _xdr_result = (xdrproc_t) xdr_void;
+	    local =
+		(char *(*)(char *, struct svc_req *)) mountproc_umnt_3_svc;
+	    break;
 
-    case MOUNTPROC_UMNTALL:
-        _xdr_argument = (xdrproc_t) xdr_void;
-        _xdr_result = (xdrproc_t) xdr_void;
-        local = (char *(*)(char *, struct svc_req *)) mountproc_umntall_3_svc;
-        break;
+	case MOUNTPROC_UMNTALL:
+	    _xdr_argument = (xdrproc_t) xdr_void;
+	    _xdr_result = (xdrproc_t) xdr_void;
+	    local =
+		(char *(*)(char *, struct svc_req *)) mountproc_umntall_3_svc;
+	    break;
 
-    case MOUNTPROC_EXPORT:
-        _xdr_argument = (xdrproc_t) xdr_void;
-        _xdr_result = (xdrproc_t) xdr_exports;
-        local = (char *(*)(char *, struct svc_req *)) mountproc_export_3_svc;
-        break;
+	case MOUNTPROC_EXPORT:
+	    _xdr_argument = (xdrproc_t) xdr_void;
+	    _xdr_result = (xdrproc_t) xdr_exports;
+	    local =
+		(char *(*)(char *, struct svc_req *)) mountproc_export_3_svc;
+	    break;
 
-    default:
-        svcerr_noproc(transp);
-        return;
+	default:
+	    svcerr_noproc(transp);
+	    return;
     }
     memset((char *) &argument, 0, sizeof(argument));
     if (!svc_getargs(transp, (xdrproc_t) _xdr_argument, (caddr_t) & argument)) {
-        svcerr_decode(transp);
-        return;
+	svcerr_decode(transp);
+	return;
     }
     result = (*local) ((char *) &argument, rqstp);
-    if (result != NULL
-        && !svc_sendreply(transp, (xdrproc_t) _xdr_result, result)) {
-        svcerr_systemerr(transp);
+    if (result != NULL &&
+	!svc_sendreply(transp, (xdrproc_t) _xdr_result, result)) {
+	svcerr_systemerr(transp);
     }
     if (!svc_freeargs
-        (transp, (xdrproc_t) _xdr_argument, (caddr_t) & argument)) {
-        putmsg(LOG_CRIT, "unable to free XDR arguments");
-        daemon_exit(CRISIS);
+	(transp, (xdrproc_t) _xdr_argument, (caddr_t) & argument)) {
+	putmsg(LOG_CRIT, "unable to free XDR arguments");
+	daemon_exit(CRISIS);
     }
     return;
 }
@@ -450,8 +467,7 @@ mountprog_3(struct svc_req *rqstp, register SVCXPRT * transp)
  * originally generated by rpcgen
  * forking, logging, options, and signal handler stuff added
  */
-int
-main(int argc, char **argv)
+int main(int argc, char **argv)
 {
     register SVCXPRT *transp;
     pid_t pid = 0;
@@ -472,45 +488,43 @@ main(int argc, char **argv)
     pmap_unset(NFS3_PROGRAM, NFS_V3);
 
     if (!opt_anysock) {
-        sin.sin_family = AF_INET;
-        sin.sin_port = htons(NFS_PORT);
-        sin.sin_addr.s_addr = INADDR_ANY;
+	sin.sin_family = AF_INET;
+	sin.sin_port = htons(NFS_PORT);
+	sin.sin_addr.s_addr = INADDR_ANY;
 
-        udp_sock = socket(PF_INET, SOCK_DGRAM, 0);
-        bind(udp_sock, (struct sockaddr *) &sin, sizeof(struct sockaddr));
-        transp = svcudp_create(udp_sock);
-    }
-    else
-        transp = svcudp_create(RPC_ANYSOCK);
+	udp_sock = socket(PF_INET, SOCK_DGRAM, 0);
+	bind(udp_sock, (struct sockaddr *) &sin, sizeof(struct sockaddr));
+	transp = svcudp_create(udp_sock);
+    } else
+	transp = svcudp_create(RPC_ANYSOCK);
 
     if (transp == NULL) {
-        fprintf(stderr, "%s", "cannot create udp service.");
-        daemon_exit(0);
+	fprintf(stderr, "%s", "cannot create udp service.");
+	daemon_exit(0);
     }
     if (!svc_register
-        (transp, NFS3_PROGRAM, NFS_V3, nfs3_program_3, IPPROTO_UDP)) {
-        fprintf(stderr, "%s",
-                "unable to register (NFS3_PROGRAM, NFS_V3, udp).");
-        daemon_exit(0);
+	(transp, NFS3_PROGRAM, NFS_V3, nfs3_program_3, IPPROTO_UDP)) {
+	fprintf(stderr, "%s",
+		"unable to register (NFS3_PROGRAM, NFS_V3, udp).");
+	daemon_exit(0);
     }
 
     if (!opt_anysock) {
-        tcp_sock = socket(PF_INET, SOCK_STREAM, 0);
-        bind(tcp_sock, (struct sockaddr *) &sin, sizeof(struct sockaddr));
-        transp = svctcp_create(tcp_sock, 0, 0);
-    }
-    else
-        transp = svctcp_create(RPC_ANYSOCK, 0, 0);
+	tcp_sock = socket(PF_INET, SOCK_STREAM, 0);
+	bind(tcp_sock, (struct sockaddr *) &sin, sizeof(struct sockaddr));
+	transp = svctcp_create(tcp_sock, 0, 0);
+    } else
+	transp = svctcp_create(RPC_ANYSOCK, 0, 0);
 
     if (transp == NULL) {
-        fprintf(stderr, "%s", "cannot create tcp service.");
-        daemon_exit(0);
+	fprintf(stderr, "%s", "cannot create tcp service.");
+	daemon_exit(0);
     }
     if (!svc_register
-        (transp, NFS3_PROGRAM, NFS_V3, nfs3_program_3, IPPROTO_TCP)) {
-        fprintf(stderr, "%s",
-                "unable to register (NFS3_PROGRAM, NFS_V3, tcp).");
-        daemon_exit(0);
+	(transp, NFS3_PROGRAM, NFS_V3, nfs3_program_3, IPPROTO_TCP)) {
+	fprintf(stderr, "%s",
+		"unable to register (NFS3_PROGRAM, NFS_V3, tcp).");
+	daemon_exit(0);
     }
 
     pmap_unset(MOUNTPROG, MOUNTVERS1);
@@ -518,88 +532,88 @@ main(int argc, char **argv)
 
     transp = svcudp_create(RPC_ANYSOCK);
     if (transp == NULL) {
-        fprintf(stderr, "%s", "cannot create udp service.");
-        daemon_exit(0);
+	fprintf(stderr, "%s", "cannot create udp service.");
+	daemon_exit(0);
     }
     if (!svc_register
-        (transp, MOUNTPROG, MOUNTVERS1, mountprog_3, IPPROTO_UDP)) {
-        fprintf(stderr, "%s",
-                "unable to register (MOUNTPROG, MOUNTVERS1, udp).");
-        daemon_exit(0);
+	(transp, MOUNTPROG, MOUNTVERS1, mountprog_3, IPPROTO_UDP)) {
+	fprintf(stderr, "%s",
+		"unable to register (MOUNTPROG, MOUNTVERS1, udp).");
+	daemon_exit(0);
     }
     if (!svc_register
-        (transp, MOUNTPROG, MOUNTVERS3, mountprog_3, IPPROTO_UDP)) {
-        fprintf(stderr, "%s",
-                "unable to register (MOUNTPROG, MOUNTVERS3, udp).");
-        daemon_exit(0);
+	(transp, MOUNTPROG, MOUNTVERS3, mountprog_3, IPPROTO_UDP)) {
+	fprintf(stderr, "%s",
+		"unable to register (MOUNTPROG, MOUNTVERS3, udp).");
+	daemon_exit(0);
     }
 
     transp = svctcp_create(RPC_ANYSOCK, 0, 0);
     if (transp == NULL) {
-        fprintf(stderr, "%s", "cannot create tcp service.");
-        daemon_exit(0);
+	fprintf(stderr, "%s", "cannot create tcp service.");
+	daemon_exit(0);
     }
     if (!svc_register
-        (transp, MOUNTPROG, MOUNTVERS1, mountprog_3, IPPROTO_TCP)) {
-        fprintf(stderr, "%s",
-                "unable to register (MOUNTPROG, MOUNTVERS1, tcp).");
-        daemon_exit(0);
+	(transp, MOUNTPROG, MOUNTVERS1, mountprog_3, IPPROTO_TCP)) {
+	fprintf(stderr, "%s",
+		"unable to register (MOUNTPROG, MOUNTVERS1, tcp).");
+	daemon_exit(0);
     }
     if (!svc_register
-        (transp, MOUNTPROG, MOUNTVERS3, mountprog_3, IPPROTO_TCP)) {
-        fprintf(stderr, "%s",
-                "unable to register (MOUNTPROG, MOUNTVERS3, tcp).");
-        daemon_exit(0);
+	(transp, MOUNTPROG, MOUNTVERS3, mountprog_3, IPPROTO_TCP)) {
+	fprintf(stderr, "%s",
+		"unable to register (MOUNTPROG, MOUNTVERS3, tcp).");
+	daemon_exit(0);
     }
 
     if (opt_detach) {
-        pid = fork();
-        if (pid == -1) {
-            fprintf(stderr, "could not fork into background\n");
-            daemon_exit(0);
-        }
+	pid = fork();
+	if (pid == -1) {
+	    fprintf(stderr, "could not fork into background\n");
+	    daemon_exit(0);
+	}
     }
 
     if (!opt_detach || pid == 0) {
-        sigemptyset(&actset);
-        act.sa_handler = daemon_exit;
-        act.sa_mask = actset;
-        act.sa_flags = 0;
-        sigaction(SIGHUP, &act, NULL);
-        sigaction(SIGTERM, &act, NULL);
-        sigaction(SIGINT, &act, NULL);
-        sigaction(SIGQUIT, &act, NULL);
-        sigaction(SIGSEGV, &act, NULL);
-        sigaction(SIGUSR1, &act, NULL);
+	sigemptyset(&actset);
+	act.sa_handler = daemon_exit;
+	act.sa_mask = actset;
+	act.sa_flags = 0;
+	sigaction(SIGHUP, &act, NULL);
+	sigaction(SIGTERM, &act, NULL);
+	sigaction(SIGINT, &act, NULL);
+	sigaction(SIGQUIT, &act, NULL);
+	sigaction(SIGSEGV, &act, NULL);
+	sigaction(SIGUSR1, &act, NULL);
 
-        act.sa_handler = SIG_IGN;
-        sigaction(SIGPIPE, &act, NULL);
-        sigaction(SIGUSR2, &act, NULL);
-        sigaction(SIGALRM, &act, NULL);
+	act.sa_handler = SIG_IGN;
+	sigaction(SIGPIPE, &act, NULL);
+	sigaction(SIGUSR2, &act, NULL);
+	sigaction(SIGALRM, &act, NULL);
 
-        /* don't make directory we started in busy */
-        chdir("/");
+	/* don't make directory we started in busy */
+	chdir("/");
 
-        /* no umask to not screw up create modes */
-        umask(0);
+	/* no umask to not screw up create modes */
+	umask(0);
 
-        /* detach from terminal */
-        if (opt_detach) {
-            setsid();
-            fclose(stdin);
-            fclose(stdout);
-            fclose(stderr);
-        }
+	/* detach from terminal */
+	if (opt_detach) {
+	    setsid();
+	    fclose(stdin);
+	    fclose(stdout);
+	    fclose(stderr);
+	}
 
-        /* initialize internal stuff */
-        fh_cache_init();
-        fd_cache_init();
-        get_squash_ids();
-        exports_parse();
+	/* initialize internal stuff */
+	fh_cache_init();
+	fd_cache_init();
+	get_squash_ids();
+	exports_parse();
 
-        svc_run();
-        exit(1);
-        /* NOTREACHED */
+	svc_run();
+	exit(1);
+	/* NOTREACHED */
     }
 
     return 0;

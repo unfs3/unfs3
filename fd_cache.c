@@ -1,3 +1,4 @@
+
 /*
  * UNFS3 file descriptor cache
  * (C) 2004, Pascal Schmidt <der.eremit@email.de>
@@ -32,14 +33,13 @@
 /* number of entries in fd cache */
 #define FD_ENTRIES	256
 
-typedef struct
-{
-    int fd;                     /* open file descriptor */
-    int kind;                   /* read or write */
-    time_t use;                 /* last use */
-    uint32 dev;                 /* device */
-    uint32 ino;                 /* inode */
-    uint32 gen;                 /* inode generation */
+typedef struct {
+    int fd;			/* open file descriptor */
+    int kind;			/* read or write */
+    time_t use;			/* last use */
+    uint32 dev;			/* device */
+    uint32 ino;			/* inode */
+    uint32 gen;			/* inode generation */
 } fd_cache_t;
 
 static fd_cache_t fd_cache[FD_ENTRIES];
@@ -54,8 +54,7 @@ static int fd_cache_time = 0;
 /*
  * return next pseudo-time value for LRU counter
  */
-static int
-fd_cache_next(void)
+static int fd_cache_next(void)
 {
     return ++fd_cache_time;
 }
@@ -63,18 +62,17 @@ fd_cache_next(void)
 /*
  * initialize the fd cache
  */
-void
-fd_cache_init(void)
+void fd_cache_init(void)
 {
     int i;
 
     for (i = 0; i < FD_ENTRIES; i++) {
-        fd_cache[i].fd = -1;
-        fd_cache[i].kind = FD_READ;
-        fd_cache[i].use = 0;
-        fd_cache[i].dev = 0;
-        fd_cache[i].ino = 0;
-        fd_cache[i].gen = 0;
+	fd_cache[i].fd = -1;
+	fd_cache[i].kind = FD_READ;
+	fd_cache[i].use = 0;
+	fd_cache[i].dev = 0;
+	fd_cache[i].ino = 0;
+	fd_cache[i].gen = 0;
     }
 }
 
@@ -84,30 +82,28 @@ fd_cache_init(void)
  *
  * only returns a used WRITE slot if opt_expire_writers is set
  */
-static int
-fd_cache_lru(void)
+static int fd_cache_lru(void)
 {
     int best = -1;
     int i;
     int idx = -1;
 
     for (i = 0; i < FD_ENTRIES; i++) {
-        if (fd_cache[i].use == 0)
-            return i;
-        if (fd_cache[i].use < best) {
-            if (opt_expire_writers) {
-                best = fd_cache[i].use;
-                idx = i;
-            }
-            else if (fd_cache[i].kind == FD_READ) {
-                best = fd_cache[i].use;
-                idx = i;
-            }
-        }
+	if (fd_cache[i].use == 0)
+	    return i;
+	if (fd_cache[i].use < best) {
+	    if (opt_expire_writers) {
+		best = fd_cache[i].use;
+		idx = i;
+	    } else if (fd_cache[i].kind == FD_READ) {
+		best = fd_cache[i].use;
+		idx = i;
+	    }
+	}
     }
 
     if (idx == -1)
-        putmsg(LOG_WARNING, "fd cache full due to UNSTABLE writers");
+	putmsg(LOG_WARNING, "fd cache full due to UNSTABLE writers");
 
     return idx;
 }
@@ -115,33 +111,30 @@ fd_cache_lru(void)
 /*
  * remove an entry from the cache
  */
-static int
-fd_cache_del(int idx)
+static int fd_cache_del(int idx)
 {
     int res1, res2;
 
     fd_cache[idx].use = 0;
 
     if (fd_cache[idx].fd != -1) {
-        if (fd_cache[idx].kind == FD_WRITE) {
-            /* sync file data if writing descriptor */
-            fd_cache_writers--;
-            res1 = fsync(fd_cache[idx].fd);
-        }
-        else {
-            fd_cache_readers--;
-            res1 = 0;
-        }
-        res2 = close(fd_cache[idx].fd);
+	if (fd_cache[idx].kind == FD_WRITE) {
+	    /* sync file data if writing descriptor */
+	    fd_cache_writers--;
+	    res1 = fsync(fd_cache[idx].fd);
+	} else {
+	    fd_cache_readers--;
+	    res1 = 0;
+	}
+	res2 = close(fd_cache[idx].fd);
 
-        /* return -1 if something went wrong during sync or close */
-        if (res1 == -1 || res2 == -1)
-            res1 = -1;
-        else
-            res1 = 0;
-    }
-    else
-        res1 = 0;
+	/* return -1 if something went wrong during sync or close */
+	if (res1 == -1 || res2 == -1)
+	    res1 = -1;
+	else
+	    res1 = 0;
+    } else
+	res1 = 0;
 
     fd_cache[idx].fd = -1;
     fd_cache[idx].dev = 0;
@@ -153,76 +146,73 @@ fd_cache_del(int idx)
 /*
  * add an entry to the cache
  */
-static void
-fd_cache_add(int fd, unfs3_fh_t * ufh, int kind)
+static void fd_cache_add(int fd, unfs3_fh_t * ufh, int kind)
 {
     int idx, res;
     uint32 dev, ino;
 
     idx = fd_cache_lru();
     if (idx != -1) {
-        if (fd_cache[idx].kind == FD_READ)
-            fd_cache_del(idx);
-        else {
-            /* if expiring a WRITE fd, report errors to log */
-            dev = fd_cache[idx].dev;
-            ino = fd_cache[idx].ino;
-            res = fd_cache_del(idx);
-            if (res != 0)
-                putmsg(LOG_CRIT,
-                       "silent write failure for dev %li, inode %li",
-                       dev, ino);
-        }
+	if (fd_cache[idx].kind == FD_READ)
+	    fd_cache_del(idx);
+	else {
+	    /* if expiring a WRITE fd, report errors to log */
+	    dev = fd_cache[idx].dev;
+	    ino = fd_cache[idx].ino;
+	    res = fd_cache_del(idx);
+	    if (res != 0)
+		putmsg(LOG_CRIT,
+		       "silent write failure for dev %li, inode %li", dev,
+		       ino);
+	}
 
-        /* update statistics */
-        if (kind == FD_READ)
-            fd_cache_readers++;
-        else
-            fd_cache_writers++;
+	/* update statistics */
+	if (kind == FD_READ)
+	    fd_cache_readers++;
+	else
+	    fd_cache_writers++;
 
-        fd_cache[idx].fd = fd;
-        fd_cache[idx].kind = kind;
-        fd_cache[idx].use = fd_cache_next();
-        fd_cache[idx].dev = ufh->dev;
-        fd_cache[idx].ino = ufh->ino;
-        fd_cache[idx].gen = ufh->gen;
+	fd_cache[idx].fd = fd;
+	fd_cache[idx].kind = kind;
+	fd_cache[idx].use = fd_cache_next();
+	fd_cache[idx].dev = ufh->dev;
+	fd_cache[idx].ino = ufh->ino;
+	fd_cache[idx].gen = ufh->gen;
     }
 }
 
 /*
  * find entry by operating system fd number
  */
-static int
-idx_by_fd(int fd, int kind)
+static int idx_by_fd(int fd, int kind)
 {
     int i;
     int idx = -1;
 
     for (i = 0; i < FD_ENTRIES; i++)
-        if (fd_cache[i].fd == fd && fd_cache[i].kind == kind) {
-            idx = i;
-            break;
-        }
+	if (fd_cache[i].fd == fd && fd_cache[i].kind == kind) {
+	    idx = i;
+	    break;
+	}
     return idx;
 }
 
 /*
  * find entry by fh (device, inode, and generation number)
  */
-static int
-idx_by_fh(unfs3_fh_t * ufh, int kind)
+static int idx_by_fh(unfs3_fh_t * ufh, int kind)
 {
     int i;
     int idx = -1;
 
     for (i = 0; i < FD_ENTRIES; i++)
-        if (fd_cache[i].kind == kind) {
-            if (fd_cache[i].dev == ufh->dev &&
-                fd_cache[i].ino == ufh->ino && fd_cache[i].gen == ufh->gen) {
-                idx = i;
-                break;
-            }
-        }
+	if (fd_cache[i].kind == kind) {
+	    if (fd_cache[i].dev == ufh->dev && fd_cache[i].ino == ufh->ino &&
+		fd_cache[i].gen == ufh->gen) {
+		idx = i;
+		break;
+	    }
+	}
     return idx;
 }
 
@@ -230,8 +220,7 @@ idx_by_fh(unfs3_fh_t * ufh, int kind)
  * open a file descriptor
  * uses fd from cache if possible
  */
-int
-fd_open(const char *path, nfs_fh3 nfh, int kind)
+int fd_open(const char *path, nfs_fh3 nfh, int kind)
 {
     int idx, res, fd;
     struct stat buf;
@@ -240,37 +229,37 @@ fd_open(const char *path, nfs_fh3 nfh, int kind)
     idx = idx_by_fh(fh, kind);
 
     if (idx != -1)
-        return fd_cache[idx].fd;
+	return fd_cache[idx].fd;
     else {
-        /* call open to obtain new fd */
-        if (kind == FD_READ)
-            fd = open(path, O_RDONLY);
-        else
-            fd = open(path, O_WRONLY);
-        if (fd == -1)
-            return -1;
+	/* call open to obtain new fd */
+	if (kind == FD_READ)
+	    fd = open(path, O_RDONLY);
+	else
+	    fd = open(path, O_WRONLY);
+	if (fd == -1)
+	    return -1;
 
-        /* check for local fs race */
-        res = fstat(fd, &buf);
-        if ((res == -1) ||
-            (fh->dev != buf.st_dev ||
-             fh->ino != buf.st_ino || fh->gen != get_gen(buf, fd, path))) {
-            /*
-             * local fs changed meaning of path between
-             * calling NFS operation doing fh_decomp and
-             * arriving here
-             *
-             * set errno to ELOOP to make calling NFS
-             * operation return NFS3ERR_STALE
-             */
-            close(fd);
-            errno = ELOOP;
-            return -1;
-        }
+	/* check for local fs race */
+	res = fstat(fd, &buf);
+	if ((res == -1) ||
+	    (fh->dev != buf.st_dev || fh->ino != buf.st_ino ||
+	     fh->gen != get_gen(buf, fd, path))) {
+	    /* 
+	     * local fs changed meaning of path between
+	     * calling NFS operation doing fh_decomp and
+	     * arriving here
+	     *
+	     * set errno to ELOOP to make calling NFS
+	     * operation return NFS3ERR_STALE
+	     */
+	    close(fd);
+	    errno = ELOOP;
+	    return -1;
+	}
 
-        /* success, add to cache for later use */
-        fd_cache_add(fd, fh, kind);
-        return fd;
+	/* success, add to cache for later use */
+	fd_cache_add(fd, fh, kind);
+	return fd;
     }
 }
 
@@ -278,55 +267,51 @@ fd_open(const char *path, nfs_fh3 nfh, int kind)
  * close a file descriptor
  * returns error number from real close() if applicable
  */
-int
-fd_close(int fd, int kind, int really_close)
+int fd_close(int fd, int kind, int really_close)
 {
     int idx;
 
     idx = idx_by_fd(fd, kind);
     if (idx != -1) {
-        /* update usage time of cache entry */
-        fd_cache[idx].use = fd_cache_next();
+	/* update usage time of cache entry */
+	fd_cache[idx].use = fd_cache_next();
 
-        if (really_close == FD_CLOSE_REAL)
-            /* delete entry on real close, will close() fd */
-            return fd_cache_del(idx);
-        else
-            return 0;
-    }
-    else
-        /* not in cache, close directly */
-        return close(fd);
+	if (really_close == FD_CLOSE_REAL)
+	    /* delete entry on real close, will close() fd */
+	    return fd_cache_del(idx);
+	else
+	    return 0;
+    } else
+	/* not in cache, close directly */
+	return close(fd);
 }
 
 /*
  * sync file descriptor data to disk
  */
-int
-fd_sync(nfs_fh3 nfh)
+int fd_sync(nfs_fh3 nfh)
 {
     int idx;
     unfs3_fh_t *fh = (void *) nfh.data.data_val;
 
     idx = idx_by_fh(fh, FD_WRITE);
     if (idx != -1)
-        /* delete entry, will fsync() and close() the fd */
-        return fd_cache_del(idx);
+	/* delete entry, will fsync() and close() the fd */
+	return fd_cache_del(idx);
     else
-        return 0;
+	return 0;
 }
 
 /*
  * purge/shutdown the cache
  */
-void
-fd_cache_purge(void)
+void fd_cache_purge(void)
 {
     int i;
 
     /* close any open file descriptors we still have */
     for (i = 0; i < FD_ENTRIES; i++) {
-        if (fd_cache[i].fd != -1)
-            fd_cache_del(i);
+	if (fd_cache[i].fd != -1)
+	    fd_cache_del(i);
     }
 }

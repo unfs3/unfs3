@@ -1,3 +1,4 @@
+
 /*
  * UNFS3 NFS protocol procedures
  * (C) 2004, Pascal Schmidt <der.eremit@email.de>
@@ -8,8 +9,8 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <sys/param.h>          /* needed for statfs() on NetBSD */
-#include <sys/mount.h>          /* dito */
+#include <sys/param.h>		       /* needed for statfs() on NetBSD */
+#include <sys/mount.h>		       /* dito */
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <rpc/rpc.h>
@@ -57,46 +58,44 @@
 /*
  * cat an object name onto a path, checking for illegal input
  */
-nfsstat3
-cat_name(const char *path, const char *name, char *result)
+nfsstat3 cat_name(const char *path, const char *name, char *result)
 {
     if (!path)
-        return NFS3ERR_STALE;
+	return NFS3ERR_STALE;
 
     if (!name)
-        return NFS3ERR_ACCES;
+	return NFS3ERR_ACCES;
 
     if (name[0] == 0 || strchr(name, '/') != NULL)
-        return NFS3ERR_ACCES;
+	return NFS3ERR_ACCES;
 
     if (strlen(path) + strlen(name) + 2 > NFS_MAXPATHLEN)
-        return NFS3ERR_NAMETOOLONG;
+	return NFS3ERR_NAMETOOLONG;
 
     sprintf(result, "%s/%s", path, name);
     return NFS3_OK;
 }
 
-void *
-nfsproc3_null_3_svc(U(void *argp), U(struct svc_req *rqstp))
+void *nfsproc3_null_3_svc(U(void *argp), U(struct svc_req *rqstp))
 {
     static void *result = NULL;
 
     return &result;
 }
 
-GETATTR3res *
-nfsproc3_getattr_3_svc(GETATTR3args * argp, struct svc_req * rqstp)
+GETATTR3res *nfsproc3_getattr_3_svc(GETATTR3args * argp,
+				    struct svc_req * rqstp)
 {
     static GETATTR3res result;
     char *path;
     post_op_attr post;
 
     PREP(path, argp->object)
-        post = get_post_cached();
+	post = get_post_cached();
 
     result.status = NFS3_OK;
     result.GETATTR3res_u.resok.obj_attributes =
-        post.post_op_attr_u.attributes;
+	post.post_op_attr_u.attributes;
 
     return &result;
 }
@@ -104,35 +103,34 @@ nfsproc3_getattr_3_svc(GETATTR3args * argp, struct svc_req * rqstp)
 /*
  * check ctime guard for SETATTR procedure
  */
-static nfsstat3
-in_sync(sattrguard3 guard, pre_op_attr pre)
+static nfsstat3 in_sync(sattrguard3 guard, pre_op_attr pre)
 {
     if (!pre.attributes_follow)
-        return NFS3ERR_STALE;
+	return NFS3ERR_STALE;
 
     if (!guard.check)
-        return NFS3_OK;
+	return NFS3_OK;
 
     if (guard.sattrguard3_u.obj_ctime.seconds !=
-        pre.pre_op_attr_u.attributes.ctime.seconds)
-        return NFS3ERR_NOT_SYNC;
+	pre.pre_op_attr_u.attributes.ctime.seconds)
+	return NFS3ERR_NOT_SYNC;
 
     return NFS3_OK;
 }
 
-SETATTR3res *
-nfsproc3_setattr_3_svc(SETATTR3args * argp, struct svc_req * rqstp)
+SETATTR3res *nfsproc3_setattr_3_svc(SETATTR3args * argp,
+				    struct svc_req * rqstp)
 {
     static SETATTR3res result;
     pre_op_attr pre;
     char *path;
 
     PREP(path, argp->object)
-        pre = get_pre_cached();
+	pre = get_pre_cached();
     result.status = join(in_sync(argp->guard, pre), exports_rw());
 
     if (result.status == NFS3_OK)
-        result.status = set_attr(path, argp->object, argp->new_attributes);
+	result.status = set_attr(path, argp->object, argp->new_attributes);
 
     /* overlaps with resfail */
     result.SETATTR3res_u.resok.obj_wcc.before = pre;
@@ -141,8 +139,7 @@ nfsproc3_setattr_3_svc(SETATTR3args * argp, struct svc_req * rqstp)
     return &result;
 }
 
-LOOKUP3res *
-nfsproc3_lookup_3_svc(LOOKUP3args * argp, struct svc_req * rqstp)
+LOOKUP3res *nfsproc3_lookup_3_svc(LOOKUP3args * argp, struct svc_req * rqstp)
 {
     static LOOKUP3res result;
     unfs3_fh_t *fh;
@@ -153,29 +150,28 @@ nfsproc3_lookup_3_svc(LOOKUP3args * argp, struct svc_req * rqstp)
     uint32 gen;
 
     PREP(path, argp->what.dir)
-        result.status = cat_name(path, argp->what.name, obj);
+	result.status = cat_name(path, argp->what.name, obj);
 
     cluster_lookup(obj, rqstp, &result.status);
 
     if (result.status == NFS3_OK) {
-        res = lstat(obj, &buf);
-        if (res == -1)
-            result.status = lookup_err();
-        else {
-            gen = get_gen(buf, FD_NONE, obj);
-            fh = fh_extend(argp->what.dir, buf.st_dev, buf.st_ino, gen);
-            fh_cache_add(buf.st_dev, buf.st_ino, obj);
+	res = lstat(obj, &buf);
+	if (res == -1)
+	    result.status = lookup_err();
+	else {
+	    gen = get_gen(buf, FD_NONE, obj);
+	    fh = fh_extend(argp->what.dir, buf.st_dev, buf.st_ino, gen);
+	    fh_cache_add(buf.st_dev, buf.st_ino, obj);
 
-            if (fh) {
-                result.LOOKUP3res_u.resok.object.data.data_len = fh_len(fh);
-                result.LOOKUP3res_u.resok.object.data.data_val = (char *) fh;
-                result.LOOKUP3res_u.resok.obj_attributes = get_post_buf(buf);
-            }
-            else {
-                /* path was too long */
-                result.status = NFS3ERR_NAMETOOLONG;
-            }
-        }
+	    if (fh) {
+		result.LOOKUP3res_u.resok.object.data.data_len = fh_len(fh);
+		result.LOOKUP3res_u.resok.object.data.data_val = (char *) fh;
+		result.LOOKUP3res_u.resok.obj_attributes = get_post_buf(buf);
+	    } else {
+		/* path was too long */
+		result.status = NFS3ERR_NAMETOOLONG;
+	    }
+	}
     }
 
     /* overlaps with resfail */
@@ -184,8 +180,7 @@ nfsproc3_lookup_3_svc(LOOKUP3args * argp, struct svc_req * rqstp)
     return &result;
 }
 
-ACCESS3res *
-nfsproc3_access_3_svc(ACCESS3args * argp, struct svc_req * rqstp)
+ACCESS3res *nfsproc3_access_3_svc(ACCESS3args * argp, struct svc_req * rqstp)
 {
     static ACCESS3res result;
     char *path;
@@ -194,48 +189,48 @@ nfsproc3_access_3_svc(ACCESS3args * argp, struct svc_req * rqstp)
     int access = 0;
 
     PREP(path, argp->object)
-        post = get_post_cached();
+	post = get_post_cached();
     mode = post.post_op_attr_u.attributes.mode;
 
     /* owner permissions */
     if (is_owner(post.post_op_attr_u.attributes.uid, rqstp)) {
-        if (mode & S_IRUSR)
-            access |= ACCESS3_READ;
-        if (mode & S_IWUSR)
-            access |= ACCESS3_MODIFY | ACCESS3_EXTEND;
-        if (mode & S_IXUSR)
-            access |= ACCESS3_EXECUTE;
+	if (mode & S_IRUSR)
+	    access |= ACCESS3_READ;
+	if (mode & S_IWUSR)
+	    access |= ACCESS3_MODIFY | ACCESS3_EXTEND;
+	if (mode & S_IXUSR)
+	    access |= ACCESS3_EXECUTE;
     }
 
     /* group permissions */
     if (has_group(post.post_op_attr_u.attributes.gid, rqstp)) {
-        if (mode & S_IRGRP)
-            access |= ACCESS3_READ;
-        if (mode & S_IWGRP)
-            access |= ACCESS3_MODIFY | ACCESS3_EXTEND;
-        if (mode & S_IXGRP)
-            access |= ACCESS3_EXECUTE;
+	if (mode & S_IRGRP)
+	    access |= ACCESS3_READ;
+	if (mode & S_IWGRP)
+	    access |= ACCESS3_MODIFY | ACCESS3_EXTEND;
+	if (mode & S_IXGRP)
+	    access |= ACCESS3_EXECUTE;
     }
 
     /* other permissions */
     if (mode & S_IROTH)
-        access |= ACCESS3_READ;
+	access |= ACCESS3_READ;
     if (mode & S_IWOTH)
-        access |= ACCESS3_MODIFY | ACCESS3_EXTEND;
+	access |= ACCESS3_MODIFY | ACCESS3_EXTEND;
     if (mode & S_IXOTH)
-        access |= ACCESS3_EXECUTE;
+	access |= ACCESS3_EXECUTE;
 
     /* root is allowed everything */
     if (get_uid(rqstp) == 0)
-        access |= ACCESS3_READ | ACCESS3_MODIFY | ACCESS3_EXTEND;
+	access |= ACCESS3_READ | ACCESS3_MODIFY | ACCESS3_EXTEND;
 
     /* adjust if directory */
     if (post.post_op_attr_u.attributes.type == NF3DIR) {
-        if (access & ACCESS3_READ)
-            access |= ACCESS3_LOOKUP;
-        if (access & ACCESS3_MODIFY)
-            access |= ACCESS3_DELETE;
-        access &= ~ACCESS3_EXECUTE;
+	if (access & ACCESS3_READ)
+	    access |= ACCESS3_LOOKUP;
+	if (access & ACCESS3_MODIFY)
+	    access |= ACCESS3_DELETE;
+	access &= ~ACCESS3_EXECUTE;
     }
 
     result.status = NFS3_OK;
@@ -245,8 +240,8 @@ nfsproc3_access_3_svc(ACCESS3args * argp, struct svc_req * rqstp)
     return &result;
 }
 
-READLINK3res
-    * nfsproc3_readlink_3_svc(READLINK3args * argp, struct svc_req * rqstp)
+READLINK3res * nfsproc3_readlink_3_svc(READLINK3args * argp,
+				       struct svc_req * rqstp)
 {
     static READLINK3res result;
     char *path;
@@ -255,15 +250,15 @@ READLINK3res
 
     PREP(path, argp->symlink)
 
-        res = readlink(path, buf, NFS_MAXPATHLEN - 1);
+	res = readlink(path, buf, NFS_MAXPATHLEN - 1);
     if (res == -1)
-        result.status = readlink_err();
+	result.status = readlink_err();
     else {
-        /* readlink does not NULL-terminate */
-        buf[res] = 0;
+	/* readlink does not NULL-terminate */
+	buf[res] = 0;
 
-        result.status = NFS3_OK;
-        result.READLINK3res_u.resok.data = buf;
+	result.status = NFS3_OK;
+	result.READLINK3res_u.resok.data = buf;
     }
 
     /* overlaps with resfail */
@@ -272,8 +267,7 @@ READLINK3res
     return &result;
 }
 
-READ3res *
-nfsproc3_read_3_svc(READ3args * argp, struct svc_req * rqstp)
+READ3res *nfsproc3_read_3_svc(READ3args * argp, struct svc_req * rqstp)
 {
     static READ3res result;
     char *path;
@@ -282,56 +276,53 @@ nfsproc3_read_3_svc(READ3args * argp, struct svc_req * rqstp)
     static char buf[8192 + 1];
 
     PREP(path, argp->file)
-        result.status = is_reg();
+	result.status = is_reg();
 
     /* if bigger than rtmax, truncate length */
     if (argp->count > 8192)
-        argp->count = 8192;
+	argp->count = 8192;
 
     if (result.status == NFS3_OK) {
-        fd = fd_open(path, argp->file, FD_READ);
-        if (fd != -1) {
-            where = lseek(fd, argp->offset, SEEK_SET);
-            if (where == (int64) argp->offset) {
+	fd = fd_open(path, argp->file, FD_READ);
+	if (fd != -1) {
+	    where = lseek(fd, argp->offset, SEEK_SET);
+	    if (where == (int64) argp->offset) {
 
-                /* read one more to check for eof */
-                res = read(fd, buf, argp->count + 1);
+		/* read one more to check for eof */
+		res = read(fd, buf, argp->count + 1);
 
-                /* eof if we could not read one more */
-                result.READ3res_u.resok.eof = (res <= (int64) argp->count);
+		/* eof if we could not read one more */
+		result.READ3res_u.resok.eof = (res <= (int64) argp->count);
 
-                /* close for real when hitting eof */
-                if (result.READ3res_u.resok.eof)
-                    fd_close(fd, FD_READ, FD_CLOSE_REAL);
-                else {
-                    fd_close(fd, FD_READ, FD_CLOSE_VIRT);
-                    res--;
-                }
+		/* close for real when hitting eof */
+		if (result.READ3res_u.resok.eof)
+		    fd_close(fd, FD_READ, FD_CLOSE_REAL);
+		else {
+		    fd_close(fd, FD_READ, FD_CLOSE_VIRT);
+		    res--;
+		}
 
-                if (res >= 0) {
-                    result.READ3res_u.resok.count = res;
-                    result.READ3res_u.resok.data.data_len = res;
-                    result.READ3res_u.resok.data.data_val = buf;
-                }
-                else {
-                    /* error during read() */
+		if (res >= 0) {
+		    result.READ3res_u.resok.count = res;
+		    result.READ3res_u.resok.data.data_len = res;
+		    result.READ3res_u.resok.data.data_val = buf;
+		} else {
+		    /* error during read() */
 
-                    /* EINVAL means unreadable object */
-                    if (errno == EINVAL)
-                        result.status = NFS3ERR_INVAL;
-                    else
-                        result.status = NFS3ERR_IO;
-                }
-            }
-            else {
-                /* could not seek to file position */
-                fd_close(fd, FD_READ, FD_CLOSE_REAL);
-                result.status = NFS3ERR_IO;
-            }
-        }
-        else
-            /* opening for read failed */
-            result.status = read_err();
+		    /* EINVAL means unreadable object */
+		    if (errno == EINVAL)
+			result.status = NFS3ERR_INVAL;
+		    else
+			result.status = NFS3ERR_IO;
+		}
+	    } else {
+		/* could not seek to file position */
+		fd_close(fd, FD_READ, FD_CLOSE_REAL);
+		result.status = NFS3ERR_IO;
+	    }
+	} else
+	    /* opening for read failed */
+	    result.status = read_err();
     }
 
     /* overlaps with resfail */
@@ -340,8 +331,7 @@ nfsproc3_read_3_svc(READ3args * argp, struct svc_req * rqstp)
     return &result;
 }
 
-WRITE3res *
-nfsproc3_write_3_svc(WRITE3args * argp, struct svc_req * rqstp)
+WRITE3res *nfsproc3_write_3_svc(WRITE3args * argp, struct svc_req * rqstp)
 {
     static WRITE3res result;
     char *path;
@@ -349,45 +339,42 @@ nfsproc3_write_3_svc(WRITE3args * argp, struct svc_req * rqstp)
     off_t where;
 
     PREP(path, argp->file)
-        result.status = join(is_reg(), exports_rw());
+	result.status = join(is_reg(), exports_rw());
 
     if (result.status == NFS3_OK) {
-        fd = fd_open(path, argp->file, FD_WRITE);
-        if (fd != -1) {
-            where = lseek(fd, argp->offset, SEEK_SET);
-            if (where == (int64) argp->offset) {
-                res = write(fd, argp->data.data_val, argp->data.data_len);
+	fd = fd_open(path, argp->file, FD_WRITE);
+	if (fd != -1) {
+	    where = lseek(fd, argp->offset, SEEK_SET);
+	    if (where == (int64) argp->offset) {
+		res = write(fd, argp->data.data_val, argp->data.data_len);
 
-                /* close for real if not UNSTABLE write */
-                if (argp->stable == UNSTABLE)
-                    fd_close(fd, FD_WRITE, FD_CLOSE_VIRT);
-                else
-                    fd_close(fd, FD_WRITE, FD_CLOSE_REAL);
+		/* close for real if not UNSTABLE write */
+		if (argp->stable == UNSTABLE)
+		    fd_close(fd, FD_WRITE, FD_CLOSE_VIRT);
+		else
+		    fd_close(fd, FD_WRITE, FD_CLOSE_REAL);
 
-                /* we always do fsync(), never fdatasync() */
-                if (argp->stable == DATA_SYNC)
-                    argp->stable = FILE_SYNC;
+		/* we always do fsync(), never fdatasync() */
+		if (argp->stable == DATA_SYNC)
+		    argp->stable = FILE_SYNC;
 
-                if (res != -1) {
-                    result.WRITE3res_u.resok.count = res;
-                    result.WRITE3res_u.resok.committed = argp->stable;
-                    memcpy(result.WRITE3res_u.resok.verf, wverf,
-                           NFS3_WRITEVERFSIZE);
-                }
-                else {
-                    /* error during write */
-                    result.status = write_write_err();
-                }
-            }
-            else {
-                /* could not seek to file position */
-                fd_close(fd, FD_WRITE, FD_CLOSE_REAL);
-                result.status = NFS3ERR_IO;
-            }
-        }
-        else
-            /* could not open for writing */
-            result.status = write_open_err();
+		if (res != -1) {
+		    result.WRITE3res_u.resok.count = res;
+		    result.WRITE3res_u.resok.committed = argp->stable;
+		    memcpy(result.WRITE3res_u.resok.verf, wverf,
+			   NFS3_WRITEVERFSIZE);
+		} else {
+		    /* error during write */
+		    result.status = write_write_err();
+		}
+	    } else {
+		/* could not seek to file position */
+		fd_close(fd, FD_WRITE, FD_CLOSE_REAL);
+		result.status = NFS3ERR_IO;
+	    }
+	} else
+	    /* could not open for writing */
+	    result.status = write_open_err();
     }
 
     /* overlaps with resfail */
@@ -397,8 +384,7 @@ nfsproc3_write_3_svc(WRITE3args * argp, struct svc_req * rqstp)
     return &result;
 }
 
-CREATE3res *
-nfsproc3_create_3_svc(CREATE3args * argp, struct svc_req * rqstp)
+CREATE3res *nfsproc3_create_3_svc(CREATE3args * argp, struct svc_req * rqstp)
 {
     static CREATE3res result;
     char *path;
@@ -410,50 +396,47 @@ nfsproc3_create_3_svc(CREATE3args * argp, struct svc_req * rqstp)
     int flags = O_RDWR | O_CREAT | O_TRUNC | O_NONBLOCK;
 
     PREP(path, argp->where.dir)
-        result.status = join(cat_name(path, argp->where.name, obj),
-                             exports_rw());
+	result.status =
+	join(cat_name(path, argp->where.name, obj), exports_rw());
 
     cluster_create(obj, rqstp, &result.status);
 
     /* GUARDED maps to Unix exclusive create */
     if (argp->how.mode == GUARDED)
-        flags = flags | O_EXCL;
+	flags = flags | O_EXCL;
 
     if (argp->how.mode != EXCLUSIVE) {
-        new_attr = argp->how.createhow3_u.obj_attributes;
-        result.status = join(result.status, atomic_attr(new_attr));
+	new_attr = argp->how.createhow3_u.obj_attributes;
+	result.status = join(result.status, atomic_attr(new_attr));
     }
 
     if (result.status == NFS3_OK) {
-        if (argp->how.mode != EXCLUSIVE) {
-            fd = open(obj, flags, create_mode(new_attr));
+	if (argp->how.mode != EXCLUSIVE) {
+	    fd = open(obj, flags, create_mode(new_attr));
 
-            if (fd != -1) {
-                res = fstat(fd, &buf);
-                if (res == -1) {
-                    /* could not stat our own file?! */
-                    close(fd);
-                    result.status = NFS3ERR_IO;
-                }
-                else {
-                    gen = get_gen(buf, fd, obj);
-                    fh_cache_add(buf.st_dev, buf.st_ino, obj);
-                    close(fd);
+	    if (fd != -1) {
+		res = fstat(fd, &buf);
+		if (res == -1) {
+		    /* could not stat our own file?! */
+		    close(fd);
+		    result.status = NFS3ERR_IO;
+		} else {
+		    gen = get_gen(buf, fd, obj);
+		    fh_cache_add(buf.st_dev, buf.st_ino, obj);
+		    close(fd);
 
-                    result.CREATE3res_u.resok.obj =
-                        fh_extend_post(argp->where.dir, buf.st_dev,
-                                       buf.st_ino, gen);
-                    result.CREATE3res_u.resok.obj_attributes =
-                        get_post_buf(buf);
-                }
-            }
-            else
-                /* creation via open() failed */
-                result.status = create_err();
-        }
-        else
-            /* EXCLUSIVE create */
-            result.status = NFS3ERR_NOTSUPP;
+		    result.CREATE3res_u.resok.obj =
+			fh_extend_post(argp->where.dir, buf.st_dev,
+				       buf.st_ino, gen);
+		    result.CREATE3res_u.resok.obj_attributes =
+			get_post_buf(buf);
+		}
+	    } else
+		/* creation via open() failed */
+		result.status = create_err();
+	} else
+	    /* EXCLUSIVE create */
+	    result.status = NFS3ERR_NOTSUPP;
     }
 
     /* overlaps with resfail */
@@ -463,8 +446,7 @@ nfsproc3_create_3_svc(CREATE3args * argp, struct svc_req * rqstp)
     return &result;
 }
 
-MKDIR3res *
-nfsproc3_mkdir_3_svc(MKDIR3args * argp, struct svc_req * rqstp)
+MKDIR3res *nfsproc3_mkdir_3_svc(MKDIR3args * argp, struct svc_req * rqstp)
 {
     static MKDIR3res result;
     char *path;
@@ -474,21 +456,22 @@ nfsproc3_mkdir_3_svc(MKDIR3args * argp, struct svc_req * rqstp)
     int res;
 
     PREP(path, argp->where.dir)
-        pre = get_pre_cached();
-    result.status = join3(cat_name(path, argp->where.name, obj),
-                          atomic_attr(argp->attributes), exports_rw());
+	pre = get_pre_cached();
+    result.status =
+	join3(cat_name(path, argp->where.name, obj),
+	      atomic_attr(argp->attributes), exports_rw());
 
     cluster_create(obj, rqstp, &result.status);
 
     if (result.status == NFS3_OK) {
-        res = mkdir(obj, create_mode(argp->attributes));
-        if (res == -1)
-            result.status = mkdir_err();
-        else {
-            result.MKDIR3res_u.resok.obj =
-                fh_extend_type(argp->where.dir, obj, S_IFDIR);
-            result.MKDIR3res_u.resok.obj_attributes = get_post_cached();
-        }
+	res = mkdir(obj, create_mode(argp->attributes));
+	if (res == -1)
+	    result.status = mkdir_err();
+	else {
+	    result.MKDIR3res_u.resok.obj =
+		fh_extend_type(argp->where.dir, obj, S_IFDIR);
+	    result.MKDIR3res_u.resok.obj_attributes = get_post_cached();
+	}
     }
 
     post = get_post_attr(path, argp->where.dir);
@@ -500,8 +483,8 @@ nfsproc3_mkdir_3_svc(MKDIR3args * argp, struct svc_req * rqstp)
     return &result;
 }
 
-SYMLINK3res *
-nfsproc3_symlink_3_svc(SYMLINK3args * argp, struct svc_req * rqstp)
+SYMLINK3res *nfsproc3_symlink_3_svc(SYMLINK3args * argp,
+				    struct svc_req * rqstp)
 {
     static SYMLINK3res result;
     char *path;
@@ -512,32 +495,33 @@ nfsproc3_symlink_3_svc(SYMLINK3args * argp, struct svc_req * rqstp)
     mode_t new_mode;
 
     PREP(path, argp->where.dir)
-        pre = get_pre_cached();
-    result.status = join3(cat_name(path, argp->where.name, obj),
-                          atomic_attr(argp->symlink.symlink_attributes),
-                          exports_rw());
+	pre = get_pre_cached();
+    result.status =
+	join3(cat_name(path, argp->where.name, obj),
+	      atomic_attr(argp->symlink.symlink_attributes), exports_rw());
 
     cluster_create(obj, rqstp, &result.status);
 
     if (argp->symlink.symlink_attributes.mode.set_it == TRUE)
-        new_mode = create_mode(argp->symlink.symlink_attributes);
+	new_mode = create_mode(argp->symlink.symlink_attributes);
     else {
-        /* default rwxrwxrwx */
-        new_mode = S_IRUSR | S_IWUSR | S_IXUSR |
-            S_IRGRP | S_IWGRP | S_IXGRP | S_IROTH | S_IWOTH | S_IXOTH;
+	/* default rwxrwxrwx */
+	new_mode =
+	    S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IWGRP | S_IXGRP |
+	    S_IROTH | S_IWOTH | S_IXOTH;
     }
 
     if (result.status == NFS3_OK) {
-        umask(~new_mode);
-        res = symlink(argp->symlink.symlink_data, obj);
-        umask(0);
-        if (res == -1)
-            result.status = symlink_err();
-        else {
-            result.SYMLINK3res_u.resok.obj =
-                fh_extend_type(argp->where.dir, obj, S_IFLNK);
-            result.SYMLINK3res_u.resok.obj_attributes = get_post_cached();
-        }
+	umask(~new_mode);
+	res = symlink(argp->symlink.symlink_data, obj);
+	umask(0);
+	if (res == -1)
+	    result.status = symlink_err();
+	else {
+	    result.SYMLINK3res_u.resok.obj =
+		fh_extend_type(argp->where.dir, obj, S_IFLNK);
+	    result.SYMLINK3res_u.resok.obj_attributes = get_post_cached();
+	}
     }
 
     post = get_post_attr(path, argp->where.dir);
@@ -552,51 +536,50 @@ nfsproc3_symlink_3_svc(SYMLINK3args * argp, struct svc_req * rqstp)
 /*
  * check and process arguments to MKNOD procedure
  */
-static nfsstat3
-mknod_args(mknoddata3 what, const char *obj, mode_t * mode, dev_t * dev)
+static nfsstat3 mknod_args(mknoddata3 what, const char *obj, mode_t * mode,
+			   dev_t * dev)
 {
     sattr3 attr;
 
     /* determine attributes */
     switch (what.type) {
-    case NF3REG:
-    case NF3DIR:
-    case NF3LNK:
-        return NFS3ERR_INVAL;
-    case NF3SOCK:
-        if (strlen(obj) + 1 > UNIX_PATH_MAX)
-            return NFS3ERR_NAMETOOLONG;
-        /* fall thru */
-    case NF3FIFO:
-        attr = what.mknoddata3_u.pipe_attributes;
-        break;
-    case NF3BLK:
-    case NF3CHR:
-        attr = what.mknoddata3_u.device.dev_attributes;
-        *dev = (what.mknoddata3_u.device.spec.specdata1 << 8)
-            + what.mknoddata3_u.device.spec.specdata2;
-        break;
+	case NF3REG:
+	case NF3DIR:
+	case NF3LNK:
+	    return NFS3ERR_INVAL;
+	case NF3SOCK:
+	    if (strlen(obj) + 1 > UNIX_PATH_MAX)
+		return NFS3ERR_NAMETOOLONG;
+	    /* fall thru */
+	case NF3FIFO:
+	    attr = what.mknoddata3_u.pipe_attributes;
+	    break;
+	case NF3BLK:
+	case NF3CHR:
+	    attr = what.mknoddata3_u.device.dev_attributes;
+	    *dev = (what.mknoddata3_u.device.spec.specdata1 << 8)
+		+ what.mknoddata3_u.device.spec.specdata2;
+	    break;
     }
 
     *mode = create_mode(attr);
 
     /* adjust mode for creation of device special files */
     switch (what.type) {
-    case NF3CHR:
-        *mode |= S_IFCHR;
-        break;
-    case NF3REG:
-        *mode |= S_IFREG;
-        break;
-    default:
-        break;
+	case NF3CHR:
+	    *mode |= S_IFCHR;
+	    break;
+	case NF3REG:
+	    *mode |= S_IFREG;
+	    break;
+	default:
+	    break;
     }
 
     return atomic_attr(attr);
 }
 
-MKNOD3res *
-nfsproc3_mknod_3_svc(MKNOD3args * argp, struct svc_req * rqstp)
+MKNOD3res *nfsproc3_mknod_3_svc(MKNOD3args * argp, struct svc_req * rqstp)
 {
     static MKNOD3res result;
     char *path;
@@ -609,40 +592,40 @@ nfsproc3_mknod_3_svc(MKNOD3args * argp, struct svc_req * rqstp)
     struct sockaddr_un addr;
 
     PREP(path, argp->where.dir)
-        pre = get_pre_cached();
-    result.status = join3(cat_name(path, argp->where.name, obj),
-                          mknod_args(argp->what, obj, &new_mode, &dev),
-                          exports_rw());
+	pre = get_pre_cached();
+    result.status =
+	join3(cat_name(path, argp->where.name, obj),
+	      mknod_args(argp->what, obj, &new_mode, &dev), exports_rw());
 
     cluster_create(obj, rqstp, &result.status);
 
     if (result.status == NFS3_OK) {
-        if (argp->what.type == NF3CHR || argp->what.type == NF3BLK)
-            res = mknod(obj, new_mode, dev);    /* device */
-        else if (argp->what.type == NF3FIFO)
-            res = mkfifo(obj, new_mode);        /* FIFO */
-        else {
-            sock = socket(PF_UNIX, SOCK_STREAM, 0);     /* socket */
-            addr.sun_family = AF_UNIX;
-            strcpy(addr.sun_path, obj);
-            res = sock;
-            if (res != -1) {
-                umask(~new_mode);
-                res = bind(res, (struct sockaddr *) &addr,
-                           sizeof(addr.sun_family) + strlen(addr.sun_path));
-                umask(0);
-            }
-        }
+	if (argp->what.type == NF3CHR || argp->what.type == NF3BLK)
+	    res = mknod(obj, new_mode, dev);	/* device */
+	else if (argp->what.type == NF3FIFO)
+	    res = mkfifo(obj, new_mode);	/* FIFO */
+	else {
+	    sock = socket(PF_UNIX, SOCK_STREAM, 0);	/* socket */
+	    addr.sun_family = AF_UNIX;
+	    strcpy(addr.sun_path, obj);
+	    res = sock;
+	    if (res != -1) {
+		umask(~new_mode);
+		res =
+		    bind(res, (struct sockaddr *) &addr,
+			 sizeof(addr.sun_family) + strlen(addr.sun_path));
+		umask(0);
+	    }
+	}
 
-        if (res == -1) {
-            result.status = mknod_err();
-        }
-        else {
-            result.MKNOD3res_u.resok.obj =
-                fh_extend_type(argp->where.dir, obj,
-                               type_to_mode(argp->what.type));
-            result.MKNOD3res_u.resok.obj_attributes = get_post_cached();
-        }
+	if (res == -1) {
+	    result.status = mknod_err();
+	} else {
+	    result.MKNOD3res_u.resok.obj =
+		fh_extend_type(argp->where.dir, obj,
+			       type_to_mode(argp->what.type));
+	    result.MKNOD3res_u.resok.obj_attributes = get_post_cached();
+	}
     }
 
     post = get_post_attr(path, argp->where.dir);
@@ -654,8 +637,7 @@ nfsproc3_mknod_3_svc(MKNOD3args * argp, struct svc_req * rqstp)
     return &result;
 }
 
-REMOVE3res *
-nfsproc3_remove_3_svc(REMOVE3args * argp, struct svc_req * rqstp)
+REMOVE3res *nfsproc3_remove_3_svc(REMOVE3args * argp, struct svc_req * rqstp)
 {
     static REMOVE3res result;
     char *path;
@@ -663,15 +645,15 @@ nfsproc3_remove_3_svc(REMOVE3args * argp, struct svc_req * rqstp)
     int res;
 
     PREP(path, argp->object.dir)
-        result.status = join(cat_name(path, argp->object.name, obj),
-                             exports_rw());
+	result.status =
+	join(cat_name(path, argp->object.name, obj), exports_rw());
 
     cluster_lookup(obj, rqstp, &result.status);
 
     if (result.status == NFS3_OK) {
-        res = remove(obj);
-        if (res == -1)
-            result.status = remove_err();
+	res = remove(obj);
+	if (res == -1)
+	    result.status = remove_err();
     }
 
     /* overlaps with resfail */
@@ -681,8 +663,7 @@ nfsproc3_remove_3_svc(REMOVE3args * argp, struct svc_req * rqstp)
     return &result;
 }
 
-RMDIR3res *
-nfsproc3_rmdir_3_svc(RMDIR3args * argp, struct svc_req * rqstp)
+RMDIR3res *nfsproc3_rmdir_3_svc(RMDIR3args * argp, struct svc_req * rqstp)
 {
     static RMDIR3res result;
     char *path;
@@ -690,15 +671,15 @@ nfsproc3_rmdir_3_svc(RMDIR3args * argp, struct svc_req * rqstp)
     int res;
 
     PREP(path, argp->object.dir)
-        result.status = join(cat_name(path, argp->object.name, obj),
-                             exports_rw());
+	result.status =
+	join(cat_name(path, argp->object.name, obj), exports_rw());
 
     cluster_lookup(obj, rqstp, &result.status);
 
     if (result.status == NFS3_OK) {
-        res = rmdir(obj);
-        if (res == -1)
-            result.status = rmdir_err();
+	res = rmdir(obj);
+	if (res == -1)
+	    result.status = rmdir_err();
     }
 
     /* overlaps with resfail */
@@ -708,8 +689,7 @@ nfsproc3_rmdir_3_svc(RMDIR3args * argp, struct svc_req * rqstp)
     return &result;
 }
 
-RENAME3res *
-nfsproc3_rename_3_svc(RENAME3args * argp, struct svc_req * rqstp)
+RENAME3res *nfsproc3_rename_3_svc(RENAME3args * argp, struct svc_req * rqstp)
 {
     static RENAME3res result;
     char *from;
@@ -721,25 +701,26 @@ nfsproc3_rename_3_svc(RENAME3args * argp, struct svc_req * rqstp)
     int res;
 
     PREP(from, argp->from.dir)
-        pre = get_pre_cached();
-    result.status = join(cat_name(from, argp->from.name, from_obj),
-                         exports_rw());
+	pre = get_pre_cached();
+    result.status =
+	join(cat_name(from, argp->from.name, from_obj), exports_rw());
 
     cluster_lookup(from_obj, rqstp, &result.status);
 
     to = fh_decomp(argp->to.dir);
 
     if (result.status == NFS3_OK) {
-        result.status = join(cat_name(to, argp->to.name, to_obj),
-                             exports_compat(to, rqstp));
+	result.status =
+	    join(cat_name(to, argp->to.name, to_obj),
+		 exports_compat(to, rqstp));
 
-        cluster_create(to_obj, rqstp, &result.status);
+	cluster_create(to_obj, rqstp, &result.status);
 
-        if (result.status == NFS3_OK) {
-            res = rename(from_obj, to_obj);
-            if (res == -1)
-                result.status = rename_err();
-        }
+	if (result.status == NFS3_OK) {
+	    res = rename(from_obj, to_obj);
+	    if (res == -1)
+		result.status = rename_err();
+	}
     }
 
     post = get_post_attr(from, argp->from.dir);
@@ -753,8 +734,7 @@ nfsproc3_rename_3_svc(RENAME3args * argp, struct svc_req * rqstp)
     return &result;
 }
 
-LINK3res *
-nfsproc3_link_3_svc(LINK3args * argp, struct svc_req * rqstp)
+LINK3res *nfsproc3_link_3_svc(LINK3args * argp, struct svc_req * rqstp)
 {
     static LINK3res result;
     char *path, *old;
@@ -764,7 +744,7 @@ nfsproc3_link_3_svc(LINK3args * argp, struct svc_req * rqstp)
     int res;
 
     PREP(path, argp->link.dir)
-        pre = get_pre_cached();
+	pre = get_pre_cached();
     result.status = join(cat_name(path, argp->link.name, obj), exports_rw());
 
     cluster_create(obj, rqstp, &result.status);
@@ -772,16 +752,15 @@ nfsproc3_link_3_svc(LINK3args * argp, struct svc_req * rqstp)
     old = fh_decomp(argp->file);
 
     if (old && result.status == NFS3_OK) {
-        result.status = exports_compat(old, rqstp);
+	result.status = exports_compat(old, rqstp);
 
-        if (result.status == NFS3_OK) {
-            res = link(old, obj);
-            if (res == -1)
-                result.status = link_err();
-        }
-    }
-    else if (!old)
-        result.status = NFS3ERR_STALE;
+	if (result.status == NFS3_OK) {
+	    res = link(old, obj);
+	    if (res == -1)
+		result.status = link_err();
+	}
+    } else if (!old)
+	result.status = NFS3ERR_STALE;
 
     post = get_post_attr(path, argp->link.dir);
 
@@ -793,27 +772,26 @@ nfsproc3_link_3_svc(LINK3args * argp, struct svc_req * rqstp)
     return &result;
 }
 
-READDIR3res *
-nfsproc3_readdir_3_svc(READDIR3args * argp, struct svc_req * rqstp)
+READDIR3res *nfsproc3_readdir_3_svc(READDIR3args * argp,
+				    struct svc_req * rqstp)
 {
     static READDIR3res result;
     char *path;
 
     PREP(path, argp->dir)
 
-        result = read_dir(path, argp->cookie, argp->cookieverf, argp->count);
+	result = read_dir(path, argp->cookie, argp->cookieverf, argp->count);
     result.READDIR3res_u.resok.dir_attributes = get_post_stat(path);
 
     return &result;
 }
 
-READDIRPLUS3res
-    * nfsproc3_readdirplus_3_svc(U(READDIRPLUS3args * argp),
-                                 U(struct svc_req * rqstp))
+READDIRPLUS3res * nfsproc3_readdirplus_3_svc(U(READDIRPLUS3args * argp),
+					     U(struct svc_req * rqstp))
 {
     static READDIRPLUS3res result;
 
-    /*
+    /* 
      * we don't do READDIRPLUS since it involves filehandle and
      * attribute getting which is impossible to do atomically
      * from user-space
@@ -824,8 +802,7 @@ READDIRPLUS3res
     return &result;
 }
 
-FSSTAT3res *
-nfsproc3_fsstat_3_svc(FSSTAT3args * argp, struct svc_req * rqstp)
+FSSTAT3res *nfsproc3_fsstat_3_svc(FSSTAT3args * argp, struct svc_req * rqstp)
 {
     static FSSTAT3res result;
     char *path;
@@ -834,39 +811,37 @@ nfsproc3_fsstat_3_svc(FSSTAT3args * argp, struct svc_req * rqstp)
 
     PREP(path, argp->fsroot)
 
-        /* overlaps with resfail */
-        result.FSSTAT3res_u.resok.obj_attributes = get_post_cached();
+	/* overlaps with resfail */
+	result.FSSTAT3res_u.resok.obj_attributes = get_post_cached();
 
     res = statvfs(path, &buf);
     if (res == -1) {
-        /* statvfs fell on its nose */
-        result.status = NFS3ERR_IO;
-    }
-    else {
-        result.status = NFS3_OK;
-        result.FSSTAT3res_u.resok.tbytes =
-            (uint64) buf.f_blocks * buf.f_bsize;
-        result.FSSTAT3res_u.resok.fbytes = (uint64) buf.f_bfree * buf.f_bsize;
-        result.FSSTAT3res_u.resok.abytes =
-            (uint64) buf.f_bavail * buf.f_bsize;
-        result.FSSTAT3res_u.resok.tfiles = buf.f_files;
-        result.FSSTAT3res_u.resok.ffiles = buf.f_ffree;
-        result.FSSTAT3res_u.resok.afiles = buf.f_ffree;
-        result.FSSTAT3res_u.resok.invarsec = 0;
+	/* statvfs fell on its nose */
+	result.status = NFS3ERR_IO;
+    } else {
+	result.status = NFS3_OK;
+	result.FSSTAT3res_u.resok.tbytes =
+	    (uint64) buf.f_blocks * buf.f_bsize;
+	result.FSSTAT3res_u.resok.fbytes = (uint64) buf.f_bfree * buf.f_bsize;
+	result.FSSTAT3res_u.resok.abytes =
+	    (uint64) buf.f_bavail * buf.f_bsize;
+	result.FSSTAT3res_u.resok.tfiles = buf.f_files;
+	result.FSSTAT3res_u.resok.ffiles = buf.f_ffree;
+	result.FSSTAT3res_u.resok.afiles = buf.f_ffree;
+	result.FSSTAT3res_u.resok.invarsec = 0;
     }
 
     return &result;
 }
 
-FSINFO3res *
-nfsproc3_fsinfo_3_svc(FSINFO3args * argp, struct svc_req * rqstp)
+FSINFO3res *nfsproc3_fsinfo_3_svc(FSINFO3args * argp, struct svc_req * rqstp)
 {
     static FSINFO3res result;
     char *path;
 
     PREP(path, argp->fsroot)
 
-        result.FSINFO3res_u.resok.obj_attributes = get_post_cached();
+	result.FSINFO3res_u.resok.obj_attributes = get_post_cached();
 
     result.status = NFS3_OK;
     result.FSINFO3res_u.resok.rtmax = 8192;
@@ -879,21 +854,21 @@ nfsproc3_fsinfo_3_svc(FSINFO3args * argp, struct svc_req * rqstp)
     result.FSINFO3res_u.resok.maxfilesize = ~0ULL;
     result.FSINFO3res_u.resok.time_delta.seconds = 1;
     result.FSINFO3res_u.resok.time_delta.nseconds = 0;
-    result.FSINFO3res_u.resok.properties = FSF3_LINK | FSF3_SYMLINK
-        | FSF3_HOMOGENEOUS | FSF3_CANSETTIME;
+    result.FSINFO3res_u.resok.properties =
+	FSF3_LINK | FSF3_SYMLINK | FSF3_HOMOGENEOUS | FSF3_CANSETTIME;
 
     return &result;
 }
 
-PATHCONF3res
-    * nfsproc3_pathconf_3_svc(PATHCONF3args * argp, struct svc_req * rqstp)
+PATHCONF3res * nfsproc3_pathconf_3_svc(PATHCONF3args * argp,
+				       struct svc_req * rqstp)
 {
     static PATHCONF3res result;
     char *path;
 
     PREP(path, argp->object)
 
-        result.PATHCONF3res_u.resok.obj_attributes = get_post_cached();
+	result.PATHCONF3res_u.resok.obj_attributes = get_post_cached();
 
     result.status = NFS3_OK;
     result.PATHCONF3res_u.resok.linkmax = 0xFFFFFFFF;
@@ -906,23 +881,22 @@ PATHCONF3res
     return &result;
 }
 
-COMMIT3res *
-nfsproc3_commit_3_svc(COMMIT3args * argp, struct svc_req * rqstp)
+COMMIT3res *nfsproc3_commit_3_svc(COMMIT3args * argp, struct svc_req * rqstp)
 {
     static COMMIT3res result;
     char *path;
     int res;
 
     PREP(path, argp->file)
-        result.status = join(is_reg(), exports_rw());
+	result.status = join(is_reg(), exports_rw());
 
     if (result.status == NFS3_OK) {
-        res = fd_sync(argp->file);
-        if (res != 1)
-            memcpy(result.COMMIT3res_u.resok.verf, wverf, NFS3_WRITEVERFSIZE);
-        else
-            /* error during fsync() or close() */
-            result.status = NFS3ERR_IO;
+	res = fd_sync(argp->file);
+	if (res != 1)
+	    memcpy(result.COMMIT3res_u.resok.verf, wverf, NFS3_WRITEVERFSIZE);
+	else
+	    /* error during fsync() or close() */
+	    result.status = NFS3ERR_IO;
     }
 
     /* overlaps with resfail */
