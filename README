@@ -1,0 +1,70 @@
+UNFS3 (User-Space NFSv3 Server)
+(C) 2003-2004, Pascal Schmidt <der.eremit@email.de>
+
+
+INTRODUCTION
+============
+
+UNFS3 is a user-space implementation of the NFSv3 server
+specification.
+
+UNFS3 supports all NFSv3 procedures with the exception of the
+READDIRPLUS procedure. It tries to provide as much information
+to NFS clients as possible, within the limits possible from
+user-space.
+
+See the unfsd(8) manpage for restrictions imposed on NFS
+operations (section RESTRICTIONS) and for possible races
+with local file system activity (section BUGS).
+
+It is not possible to export to netgroups or wildcard hostnames
+via /etc/exports, all other addressing methods should work. The
+following options are recognized in the exports file: ro, rw,
+root_squash, all_squash, no_root_squash, no_all_squash. If
+other options are present, they are ignored.
+
+
+SUPPORTED SYSTEMS
+=================
+
+Linux:		compiles and runs, passes Connectathon 2003 NFS
+		testsuite's "basic" and "general" tests, survives
+		fsx stress testing
+
+Solaris: 	compiles and runs, survives light testing
+
+NetBSD: 	compiles and runs, but there are compatibility
+		problems with the in-kernel NFS client
+
+
+INSTALLATION
+============
+
+You will need gcc, lex, and yacc to compile UNFS3.
+
+	./configure
+	make
+	make install
+
+Please read the manpage for information about command-line
+options.
+
+	man 8 unfsd
+
+If you decide to modify the code yourself, you can run
+
+	make dep
+	
+to append dependency information to the Makefile, so that make
+knows which files depend on each other and recompiles all the
+necessary files on changes.
+
+
+CREDITS
+=======
+
+People who contributed ideas, suggestions, or code to UNFS3:
+
+- Bernd Schubert <bernd-schubert@web.de>
+- Avery Pennarun <apenwarr@nit.ca>
+- Juergen Brendel <juergen@brendel.com>

@@ -1,0 +1,28 @@
+
+/* for lack of a better place */
+#define U(x) x __attribute__ ((unused))
+
+/* whether <rpc/svc_soc.h> is available */
+#define HAVE_RPC_SVC_SOC_H 0
+
+/* whether <linux/ext2_fs.h> is available */
+#define HAVE_LINUX_EXT2_FS_H 0
+
+/* whether rpc_inline_t exists */
+#define HAVE_RPC_INLINE_T 0
+
+/* whether xdr_u_int64_t() exists */
+#define HAVE_XDR_U_INT64_T 0
+
+/* whether statvfs() is available */
+#define HAVE_STATVFS 0
+
+/* largefile stuff */
+#define _LARGE_FILES 0
+#define _FILE_OFFSET_BITS 0
+
+/* whether struct stat has an st_gen member */
+#define HAVE_STRUCT_STAT_ST_GEN 0
+
+/* whether cluster extensions are wanted */
+#define WANT_CLUSTER 0

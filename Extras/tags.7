@@ -1,0 +1,113 @@
+.\"
+.\" (C) 2004, Pascal Schmidt <der.eremit@email.de>
+.\"
+.TH tags 7 "04 Jan 2004"
+.SH NAME
+tags \- tagged files used for clustering extensions
+.SH DESCRIPTION
+Tagged files are used by
+.B ClusterNFS
+and
+.B unfs3
+to support NFS exporting directories like
+.I /etc
+and
+.I /var
+to a cluster of client machines. The problem at hand is that different
+files need to be served to different clients. Tagged files provide a
+way to specify which file should be served to which client(s).
+.P
+Tags are appended to the end of a filename and are seperated from the
+rest of the name by beginning and ending with $$. For each file, there
+can be multiple tagged variants. The normal file, without a tag, is
+only served to clients when no tagged file matching the client is
+found. The following tags exist:
+.TP
+.B file$$IP=a.b.c.d$$
+If a client with an IP address of
+.I a.b.c.d
+attempts to access the normal file,
+it will be redirected to this file instead.
+.TP
+.B file$$IP=a.b.c.d_n$$
+If a client with an IP adress in the network
+.I a.b.c.d/n
+attempts to
+access the normal file, it will be redirected to this file instead. Note that
+.B unfs3
+only supports 8, 16, and 24 as values for
+.BR n .
+.TP
+.B file$$HOST=name$$
+If a client with the hostname
+.I name
+attempts to access the normal file, it will be redirected to this file instead.
+.TP
+.B file$$HOST=name*$$
+If a client whose hostname begins with the string
+.I name
+attempts to access the normal file, it will be redirected to this file instead.
+.TP
+.B file$$CLIENT$$
+If any client attempts to access the normal file, it will be redirected to this
+file instead.
+.TP
+.B file$$ALWAYS=IP$$
+If any client attempts to access the normal file, it will be redirected to
+.B file$$IP=a.b.c.d$$
+instead, where
+.I a.b.c.d
+is the IP address of the client. It does not matter whether the target
+tagged file exists or not.
+.TP
+.B file$$ALWAYS=CLIENT$$
+If any client attempts to access the normal file, it will be redirected to
+.B file$$CLIENT$$
+instead. It does not matter whether this file exists or not.
+.TP
+.B $$ALWAYS=CLIENT$$
+Like above, but effective for all files in the directory where it is found.
+.TP
+.B $$ALWAYS=IP$$
+Like above, but effective for all files in the directory where it is found.
+.PP
+Note that the ALWAYS tag can lead to file not found errors on clients
+if the tagged files it redirects to does not exist on the server. For
+example,
+.BR ls (1)
+can suffer from this problem. Furthermore, this tag is a
+.B unfs3
+extension and does not exist in
+.BR ClusterNFS .
+When this tags exists, it prevents all access to the normal file by any
+client.
+.TP
+.B file$$CREATE=IP$$
+If any client attempts to create the normal file,
+.B file$$IP=a.b.c.d$$
+will be created instead, where
+.I a.b.c.d
+is the IP address of the client.
+.TP
+.B file$$CREATE=CLIENT$$
+If any client attempts to create the normal file,
+.B file$$CLIENT$$
+will be created instead.
+.TP
+.B $$CREATE=IP$$
+Like above, but effective for all files in the directory where it is found.
+.TP
+.B $$CREATE=CLIENT$$
+Like above, but effective for all files in the directory where it is found.
+.PP
+Tags work for all kinds of named filesystem objects.
+If multiple tagged files
+are found for a normal file, they are considered in the order they are
+given above, starting at the top. Processing stops once a match is found.
+In
+.BR ClusterNFS ", but not in " unfs3 ,
+only files accessible and readable by a client are considered matches.
+.SH AUTHOR
+Pascal Schmidt
+.SH "SEE ALSO"
+.BR unfsd (8)

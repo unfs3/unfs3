@@ -1,0 +1,33 @@
+CC = @CC@
+CFLAGS = @CFLAGS@ -Wall -W -Wno-unused
+AR = ar
+RM = rm -f
+LEX = @LEX@
+YACC = @YACC@
+
+OBJS = @LEX_OUTPUT_ROOT@.o y.tab.o
+
+all: lib.a
+
+lib.a: $(OBJS)
+	$(AR) cr lib.a $(OBJS)
+
+y.tab.h y.tab.c: exports.y
+	$(YACC) -d exports.y
+
+y.tab.o: y.tab.c exports.h ../nfs.h ../mount.h ../daemon.h
+
+@LEX_OUTPUT_ROOT@.c: exports.l
+	$(LEX) exports.l
+
+@LEX_OUTPUT_ROOT@.o: @LEX_OUTPUT_ROOT@.c y.tab.h ../nfs.h
+
+dep:
+	:
+
+clean:
+	$(RM) $(OBJS) lib.a
+	$(RM) @LEX_OUTPUT_ROOT@.c y.tab.h y.tab.c
+
+distclean:
+	$(RM) Makefile

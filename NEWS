@@ -1,0 +1,119 @@
+What's new or changed in 0.9.5
+==============================
+
+Some code cleanup was done; all functions requiring filehandles now
+directly take the NFS filehandle (nfs_fh3) instead of a char pointer.
+
+A bug in the READDIR implementation was fixed which could lead to
+READDIR returning EOF to the client although the last directory entry
+was not read by the client (thanks to Juergen Brendel).
+
+
+Old news
+========
+
+Version 0.9.4
+
+  - support the DUMP and EXPORT mount protocol procedures
+  - use a simple counter instead of the system time for cache LRU
+  - document tagged files in a seperate manpage, tags(7)
+  - introduce a new ALWAYS tag for forced redirection
+
+Version 0.9.3
+
+  - fix mount handler not properly initializing return status 
+  - send messages to syslog for some mount problems
+  - make it possible to export and mount symlinks to directories
+  - fix cluster extensions breakage from 0.9.1 code merge
+  - prevent filehandle cache from storing redundant information
+
+Version 0.9.2
+
+  - clean up lots of duplicate code in nfs.c
+  - move configuration parser and cluster extensions into subdirectories
+  - use real write verifier in WRITE and COMMIT
+
+Version 0.9.1
+
+  - add -d option to prevent forking into background (for debugging)
+  - merge in lots of cleaner code from the experimental branch
+  - merge nfsd and mountd into one program
+  - better /etc/exports parser using lex and yacc
+
+Version 0.9.0
+
+  - check for clients attempting to use invalid pathnames
+  - include cluster extensions (optional at compile and run time)
+
+Version 0.8.8
+
+  - fix ACCESS compatibility problem affecting HP-UX clients
+
+Version 0.8.7
+
+  - fixed chmod handling to make us pass the Connectathon 2003 NFS
+    testsuite's "basic" and "general" tests
+  - improve filehandle integrity checking
+
+Version 0.8.6
+
+  - use inode generation numbers only in SETATTR and fd cache because
+    it is a huge performance hit everywhere else
+  - use 32 bit device and inode numbers to save space in filehandles
+  - have nfsd bind to port number 2049 (nfs) by default
+
+Version 0.8.5
+
+  - undo refusal to use "." and ".." since it confuses NetBSD clients
+  - include inode generation number in filehandles whenever possible
+
+Version 0.8.4
+
+  - handle export of the root directory correctly
+  - return XDEV error in RENAME and LINK if export options for given
+    objects do not match (needed for squash options differences)
+  - prevent the use of "." and ".." as names
+  - use largefile API to enable access to files greater than 2 GB
+  - check filehandles for integrity before using them
+  - we no longer need GNU make
+
+Version 0.8.3
+
+  - use shorter filehandles whenever possible
+  - use stat cache in unfs3_readdir()
+  - switch filehandle cache to use static allocation of entries
+  - make unfs3_readdir() account for XDR overhead correctly
+
+Version 0.8.2
+
+  - simplify and speed up low-level filehandle routines
+  - fix a serious bug in READDIR, cookie == 0 was handled incorrectly
+  - make it build and run on NetBSD 1.6.1/i386
+
+Version 0.8.1
+
+  - use svc_getcaller instead of our own hack (well, duh)
+  - don't attempt to service v1 mount calls, only v1 umount
+  - check incoming object names for validity
+
+Version 0.8
+
+  - support for export controls via /etc/exports
+  - introduce caching of stat() results to improve performance
+  - explicitly check for gcc in the configure script
+  - make user/group id squashing be based on export options
+  - remove the now obsolete -r and -a nfsd options
+
+Version 0.7
+
+  - attempt at race protection/detection code for many NFS procedures
+  - add comments to all error code paths
+
+Version 0.6.1
+
+  - document possible races with local fs activity on server
+  - minor fix in LOOKUP error handling
+
+Version 0.6
+
+  - initial public release
