@@ -67,7 +67,7 @@ mode_t type_to_mode(ftype3 ftype)
 /*
  * post_op_attr for error returns
  */
-static post_op_attr error_attr = { .attributes_follow = FALSE };
+static post_op_attr error_attr = {.attributes_follow = FALSE };
 
 /*
  * return pre-operation attributes
@@ -440,10 +440,10 @@ mode_t create_mode(sattr3 new)
 nfsstat3 atomic_attr(sattr3 attr)
 {
     if ((attr.uid.set_it == TRUE && attr.uid.set_uid3_u.uid != geteuid()) ||
-        (attr.gid.set_it == TRUE && attr.gid.set_gid3_u.gid != getegid()) ||
-        (attr.size.set_it == TRUE && attr.size.set_size3_u.size != 0)     ||
-        attr.atime.set_it != DONT_CHANGE || attr.mtime.set_it != DONT_CHANGE)
-        return NFS3ERR_INVAL;
+	(attr.gid.set_it == TRUE && attr.gid.set_gid3_u.gid != getegid()) ||
+	(attr.size.set_it == TRUE && attr.size.set_size3_u.size != 0) ||
+	attr.atime.set_it != DONT_CHANGE || attr.mtime.set_it != DONT_CHANGE)
+	return NFS3ERR_INVAL;
     else
 	return NFS3_OK;
 }

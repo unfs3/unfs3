@@ -20,6 +20,7 @@
 #include <unistd.h>
 
 #if HAVE_LINUX_EXT2_FS_H == 1
+
 /*
  * presence of linux/ext2_fs.h is a hint that we are on Linux, really
  * including that file doesn't work on Debian, so define the ioctl

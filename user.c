@@ -161,11 +161,11 @@ void read_executable(struct svc_req *req, struct stat buf)
 
     /* bail out if read permission is there */
     if (buf.st_mode & S_IROTH)
-    	return;
+	return;
     else if ((buf.st_mode & S_IRUSR) && is_owner(buf.st_uid, req))
-    	return;
+	return;
     else if ((buf.st_mode & S_IRGRP) && has_group(buf.st_gid, req))
-    	return;
+	return;
 
     /* check for execute permission */
     if (buf.st_mode & S_IXOTH)
