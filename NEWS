@@ -8,6 +8,12 @@ code and declarations. Problem report and patch by Simon Matter
 The ALWAYS cluster tag now also takes effect for creation of
 files. Patch by Bernd Schubert <bernd-schubert@web.de>.
 
+There was a possible use-after-free bug in the filehandle
+resolution routines, closedir() was called before copying
+the results of a previous readdir(). Depending on the glibc
+version in use, this can lead to segfaults. Report and patch
+by Bernd Schubert <bernd-schubert@web.de>.
+
 
 ChangeLog
 =========
@@ -16,6 +22,7 @@ Version 0.9.10
 
   - fix building with gcc 2.95.x or 2.96
   - make ALWAYS cluster tag take effect for file creations
+  - fix possible use-after-free bug in fh.c:fh_rec
 
 Version 0.9.9
 

@@ -381,8 +381,8 @@ static int fh_rec(const unfs3_fh_t * fh, int pos, const char *lead,
 
 	    if (buf.st_dev == fh->dev && buf.st_ino == fh->ino) {
 		/* found the object */
-		closedir(search);
 		sprintf(result, "%s/%s", lead + 1, entry->d_name);
+		closedir(search);
 		/* update stat cache */
 		st_cache_valid = TRUE;
 		st_cache = buf;
