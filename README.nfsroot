@@ -1,0 +1,44 @@
+Using UNFS3 for Linux nfsroot
+=============================
+
+General information about Linux nfsroot can be found in the
+Linux kernel source, in the file Documentation/nfsroot.txt.
+
+If you want the use the Linux kernel's "nfsroot=" boot option
+to use a root directory on an NFS server and use UNFS3 in the
+role of the NFS server for that, you need to remember that UNFS3
+only supports NFSv3, not NFSv2. The kernel, on the other hand,
+always defaults to using NFSv2. Thus, you need to modify the
+nfsroot boot option to force the kernel to use NFSv3. If you do
+not do this, an error message like this will appear on the
+client machine:
+
+  Looking up port of RPC 1000003/2 on 172.16.100.100
+  Root-NFS: Portmapper on server returned 2049 as nfsd port
+  Looking up port of RPC 1000005/1 on 172.16.100.100
+  Root-NFS: mounted port is 2049
+  NFS:      nfs_mount (ac106464:/nfsroot)
+  RPC: call_verify: programm 100003 version 2 unsupported by server
+  nfs_get_root: getattr error = 5
+  nfs_read_super: get root inode failed
+  VFS: Unable to mount root fs via NFS trying floppy
+
+To fix this problem, append the "v3" NFS option to the nfsroot
+boot option. Assuming your NFS server's IP address is 192.168.2.72
+and the path you need to mount is /tftpboot/nfsroot, the boot
+option should look like this:
+
+  nfsroot=192.168.2.72:/tftpboot/nfsroot,v3
+
+You can add more options to the end, seperated by commas. If you
+use DHCP to pass the NFS server configuration to the client, you
+need to use a line like this in the /etc/dhcpd.conf settings
+for the client machine:
+
+  option root-path "/tftpboot/nfsroot,v3";
+
+As above, more options can be added to the end, sepereated by
+commas.
+
+Thanks go to Jean Aumont <JeanAumont@videotron.ca> for suggesting
+this bit of information to be documented.
