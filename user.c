@@ -10,6 +10,7 @@
 #include <pwd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#define PORTMAP
 #include <rpc/rpc.h>
 #include <stdlib.h>
 #include <syslog.h>

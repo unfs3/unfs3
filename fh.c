@@ -10,6 +10,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
+#define PORTMAP
 #include <rpc/rpc.h>
 #include <dirent.h>
 #include <fcntl.h>

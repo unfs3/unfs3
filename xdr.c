@@ -6,6 +6,7 @@
 #include "config.h"
 
 #include <sys/types.h>
+#define PORTMAP
 #include <rpc/rpc.h>
 
 #if HAVE_RPC_INLINE_T == 0

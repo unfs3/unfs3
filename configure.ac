@@ -23,7 +23,7 @@ dnl Need to link with "-L/usr/ucblib -R/usr/ucblib -lrpcsoc" on Solaris.
 SAVELDFLAGS=$LDFLAGS
 LDFLAGS="-L/usr/ucblib -R/usr/ucblib $LDFLAGS"
 AC_CHECK_LIB(rpcsoc, svctcp_create, 
-    LIBS="-lrpcsoc $LIBS"; CFLAGS="-DPORTMAP $CFLAGS",
+    LIBS="-lrpcsoc $LIBS",
     LDFLAGS=$SAVELDFLAGS)
 
 AC_OUTPUT(Makefile Config/Makefile Extras/Makefile)

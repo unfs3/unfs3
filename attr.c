@@ -9,6 +9,7 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#define PORTMAP
 #include <rpc/rpc.h>
 #include <fcntl.h>
 #include <time.h>

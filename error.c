@@ -11,6 +11,7 @@
 
 #include "config.h"
 
+#define PORTMAP
 #include <rpc/rpc.h>
 #include <errno.h>
 

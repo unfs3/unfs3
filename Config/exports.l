@@ -4,6 +4,7 @@
  * (C) 2003, Pascal Schmidt <der.eremit@email.de>
  * see file LICENSE for license details
  */
+#define PORTMAP
 #include <rpc/rpc.h>
 #include <string.h>
 
