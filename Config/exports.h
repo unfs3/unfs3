@@ -15,7 +15,9 @@
 #define PASSWORD_MAXLEN   64
 
 extern exports	exports_nfslist;
+/* Options cache */
 extern int	exports_opts;
+extern uint32   export_password_hash;
 
 extern unsigned char password[PASSWORD_MAXLEN+1];
 

@@ -267,8 +267,10 @@ to keep files open between multiple read or write requests.
 To be able to mount this export, the specified password is
 required. The password needs be given in the mount request,
 as in "mount yourhost:@password:gazonk/tmp /mnt". One time passwords
-are also supported. See the file "doc/passwords.txt" in the source
-for more information.
+are also supported. When using passwords, the file handles
+will include a hash of the password. This means that 
+.B if you change the password, all clients will need to remount this export. 
+See the file "doc/passwords.txt" in the source for more information.
 .PP
 If options not present on this list are encountered by
 .BR unfsd ,

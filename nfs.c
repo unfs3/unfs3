@@ -45,6 +45,7 @@
  * otherwise zero result structure and return with error status
  */
 #define PREP(p,f) do {						\
+                      unfs3_fh_t *fh = (void *)f.data.data_val; \
                       p = fh_decomp(f);				\
                       if (exports_options(p, rqstp, NULL, NULL) == -1) { \
                           memset(&result, 0, sizeof(result));	\
@@ -54,6 +55,11 @@
                               result.status = NFS3ERR_STALE;	\
                           return &result;			\
                       }						\
+                      if (fh->pwhash != export_password_hash) { \
+                          memset(&result, 0, sizeof(result));	\
+                          result.status = NFS3ERR_STALE;        \
+                          return &result;                       \
+                      }                                         \
                       switch_user(rqstp);			\
                   } while (0)
 

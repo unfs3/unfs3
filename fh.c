@@ -229,7 +229,7 @@ unfs3_fh_t fh_comp_raw(const char *path, struct svc_req *rqstp, int need_dir)
 u_int fh_len(const unfs3_fh_t * fh)
 {
     return fh->len + sizeof(fh->len) + sizeof(fh->dev) + sizeof(fh->ino) +
-	sizeof(fh->gen);
+	sizeof(fh->gen) + sizeof(fh->pwhash);
 }
 
 /*
@@ -248,6 +248,7 @@ unfs3_fh_t *fh_extend(nfs_fh3 nfh, uint32 dev, uint32 ino, uint32 gen)
     new.dev = dev;
     new.ino = ino;
     new.gen = gen;
+    new.pwhash = export_password_hash;
     new.inos[new.len] = FH_HASH(ino);
     new.len++;
 

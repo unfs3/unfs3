@@ -8,15 +8,16 @@
 #define UNFS3_FH_H
 
 /* minimum length of complete filehandle */
-#define FH_MINLEN 13
+#define FH_MINLEN 17
 
 /* maximum depth of pathname described by filehandle */
-#define FH_MAXLEN 51
+#define FH_MAXLEN 47
 
 typedef struct {
 	uint32			dev;
 	uint32			ino;
 	uint32			gen;
+        uint32                  pwhash;
 	unsigned char	len;
 	unsigned char	inos[FH_MAXLEN];
 } __attribute__((packed)) unfs3_fh_t;

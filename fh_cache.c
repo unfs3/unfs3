@@ -253,6 +253,7 @@ char *fh_decomp(nfs_fh3 fh)
 /*
  * compose a filehandle for a path
  * cache-using wrapper for fh_comp_raw
+ * exports_options must be called before
  */
 unfs3_fh_t fh_comp(const char *path, struct svc_req * rqstp, int need_dir)
 {
@@ -263,5 +264,6 @@ unfs3_fh_t fh_comp(const char *path, struct svc_req * rqstp, int need_dir)
 	/* add to cache for later use */
 	fh_cache_add(res.dev, res.ino, path);
 
+    res.pwhash = export_password_hash;
     return res;
 }
