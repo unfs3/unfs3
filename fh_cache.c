@@ -22,6 +22,7 @@
 #include "locate.h"
 #include "fh_cache.h"
 #include "mount.h"
+#include "daemon.h"
 #include "Config/exports.h"
 #include "readdir.h"
 
@@ -229,9 +230,21 @@ char *fh_decomp(nfs_fh3 fh)
 		st_cache.st_uid = 0;
 		st_cache.st_gid = 0;
 		st_cache.st_rdev = 0;
-		st_cache.st_size = 0;
-		st_cache.st_blksize = 0;
-		st_cache.st_blocks = 0;
+		st_cache.st_size = 4096;
+		st_cache.st_blksize = 512;
+		st_cache.st_blocks = 8;
+	    } else {
+		/* Stat was OK, but make sure the values are sane. Supermount 
+		   returns insane values when no media is inserted, for
+		   example. */
+		if (st_cache.st_nlink == 0)
+		    st_cache.st_nlink = 1;
+		if (st_cache.st_size == 0)
+		    st_cache.st_size = 4096;
+		if (st_cache.st_blksize == 512)
+		    st_cache.st_blksize = 4096;
+		if (st_cache.st_blocks == 0)
+		    st_cache.st_blocks = 8;
 	    }
 
 	    st_cache.st_dev = obj->dev;
