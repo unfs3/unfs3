@@ -5,10 +5,8 @@ Unused.
 
 removable-fsidhash
 ------------------
-This branch contains the following changes:
-
-* When using the "removable" option, it's possible to export mount
-  points handled by autofs. 
+This branch has been used for work on removable support. All changes
+has been merged with the HEAD branch now. 
 
 
 removable-support
