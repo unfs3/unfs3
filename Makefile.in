@@ -54,6 +54,10 @@ distclean: clean
 	$(RM) Makefile config.h
 	$(RM) config.log config.status
 
+maintainer-clean: distclean
+	$(RM) config.h.in configure
+	$(RM) -rf autom4te.cache
+
 dep: $(SOURCES)
 	for i in $(SUBDIRS); do cd $$i; make dep; cd ..; done
 	$(CC) $(CFLAGS) -MM $(SOURCES) >> Makefile
