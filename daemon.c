@@ -55,8 +55,8 @@ char *opt_exports = "/etc/exports";
 int opt_cluster = FALSE;
 char *opt_cluster_path = "/";
 int opt_tcponly = FALSE;
-unsigned int opt_nfs_port = NFS_PORT;
-unsigned int opt_mount_port = 0;	/* 0 means RPC_ANYSOCK */
+unsigned int opt_nfs_port = NFS_PORT; /* 0 means RPC_ANYSOCK */
+unsigned int opt_mount_port = NFS_PORT;	
 
 /* Register with portmapper? */
 int opt_portmapper = TRUE;
