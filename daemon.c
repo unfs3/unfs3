@@ -170,6 +170,7 @@ static void parse_options(int argc, char **argv)
 		printf
 		    ("\t-t          TCP only, do not listen on UDP ports\n");
 		printf("\t-p          do not register with the portmapper\n");
+		printf("\t-s          single user mode\n");
 		exit(0);
 		break;
 	    case '?':
