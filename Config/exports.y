@@ -35,6 +35,7 @@ extern FILE *yyin;
 typedef struct {
 	char		orig[NFS_MAXPATHLEN];
 	int		options;
+        unsigned char   password[PASSWORD_MAXLEN+1];
 	struct in_addr	addr;
 	struct in_addr	mask;
 	struct e_host	*next;
@@ -59,11 +60,6 @@ static struct groupnode ne_host;
 
 /* error status of last parse */
 int e_error = FALSE;
-
-/* passwords. FIXME: This is global variable now, even though the syntax
-   allows for differents passwords per export */
-unsigned char password[PASSWORD_MAXLEN+1] = "";
-
 
 /*
  * clear current host
@@ -292,7 +288,7 @@ static void add_option(const char *opt)
 static void add_option_with_value(const char *opt, const char *val)
 {
 	if (strcmp(opt,"password") == 0)
-		strncpy(password, val, sizeof(password));
+		strncpy(cur_host.password, val, sizeof(password));
 }
 
 /*
@@ -529,14 +525,18 @@ void exports_parse(void)
 /*
  * find a given host inside a host list, return options
  */
-static int find_host(struct in_addr remote, e_item *item)
+static int find_host(struct in_addr remote, e_item *item,
+		     char **password)
 {
 	e_host *host;
-	
+
 	host = item->hosts;
 	while (host) {
-		if ((remote.s_addr & host->mask.s_addr) == host->addr.s_addr)
+		if ((remote.s_addr & host->mask.s_addr) == host->addr.s_addr) {
+			if (password != NULL) 
+				*password = host->password;
 			return host->options;
+		}
 		host = (e_host *) host->next;
 	}
 	return -1;
@@ -548,7 +548,8 @@ int exports_opts = -1;
 /*
  * given a path, return client's effective options
  */
-int exports_options(const char *path, struct svc_req *rqstp)
+int exports_options(const char *path, struct svc_req *rqstp,
+		    char **password)
 {
 	e_item *list;
 	struct in_addr remote;
@@ -571,7 +572,7 @@ int exports_options(const char *path, struct svc_req *rqstp)
 		/* longest matching prefix wins */
 		if (strlen(list->path) > last_len    &&
 		    strstr(path, list->path) == path) {
-			cur_opts = find_host(remote, list);
+			cur_opts = find_host(remote, list, password);
 			if (cur_opts != -1) {
 				exports_opts = cur_opts;
 				last_len = strlen(list->path);
@@ -591,7 +592,7 @@ nfsstat3 exports_compat(const char *path, struct svc_req *rqstp)
 	int prev;
 	
 	prev = exports_opts;
-	if (exports_options(path, rqstp) == prev)
+	if (exports_options(path, rqstp, NULL) == prev)
 		return NFS3_OK;
 	else if (exports_opts == -1)
 		return NFS3ERR_ACCES;

@@ -12,7 +12,7 @@
 #define OPT_RW			4
 #define OPT_REMOVABLE		8
 
-#define PASSWORD_MAXLEN   512
+#define PASSWORD_MAXLEN   64
 
 extern exports	exports_nfslist;
 extern int	exports_opts;
@@ -20,7 +20,7 @@ extern int	exports_opts;
 extern unsigned char password[PASSWORD_MAXLEN+1];
 
 void		exports_parse(void);
-int		exports_options(const char *path, struct svc_req *rqstp);
+int		exports_options(const char *path, struct svc_req *rqstp, char **password);
 nfsstat3	exports_compat(const char *path, struct svc_req *rqstp);
 nfsstat3	exports_rw(void);
 

@@ -132,7 +132,8 @@ mountres3 *mountproc_mnt_3_svc(dirpath * argp, struct svc_req * rqstp)
     static unfs3_fh_t fh;
     static mountres3 result;
     static int auth = AUTH_UNIX;
-    int authenticated = 1;
+    int authenticated = 0;
+    char *password;
 
     /* We need to modify the *argp pointer. Make a copy. */
     char *dpath = *argp;
@@ -145,10 +146,6 @@ mountres3 *mountproc_mnt_3_svc(dirpath * argp, struct svc_req * rqstp)
 	result.fhs_status = MNT3ERR_INVAL;
 	return &result;
     }
-
-    if (password[0])
-	/* If a password is defined, the user must authenticate */
-	authenticated = 0;
 
     /* Check for "mount commands" */
     if (strncmp(dpath, "@getnonce", sizeof("@getnonce") - 1) == 0) {
@@ -163,7 +160,10 @@ mountres3 *mountproc_mnt_3_svc(dirpath * argp, struct svc_req * rqstp)
 	char pw[PASSWORD_MAXLEN + 1];
 
 	mnt_cmd_argument(&dpath, "@password:", pw, PASSWORD_MAXLEN);
-	authenticated = !strcmp(password, pw);
+	if ((exports_opts = exports_options(buf, rqstp, &password)) != -1) {
+	    authenticated = !strcmp(password, pw);
+	}
+	/* else leave authenticated unchanged */
     } else if (strncmp(dpath, "@otp:", sizeof("@otp:") - 1) == 0) {
 	/* The otp from the client */
 	char otp[PASSWORD_MAXLEN + 1];
@@ -172,19 +172,28 @@ mountres3 *mountproc_mnt_3_svc(dirpath * argp, struct svc_req * rqstp)
 	unsigned char hexdigest[32];
 
 	mnt_cmd_argument(&dpath, "@otp:", otp, PASSWORD_MAXLEN);
-	otp_digest(nonce, password, hexdigest);
+	if ((exports_opts = exports_options(buf, rqstp, &password)) != -1) {
+	    otp_digest(nonce, password, hexdigest);
 
-	/* Compare our calculated digest with what the client submitted */
-	authenticated = !strncmp(hexdigest, otp, 32);
+	    /* Compare our calculated digest with what the client submitted */
+	    authenticated = !strncmp(hexdigest, otp, 32);
 
-	/* Change nonce */
-	gen_nonce(nonce);
+	    /* Change nonce */
+	    gen_nonce(nonce);
+	}
+	/* else leave authenticated unchanged */
     }
 
     if (!realpath(dpath, buf)) {
 	/* the given path does not exist */
 	result.fhs_status = MNT3ERR_NOENT;
 	return &result;
+    }
+
+    /* If the export has no password, do not require authentication */
+    if ((exports_opts = exports_options(buf, rqstp, &password)) != -1) {
+	if (!password[0])
+	    authenticated = 1;
     }
 
     if (strlen(buf) + 1 > NFS_MAXPATHLEN) {
@@ -194,7 +203,7 @@ mountres3 *mountproc_mnt_3_svc(dirpath * argp, struct svc_req * rqstp)
 	return &result;
     }
 
-    if (!authenticated || exports_options(buf, rqstp) == -1) {
+    if (!authenticated || exports_options(buf, rqstp, NULL) == -1) {
 	/* not exported to this host or at all */
 	result.fhs_status = MNT3ERR_ACCES;
 	return &result;
