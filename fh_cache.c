@@ -177,7 +177,7 @@ static char *fh_cache_lookup(uint32 dev, uint32 ino)
 	    /* update stat cache */
 	    st_cache_valid = TRUE;
 	    st_cache = buf;
-	    
+
 	    /* prevent next fh_cache_add from overwriting entry */
 	    fh_last_entry = i;
 

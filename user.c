@@ -158,7 +158,7 @@ void switch_user(struct svc_req *req)
 void read_executable(struct svc_req *req, struct stat buf)
 {
     int have_exec = 0;
-	
+
     if (buf.st_mode & S_IXOTH)
 	have_exec = 1;
     else if ((buf.st_mode & S_IXUSR) && is_owner(buf.st_uid, req))

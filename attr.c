@@ -243,7 +243,7 @@ static nfsstat3 set_time(const char *path, struct stat buf, sattr3 new)
 	if (res == -1)
 	    return setattr_err();
     }
-    
+
     return NFS3_OK;
 }
 
@@ -302,7 +302,6 @@ static nfsstat3 set_attr_unsafe(const char *path, nfs_fh3 nfh, sattr3 new)
     return set_time(path, buf, new);
 }
 
-
 /*
  * set attributes of an object
  */
@@ -318,14 +317,14 @@ nfsstat3 set_attr(const char *path, nfs_fh3 nfh, sattr3 new)
     if (res != 0)
 	return NFS3ERR_STALE;
 
-    /*
+    /* 
      * don't open(2) device nodes, it could trigger
      * module loading on the server
      */
     if (S_ISBLK(buf.st_mode) || S_ISCHR(buf.st_mode))
 	return set_attr_unsafe(path, nfh, new);
 
-    /*
+    /* 
      * open object for atomic setting of attributes
      */
     fd = open(path, O_WRONLY | O_NONBLOCK);

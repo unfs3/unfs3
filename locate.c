@@ -39,6 +39,7 @@
  */
 
 #if HAVE_MNTENT_H == 1 || HAVE_SYS_MNTTAB_H == 1
+
 /*
  * locate file given prefix, device, and inode number
  */
@@ -100,6 +101,7 @@ char *locate_file(U(uint32 dev), U(uint32 ino))
     FILE *mtab;
     struct stat buf;
     int res;
+
 #if HAVE_MNTENT_H == 1
     struct mntent *ent;
 
@@ -133,13 +135,13 @@ char *locate_file(U(uint32 dev), U(uint32 ino))
     mtab = fopen("/etc/mnttab", "r");
     if (!mtab)
 	return NULL;
-	
-    /*
+
+    /* 
      * look for mnttab entry with matching device
      */
     while (getmntent(mtab, &ent) == 0) {
 	res = lstat(ent.mnt_mountp, &buf);
-	
+
 	if (res == 0 && buf.st_dev == dev) {
 	    found = TRUE;
 	    break;

@@ -260,7 +260,7 @@ int fd_open(const char *path, nfs_fh3 nfh, int kind)
 	    return -1;
 	}
 
-	/*
+	/* 
 	 * success, add to cache for later use if not marked
 	 * as removable medium
 	 */
@@ -292,7 +292,7 @@ int fd_close(int fd, int kind, int really_close)
 	/* not in cache, sync and close directly */
 	res1 = fsync(fd);
 	res2 = close(fd);
-	
+
 	if (res1 != 0)
 	    return res1;
 	else

@@ -55,8 +55,8 @@ char *opt_exports = "/etc/exports";
 int opt_cluster = FALSE;
 char *opt_cluster_path = "/";
 int opt_tcponly = FALSE;
-unsigned int opt_nfs_port = NFS_PORT; /* 0 means RPC_ANYSOCK */
-unsigned int opt_mount_port = NFS_PORT;	
+unsigned int opt_nfs_port = NFS_PORT;	/* 0 means RPC_ANYSOCK */
+unsigned int opt_mount_port = NFS_PORT;
 
 /* Register with portmapper? */
 int opt_portmapper = TRUE;
@@ -149,8 +149,7 @@ static void parse_options(int argc, char **argv)
 		printf("Usage: %s [options]\n", argv[0]);
 		printf("\t-h          display this short option summary\n");
 		printf("\t-w          expire writers from fd cache\n");
-		printf
-		    ("\t-u          use unprivileged port for services\n");
+		printf("\t-u          use unprivileged port for services\n");
 		printf("\t-d          do not detach from terminal\n");
 		printf("\t-e <file>   file to use instead of /etc/exports\n");
 #ifdef WANT_CLUSTER
@@ -589,7 +588,7 @@ static SVCXPRT *create_udp_transport(unsigned int port)
 	sin.sin_port = htons(port);
 	sin.sin_addr.s_addr = INADDR_ANY;
 	sock = socket(PF_INET, SOCK_DGRAM, 0);
-	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof(on));
+	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *) &on, sizeof(on));
 	if (bind(sock, (struct sockaddr *) &sin, sizeof(struct sockaddr))) {
 	    perror("bind");
 	    fprintf(stderr, "Couldn't bind to port %d\n", port);
@@ -621,7 +620,7 @@ static SVCXPRT *create_tcp_transport(unsigned int port)
 	sin.sin_port = htons(port);
 	sin.sin_addr.s_addr = INADDR_ANY;
 	sock = socket(PF_INET, SOCK_STREAM, 0);
-	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof(on));
+	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *) &on, sizeof(on));
 	if (bind(sock, (struct sockaddr *) &sin, sizeof(struct sockaddr))) {
 	    perror("bind");
 	    fprintf(stderr, "Couldn't bind to port %d\n", port);
