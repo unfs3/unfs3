@@ -95,7 +95,7 @@ static void parse_options(int argc, char **argv)
 {
     int opt = 0;
 
-    char *optstring = "cC:de:hm:n:pstuw";
+    char *optstring = "bcC:de:hm:n:pstuw";
 
     while (opt != -1) {
 	opt = getopt(argc, argv, optstring);
