@@ -6,9 +6,9 @@ AC_PROG_LEX
 AC_PROG_YACC
 AC_HEADER_STDC
 AC_SYS_LARGEFILE
-AC_CHECK_LIB(nsl, xdr_int)
-AC_CHECK_LIB(socket, socket)
-AC_CHECK_LIB(resolv, inet_aton)
+AC_SEARCH_LIBS(xdr_int, nsl)
+AC_SEARCH_LIBS(socket, socket)
+AC_SEARCH_LIBS(inet_aton, resolv)
 AC_CHECK_HEADERS(rpc/svc_soc.h,,,[#include <rpc/types.h>
 #include <rpc/rpc.h>])
 AC_CHECK_HEADERS(linux/ext2_fs.h,,,[#include <unistd.h>])
