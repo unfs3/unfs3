@@ -14,7 +14,10 @@ within hostnames are now accepted, as is leading whitespace in
 export entries (useful for indenting exports that span multiple
 lines). Thanks to Jan P. Springer (jsd01@users.sourceforge.net)
 for reporting these problems.
-  
+
+The new export option "removable" makes it possible to change
+removable media on the server without remounting on the client.
+
 
 Old news
 ========
