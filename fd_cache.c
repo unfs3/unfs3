@@ -22,6 +22,7 @@
 #include "daemon.h"
 #include "Config/exports.h"
 #include "fd_cache.h"
+#include "backend.h"
 
 /*
  * intention of the file descriptor cache
@@ -124,12 +125,12 @@ static int fd_cache_del(int idx)
 	if (fd_cache[idx].kind == FD_WRITE) {
 	    /* sync file data if writing descriptor */
 	    fd_cache_writers--;
-	    res1 = fsync(fd_cache[idx].fd);
+	    res1 = backend_fsync(fd_cache[idx].fd);
 	} else {
 	    fd_cache_readers--;
 	    res1 = 0;
 	}
-	res2 = close(fd_cache[idx].fd);
+	res2 = backend_close(fd_cache[idx].fd);
 
 	/* return -1 if something went wrong during sync or close */
 	if (res1 == -1 || res2 == -1)
@@ -236,17 +237,17 @@ int fd_open(const char *path, nfs_fh3 nfh, int kind)
     else {
 	/* call open to obtain new fd */
 	if (kind == FD_READ)
-	    fd = open(path, O_RDONLY);
+	    fd = backend_open(path, O_RDONLY);
 	else
-	    fd = open(path, O_WRONLY);
+	    fd = backend_open(path, O_WRONLY);
 	if (fd == -1)
 	    return -1;
 
 	/* check for local fs race */
-	res = fstat(fd, &buf);
+	res = backend_fstat(fd, &buf);
 	if ((res == -1) ||
 	    (fh->dev != buf.st_dev || fh->ino != buf.st_ino ||
-	     fh->gen != get_gen(buf, fd, path))) {
+	     fh->gen != backend_get_gen(buf, fd, path))) {
 	    /* 
 	     * local fs changed meaning of path between
 	     * calling NFS operation doing fh_decomp and
@@ -255,7 +256,7 @@ int fd_open(const char *path, nfs_fh3 nfh, int kind)
 	     * set errno to ELOOP to make calling NFS
 	     * operation return NFS3ERR_STALE
 	     */
-	    close(fd);
+	    backend_close(fd);
 	    errno = ELOOP;
 	    return -1;
 	}
@@ -291,9 +292,9 @@ int fd_close(int fd, int kind, int really_close)
     } else {
 	/* not in cache, sync and close directly */
 	if (kind == FD_WRITE)
-	    res1 = fsync(fd);
+	    res1 = backend_fsync(fd);
 
-	res2 = close(fd);
+	res2 = backend_close(fd);
 
 	if (res1 != 0)
 	    return res1;

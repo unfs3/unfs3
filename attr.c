@@ -22,6 +22,7 @@
 #include "fh.h"
 #include "fh_cache.h"
 #include "daemon.h"
+#include "backend.h"
 
 /*
  * check whether stat_cache is for a regular file
@@ -192,7 +193,7 @@ static post_op_attr get_post_ll(const char *path, uint32 dev, uint32 ino,
     if (!path)
 	return error_attr;
 
-    res = lstat(path, &buf);
+    res = backend_lstat(path, &buf);
     if (res == -1)
 	return error_attr;
 
@@ -268,7 +269,7 @@ static nfsstat3 set_time(const char *path, struct stat buf, sattr3 new)
 	utim.actime = new_atime;
 	utim.modtime = new_mtime;
 
-	res = utime(path, &utim);
+	res = backend_utime(path, &utim);
 	if (res == -1)
 	    return setattr_err();
     }
@@ -287,7 +288,7 @@ static nfsstat3 set_attr_unsafe(const char *path, nfs_fh3 nfh, sattr3 new)
     struct stat buf;
     int res;
 
-    res = stat(path, &buf);
+    res = backend_stat(path, &buf);
     if (res != 0)
 	return NFS3ERR_STALE;
 
@@ -297,7 +298,7 @@ static nfsstat3 set_attr_unsafe(const char *path, nfs_fh3 nfh, sattr3 new)
 
     /* set file size */
     if (new.size.set_it == TRUE) {
-	res = truncate(path, new.size.set_size3_u.size);
+	res = backend_truncate(path, new.size.set_size3_u.size);
 	if (res == -1)
 	    return setattr_err();
     }
@@ -316,14 +317,14 @@ static nfsstat3 set_attr_unsafe(const char *path, nfs_fh3 nfh, sattr3 new)
 	else
 	    new_gid = -1;
 
-	res = chown(path, new_uid, new_gid);
+	res = backend_chown(path, new_uid, new_gid);
 	if (res == -1)
 	    return setattr_err();
     }
 
     /* set mode */
     if (new.mode.set_it == TRUE) {
-	res = chmod(path, new.mode.set_mode3_u.mode);
+	res = backend_chmod(path, new.mode.set_mode3_u.mode);
 	if (res == -1)
 	    return setattr_err();
     }
@@ -342,7 +343,7 @@ nfsstat3 set_attr(const char *path, nfs_fh3 nfh, sattr3 new)
     gid_t new_gid;
     struct stat buf;
 
-    res = lstat(path, &buf);
+    res = backend_lstat(path, &buf);
     if (res != 0)
 	return NFS3ERR_STALE;
 
@@ -356,31 +357,31 @@ nfsstat3 set_attr(const char *path, nfs_fh3 nfh, sattr3 new)
     /* 
      * open object for atomic setting of attributes
      */
-    fd = open(path, O_WRONLY | O_NONBLOCK);
+    fd = backend_open(path, O_WRONLY | O_NONBLOCK);
     if (fd == -1)
-	fd = open(path, O_RDONLY | O_NONBLOCK);
+	fd = backend_open(path, O_RDONLY | O_NONBLOCK);
 
     if (fd == -1)
 	return set_attr_unsafe(path, nfh, new);
 
-    res = fstat(fd, &buf);
+    res = backend_fstat(fd, &buf);
     if (res == -1) {
-	close(fd);
+	backend_close(fd);
 	return NFS3ERR_STALE;
     }
 
     /* check local fs race */
     if (fh->dev != buf.st_dev || fh->ino != buf.st_ino ||
-	fh->gen != get_gen(buf, fd, path)) {
-	close(fd);
+	fh->gen != backend_get_gen(buf, fd, path)) {
+	backend_close(fd);
 	return NFS3ERR_STALE;
     }
 
     /* set file size */
     if (new.size.set_it == TRUE) {
-	res = ftruncate(fd, new.size.set_size3_u.size);
+	res = backend_ftruncate(fd, new.size.set_size3_u.size);
 	if (res == -1) {
-	    close(fd);
+	    backend_close(fd);
 	    return setattr_err();
 	}
     }
@@ -399,23 +400,23 @@ nfsstat3 set_attr(const char *path, nfs_fh3 nfh, sattr3 new)
 	else
 	    new_gid = -1;
 
-	res = fchown(fd, new_uid, new_gid);
+	res = backend_fchown(fd, new_uid, new_gid);
 	if (res == -1) {
-	    close(fd);
+	    backend_close(fd);
 	    return setattr_err();
 	}
     }
 
     /* set mode */
     if (new.mode.set_it == TRUE) {
-	res = fchmod(fd, new.mode.set_mode3_u.mode);
+	res = backend_fchmod(fd, new.mode.set_mode3_u.mode);
 	if (res == -1) {
-	    close(fd);
+	    backend_close(fd);
 	    return setattr_err();
 	}
     }
 
-    res = close(fd);
+    res = backend_close(fd);
     if (res == -1) {
 	/* error on close probably means attributes didn't make it */
 	return NFS3ERR_IO;

@@ -20,6 +20,7 @@
 #include "../nfs.h"
 #include "../mount.h"
 #include "../daemon.h"
+#include "../backend.h"
 #include "exports.h"
 
 #ifndef PATH_MAX
@@ -193,7 +194,7 @@ static void add_item(const char *path)
 		/* If marked as removable for all hosts, don't try
 		   realpath. */
 		strncpy(buf, path, PATH_MAX);
-	} else if (!realpath(path, buf)) {
+	} else if (!backend_realpath(path, buf)) {
 		logmsg(LOG_CRIT, "realpath for %s failed", path);
 		e_error = TRUE;
 		free(new);

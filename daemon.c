@@ -38,6 +38,7 @@
 #include "fd_cache.h"
 #include "user.h"
 #include "daemon.h"
+#include "backend.h"
 #include "Config/exports.h"
 
 #ifndef SIG_PF
@@ -244,6 +245,8 @@ void daemon_exit(int error)
 
     if (opt_detach)
 	closelog();
+	
+    backend_shutdown();
 
     exit(1);
 }
@@ -687,6 +690,7 @@ int main(int argc, char **argv)
     pid_t pid = 0;
     struct sigaction act;
     sigset_t actset;
+    int res;
 
     parse_options(argc, argv);
     if (optind < argc) {
@@ -732,6 +736,12 @@ int main(int argc, char **argv)
     }
 
     if (!opt_detach || pid == 0) {
+        res = backend_init();
+        if (res == -1) {
+            fprintf(stderr, "backend initialization failed\n");
+            daemon_exit(0);
+        }
+
 	sigemptyset(&actset);
 	act.sa_handler = daemon_exit;
 	act.sa_mask = actset;

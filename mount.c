@@ -27,6 +27,7 @@
 #include "fd_cache.h"
 #include "Config/exports.h"
 #include "password.h"
+#include "backend.h"
 
 #ifndef PATH_MAX
 # define PATH_MAX	4096
@@ -193,7 +194,7 @@ mountres3 *mountproc_mnt_3_svc(dirpath * argp, struct svc_req * rqstp)
 	/* Removable media export point. Do not call realpath; simply copy
 	   path */
 	strncpy(buf, dpath, PATH_MAX);
-    } else if (!realpath(dpath, buf)) {
+    } else if (!backend_realpath(dpath, buf)) {
 	/* the given path does not exist */
 	result.fhs_status = MNT3ERR_NOENT;
 	return &result;

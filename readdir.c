@@ -21,6 +21,7 @@
 #include "mount.h"
 #include "fh.h"
 #include "readdir.h"
+#include "backend.h"
 #include "Config/exports.h"
 
 /*
@@ -66,16 +67,16 @@ uint32 directory_hash(const char *path)
     struct dirent *this;
     uint32 hval = 0;
 
-    search = opendir(path);
+    search = backend_opendir(path);
     if (!search) {
 	return 0;
     }
 
-    while ((this = readdir(search)) != NULL) {
+    while ((this = backend_readdir(search)) != NULL) {
 	hval = fnv1a_32(this->d_name, hval);
     }
 
-    closedir(search);
+    backend_closedir(search);
     return hval;
 }
 
@@ -115,7 +116,7 @@ READDIR3res read_dir(const char *path, cookie3 cookie, cookieverf3 verf,
     memset(verf, 0, NFS3_COOKIEVERFSIZE);
     *(time_t *) verf = st_cache.st_mtime;
 
-    search = opendir(path);
+    search = backend_opendir(path);
     if (!search) {
 	if ((exports_opts & OPT_REMOVABLE) && (export_point(path))) {
 	    /* Removable media export point; probably no media inserted.
@@ -132,10 +133,10 @@ READDIR3res read_dir(const char *path, cookie3 cookie, cookieverf3 verf,
 	}
     }
 
-    this = readdir(search);
+    this = backend_readdir(search);
     for (i = 0; i < cookie; i++)
 	if (this)
-	    this = readdir(search);
+	    this = backend_readdir(search);
 
     i = 0;
     entry[0].name = NULL;
@@ -147,10 +148,10 @@ READDIR3res read_dir(const char *path, cookie3 cookie, cookieverf3 verf,
 
 	    sprintf(scratch, "%s/%s", path, this->d_name);
 
-	    res = lstat(scratch, &buf);
+	    res = backend_lstat(scratch, &buf);
 	    if (res == -1) {
 		result.status = NFS3ERR_IO;
-		closedir(search);
+		backend_closedir(search);
 		return result;
 	    }
 
@@ -170,17 +171,17 @@ READDIR3res read_dir(const char *path, cookie3 cookie, cookieverf3 verf,
 		entry[i - 1].nextentry = NULL;
 	    else {
 		/* advance to next entry */
-		this = readdir(search);
+		this = backend_readdir(search);
 	    }
 
 	    i++;
 	} else {
 	    result.status = NFS3ERR_IO;
-	    closedir(search);
+	    backend_closedir(search);
 	    return result;
 	}
     }
-    closedir(search);
+    backend_closedir(search);
 
     if (entry[0].name)
 	resok.reply.entries = &entry[0];

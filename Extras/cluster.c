@@ -26,6 +26,7 @@
 
 #include "../nfs.h"
 #include "../daemon.h"
+#include "../backend.h"
 #include "cluster.h"
 
 /* array of dirents prefixed with master file name */
@@ -215,7 +216,7 @@ void cluster_scandir(const char *path)
     setegid(0);
     seteuid(0);
 
-    scan = opendir(cluster_dirname(path));
+    scan = backend_opendir(cluster_dirname(path));
     if (!scan) {
 	cluster_count = -1;
 	reset_ids(euid, egid);
@@ -223,7 +224,7 @@ void cluster_scandir(const char *path)
     }
 
     cluster_count = 0;
-    while ((entry = readdir(scan))) {
+    while ((entry = backend_readdir(scan))) {
 	if (strstr(entry->d_name, prefix) != entry->d_name &&
 	    strcmp(entry->d_name, "$$CREATE=IP$$") != 0 &&
 	    strcmp(entry->d_name, "$$CREATE=CLIENT$$") != 0 &&
@@ -238,7 +239,7 @@ void cluster_scandir(const char *path)
 	    cluster_count = -1;
 	    free(new);
 	    free(name);
-	    closedir(scan);
+	    backend_closedir(scan);
 	    reset_ids(euid, egid);
 	    return;
 	}
@@ -249,7 +250,7 @@ void cluster_scandir(const char *path)
 	cluster_count++;
     }
 
-    closedir(scan);
+    backend_closedir(scan);
     reset_ids(euid, egid);
 
     /* list needs to be sorted for cluster_lookup_lowlevel to work */

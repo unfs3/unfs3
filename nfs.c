@@ -42,6 +42,7 @@
 #include "error.h"
 #include "fd_cache.h"
 #include "daemon.h"
+#include "backend.h"
 #include "Config/exports.h"
 #include "Extras/cluster.h"
 
@@ -170,11 +171,11 @@ LOOKUP3res *nfsproc3_lookup_3_svc(LOOKUP3args * argp, struct svc_req * rqstp)
     cluster_lookup(obj, rqstp, &result.status);
 
     if (result.status == NFS3_OK) {
-	res = lstat(obj, &buf);
+	res = backend_lstat(obj, &buf);
 	if (res == -1)
 	    result.status = lookup_err();
 	else {
-	    gen = get_gen(buf, FD_NONE, obj);
+	    gen = backend_get_gen(buf, FD_NONE, obj);
 	    fh = fh_extend(argp->what.dir, buf.st_dev, buf.st_ino, gen);
 	    fh_cache_add(buf.st_dev, buf.st_ino, obj);
 
@@ -266,7 +267,7 @@ READLINK3res *nfsproc3_readlink_3_svc(READLINK3args * argp,
 
     PREP(path, argp->symlink);
 
-    res = readlink(path, buf, NFS_MAXPATHLEN - 1);
+    res = backend_readlink(path, buf, NFS_MAXPATHLEN - 1);
     if (res == -1)
 	result.status = readlink_err();
     else {
@@ -305,11 +306,11 @@ READ3res *nfsproc3_read_3_svc(READ3args * argp, struct svc_req * rqstp)
     if (result.status == NFS3_OK) {
 	fd = fd_open(path, argp->file, FD_READ);
 	if (fd != -1) {
-	    where = lseek(fd, argp->offset, SEEK_SET);
+	    where = backend_lseek(fd, argp->offset, SEEK_SET);
 	    if (where == (int64) argp->offset) {
 
 		/* read one more to check for eof */
-		res = read(fd, buf, argp->count + 1);
+		res = backend_read(fd, buf, argp->count + 1);
 
 		/* eof if we could not read one more */
 		result.READ3res_u.resok.eof = (res <= (int64) argp->count);
@@ -364,9 +365,10 @@ WRITE3res *nfsproc3_write_3_svc(WRITE3args * argp, struct svc_req * rqstp)
     if (result.status == NFS3_OK) {
 	fd = fd_open(path, argp->file, FD_WRITE);
 	if (fd != -1) {
-	    where = lseek(fd, argp->offset, SEEK_SET);
+	    where = backend_lseek(fd, argp->offset, SEEK_SET);
 	    if (where == (int64) argp->offset) {
-		res = write(fd, argp->data.data_val, argp->data.data_len);
+		res = backend_write(fd, argp->data.data_val,
+		                    argp->data.data_len);
 
 		/* close for real if not UNSTABLE write */
 		if (argp->stable == UNSTABLE)
@@ -431,18 +433,18 @@ CREATE3res *nfsproc3_create_3_svc(CREATE3args * argp, struct svc_req * rqstp)
 
     if (result.status == NFS3_OK) {
 	if (argp->how.mode != EXCLUSIVE) {
-	    fd = open(obj, flags, create_mode(new_attr));
+	    fd = backend_open(obj, flags, create_mode(new_attr));
 
 	    if (fd != -1) {
-		res = fstat(fd, &buf);
+		res = backend_fstat(fd, &buf);
 		if (res == -1) {
 		    /* could not stat our own file?! */
 		    close(fd);
 		    result.status = NFS3ERR_IO;
 		} else {
-		    gen = get_gen(buf, fd, obj);
+		    gen = backend_get_gen(buf, fd, obj);
 		    fh_cache_add(buf.st_dev, buf.st_ino, obj);
-		    close(fd);
+		    backend_close(fd);
 
 		    result.CREATE3res_u.resok.obj =
 			fh_extend_post(argp->where.dir, buf.st_dev,
@@ -483,7 +485,7 @@ MKDIR3res *nfsproc3_mkdir_3_svc(MKDIR3args * argp, struct svc_req * rqstp)
     cluster_create(obj, rqstp, &result.status);
 
     if (result.status == NFS3_OK) {
-	res = mkdir(obj, create_mode(argp->attributes));
+	res = backend_mkdir(obj, create_mode(argp->attributes));
 	if (res == -1)
 	    result.status = mkdir_err();
 	else {
@@ -532,7 +534,7 @@ SYMLINK3res *nfsproc3_symlink_3_svc(SYMLINK3args * argp,
 
     if (result.status == NFS3_OK) {
 	umask(~new_mode);
-	res = symlink(argp->symlink.symlink_data, obj);
+	res = backend_symlink(argp->symlink.symlink_data, obj);
 	umask(0);
 	if (res == -1)
 	    result.status = symlink_err();
@@ -642,11 +644,11 @@ MKNOD3res *nfsproc3_mknod_3_svc(MKNOD3args * argp, struct svc_req * rqstp)
 
     if (result.status == NFS3_OK) {
 	if (argp->what.type == NF3CHR || argp->what.type == NF3BLK)
-	    res = mknod(obj, new_mode, dev);	/* device */
+	    res = backend_mknod(obj, new_mode, dev); /* device */
 	else if (argp->what.type == NF3FIFO)
-	    res = mkfifo(obj, new_mode);	/* FIFO */
+	    res = backend_mkfifo(obj, new_mode);     /* FIFO */
 	else
-	    res = mksocket(obj, new_mode);	/* socket */
+	    res = backend_mksocket(obj, new_mode);   /* socket */
 
 	if (res == -1) {
 	    result.status = mknod_err();
@@ -681,7 +683,7 @@ REMOVE3res *nfsproc3_remove_3_svc(REMOVE3args * argp, struct svc_req * rqstp)
     cluster_lookup(obj, rqstp, &result.status);
 
     if (result.status == NFS3_OK) {
-	res = remove(obj);
+	res = backend_remove(obj);
 	if (res == -1)
 	    result.status = remove_err();
     }
@@ -707,7 +709,7 @@ RMDIR3res *nfsproc3_rmdir_3_svc(RMDIR3args * argp, struct svc_req * rqstp)
     cluster_lookup(obj, rqstp, &result.status);
 
     if (result.status == NFS3_OK) {
-	res = rmdir(obj);
+	res = backend_rmdir(obj);
 	if (res == -1)
 	    result.status = rmdir_err();
     }
@@ -747,7 +749,7 @@ RENAME3res *nfsproc3_rename_3_svc(RENAME3args * argp, struct svc_req * rqstp)
 	cluster_create(to_obj, rqstp, &result.status);
 
 	if (result.status == NFS3_OK) {
-	    res = rename(from_obj, to_obj);
+	    res = backend_rename(from_obj, to_obj);
 	    if (res == -1)
 		result.status = rename_err();
 	}
@@ -785,7 +787,7 @@ LINK3res *nfsproc3_link_3_svc(LINK3args * argp, struct svc_req * rqstp)
 	result.status = exports_compat(old, rqstp);
 
 	if (result.status == NFS3_OK) {
-	    res = link(old, obj);
+	    res = backend_link(old, obj);
 	    if (res == -1)
 		result.status = link_err();
 	}
@@ -844,7 +846,7 @@ FSSTAT3res *nfsproc3_fsstat_3_svc(FSSTAT3args * argp, struct svc_req * rqstp)
     /* overlaps with resfail */
     result.FSSTAT3res_u.resok.obj_attributes = get_post_cached(rqstp);
 
-    res = statvfs(path, &buf);
+    res = backend_statvfs(path, &buf);
     if (res == -1) {
 	/* statvfs fell on its nose */
 	if ((exports_opts & OPT_REMOVABLE) && export_point(path)) {

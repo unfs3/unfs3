@@ -25,6 +25,7 @@
 #include "daemon.h"
 #include "Config/exports.h"
 #include "readdir.h"
+#include "backend.h"
 
 /* number of entries in fh cache */
 #define CACHE_ENTRIES	4096
@@ -169,7 +170,7 @@ static char *fh_cache_lookup(uint32 dev, uint32 ino)
 
     if (i != -1) {
 	/* check whether path to <dev,ino> relation still holds */
-	res = lstat(fh_cache[i].path, &buf);
+	res = backend_lstat(fh_cache[i].path, &buf);
 	if (res == -1) {
 	    /* object does not exist any more */
 	    fh_cache_inval(i);
@@ -221,7 +222,7 @@ char *fh_decomp(nfs_fh3 fh)
 	    /* Need to fill stat cache */
 	    st_cache_valid = TRUE;
 
-	    if (lstat(result, &st_cache) == -1) {
+	    if (backend_lstat(result, &st_cache) == -1) {
 		/* export point does not exist. This probably means that we
 		   are using autofs and no media is inserted. Fill stat cache 
 		   with dummy information */
@@ -296,7 +297,7 @@ char *fh_decomp(nfs_fh3 fh)
 
 	/* if still not found, do full recursive search) */
 	if (!result)
-	    result = locate_file(obj->dev, obj->ino);
+	    result = backend_locate_file(obj->dev, obj->ino);
 
 	if (result)
 	    /* add to cache for later use if resolution ok */

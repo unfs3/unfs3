@@ -33,6 +33,7 @@
 #include "mount.h"
 #include "daemon.h"
 #include "fh.h"
+#include "backend.h"
 #include "Config/exports.h"
 
 /*
@@ -193,7 +194,7 @@ unfs3_fh_t fh_comp_raw(const char *path, struct svc_req *rqstp, int need_dir)
 	}
     }
 
-    res = lstat(path, &buf);
+    res = backend_lstat(path, &buf);
     if (res == -1)
 	return invalid_fh;
 
@@ -203,7 +204,7 @@ unfs3_fh_t fh_comp_raw(const char *path, struct svc_req *rqstp, int need_dir)
 
     fh.dev = buf.st_dev;
     fh.ino = buf.st_ino;
-    fh.gen = get_gen(buf, FD_NONE, path);
+    fh.gen = backend_get_gen(buf, FD_NONE, path);
 
     /* special case for root directory */
     if (strcmp(path, "/") == 0)
@@ -218,7 +219,7 @@ unfs3_fh_t fh_comp_raw(const char *path, struct svc_req *rqstp, int need_dir)
 	if (last != NULL)
 	    *last = 0;
 
-	res = lstat(work, &buf);
+	res = backend_lstat(work, &buf);
 	if (res == -1) {
 	    return invalid_fh;
 	}
@@ -312,7 +313,7 @@ post_op_fh3 fh_extend_type(nfs_fh3 fh, const char *path, unsigned int type)
     struct stat buf;
     int res;
 
-    res = lstat(path, &buf);
+    res = backend_lstat(path, &buf);
     if (res == -1 || (buf.st_mode & type) != type) {
 	st_cache_valid = FALSE;
 	result.handle_follows = FALSE;
@@ -323,7 +324,7 @@ post_op_fh3 fh_extend_type(nfs_fh3 fh, const char *path, unsigned int type)
     st_cache = buf;
 
     return fh_extend_post(fh, buf.st_dev, buf.st_ino,
-			  get_gen(buf, FD_NONE, path));
+			  backend_get_gen(buf, FD_NONE, path));
 }
 
 /*
@@ -367,18 +368,18 @@ static int fh_rec(const unfs3_fh_t * fh, int pos, const char *lead,
     if (pos == fh->len)
 	return FALSE;
 
-    search = opendir(lead);
+    search = backend_opendir(lead);
     if (!search)
 	return FALSE;
 
-    entry = readdir(search);
+    entry = backend_readdir(search);
 
     while (entry) {
 	if (strlen(lead) + strlen(entry->d_name) + 1 < NFS_MAXPATHLEN) {
 
 	    sprintf(obj, "%s/%s", lead, entry->d_name);
 
-	    res = lstat(obj, &buf);
+	    res = backend_lstat(obj, &buf);
 	    if (res == -1) {
 		buf.st_dev = 0;
 		buf.st_ino = 0;
@@ -387,7 +388,7 @@ static int fh_rec(const unfs3_fh_t * fh, int pos, const char *lead,
 	    if (buf.st_dev == fh->dev && buf.st_ino == fh->ino) {
 		/* found the object */
 		sprintf(result, "%s/%s", lead + 1, entry->d_name);
-		closedir(search);
+		backend_closedir(search);
 		/* update stat cache */
 		st_cache_valid = TRUE;
 		st_cache = buf;
@@ -404,15 +405,15 @@ static int fh_rec(const unfs3_fh_t * fh, int pos, const char *lead,
 		rec = fh_rec(fh, pos + 1, obj, result);
 		if (rec) {
 		    /* object was found in dir */
-		    closedir(search);
+		    backend_closedir(search);
 		    return TRUE;
 		}
 	    }
 	}
-	entry = readdir(search);
+	entry = backend_readdir(search);
     }
 
-    closedir(search);
+    backend_closedir(search);
     return FALSE;
 }
 
