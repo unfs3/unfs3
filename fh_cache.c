@@ -10,6 +10,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <rpc/rpc.h>
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -38,7 +39,7 @@ int fh_cache_use = 0;
 int fh_cache_hit = 0;
 
 /* counter for LRU */
-static int fh_cache_time = 0;
+static int fh_cache_time = 1;
 
 /*
  * return next pseudo-time value for LRU counter
@@ -63,7 +64,7 @@ void fh_cache_init(void)
  */
 static int fh_cache_lru(void)
 {
-    int best = -1;
+    int best = INT_MAX;
     int best_idx = 0;
     int i;
 
@@ -129,7 +130,10 @@ void fh_cache_add(uint32 dev, uint32 ino, const char *path)
     fh_cache[idx].ino = ino;
     fh_cache[idx].use = fh_cache_next();
 
-    strcpy(fh_cache[idx].path, path);
+    if (strstr(path, "//") == path)
+	strcpy(fh_cache[idx].path, path+1);
+    else
+	strcpy(fh_cache[idx].path, path);
 }
 
 /*
