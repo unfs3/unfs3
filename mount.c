@@ -183,6 +183,26 @@ hexify(unsigned char digest[16], unsigned char hexdigest[32])
     }
 }
 
+/* Handle mount commands:
+ * Advance dpath to first slash
+ * Copy command arguments to arg. 
+*/
+static void
+mnt_cmd_argument(char **dpath, const char *cmd, char *arg, size_t maxlen)
+{
+    char *slash;
+
+    *dpath += strlen(cmd);
+    strncpy(arg, *dpath, maxlen);
+    arg[maxlen] = '\0';
+
+    slash = strchr(arg, '/');
+    if (slash != NULL)
+        *slash = '\0';
+
+    *dpath += strlen(arg);
+}
+
 void *
 mountproc_null_3_svc(U(void *argp), U(struct svc_req *rqstp))
 {
@@ -227,33 +247,19 @@ mountproc_mnt_3_svc(dirpath * argp, struct svc_req * rqstp)
     }
     else if (strncmp(dpath, "@password:", sizeof("@password:") - 1) == 0) {
         char pw[PASSWORD_MAXLEN + 1];
-        char *slash;
 
-        dpath += sizeof("@password:") - 1;
-        strncpy(pw, dpath, PASSWORD_MAXLEN);
-        pw[PASSWORD_MAXLEN] = '\0';
-
-        slash = strchr(pw, '/');
-        if (slash != NULL)
-            *slash = '\0';
-
+        mnt_cmd_argument(&dpath, "@password:", pw, PASSWORD_MAXLEN);
         authenticated = !strcmp(password, pw);
-        dpath += strlen(pw);
     }
     else if (strncmp(dpath, "@otp:", sizeof("@otp:") - 1) == 0) {
         md5_state_t state;
+        /* The otp from the client */
         char otp[PASSWORD_MAXLEN + 1];
-        char *slash;
+        /* Our calculated otp */
         unsigned char digest[16];
         unsigned char hexdigest[32];
 
-        dpath += sizeof("@otp:") - 1;
-        strncpy(otp, dpath, PASSWORD_MAXLEN);
-        otp[PASSWORD_MAXLEN] = '\0';
-
-        slash = strchr(otp, '/');
-        if (slash != NULL)
-            *slash = '\0';
+        mnt_cmd_argument(&dpath, "@otp:", otp, PASSWORD_MAXLEN);
 
         /* Calculate the digest, in the same way as the client did */
         md5_init(&state);
@@ -266,7 +272,7 @@ mountproc_mnt_3_svc(dirpath * argp, struct svc_req * rqstp)
            submitted */
         authenticated = !strncmp(hexdigest, otp, 32);
 
-        dpath += strlen(otp);
+        /* Change nonce */
         gen_nonce(nonce);
     }
 
