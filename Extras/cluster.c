@@ -450,18 +450,22 @@ void cluster_create(char *path, struct svc_req *rqstp, nfsstat3 * nstat)
 
 	/* always create IP file */
 	sprintf(buf, "$$IP=%s$$", inet_ntoa(get_remote(rqstp)));
-	if ((res = match_suffix(master, "$$CREATE=IP$$", entry)))
+	if ( (res = match_suffix(master, "$$CREATE=IP$$", entry)) ||
+	     (res = match_suffix(master, "$$ALWAYS=IP$$", entry)) )
 	    break;
-	if (strcmp("$$CREATE=IP$$", entry) == 0) {
+	if ( (strcmp("$$CREATE=IP$$", entry) == 0) ||
+	     (strcmp("$$ALWAYS=IP$$", entry) == 0) ) {
 	    res = CLU_SLAVE;
 	    break;
 	}
 
 	/* always create CLIENT file */
 	sprintf(buf, "$$CLIENT$$");
-	if ((res = match_suffix(master, "$$CREATE=CLIENT$$", entry)))
+	if ( (res = match_suffix(master, "$$CREATE=CLIENT$$", entry)) ||
+	     (res = match_suffix(master, "$$ALWAYS=CLIENT$$", entry)) )
 	    break;
-	if (strcmp("$$CREATE=CLIENT$$", entry) == 0) {
+	if ( (strcmp("$$CREATE=CLIENT$$", entry) == 0) ||
+	     (strcmp("$$ALWAYS=CLIENT$$", entry) == 0) ) {
 	    res = CLU_SLAVE;
 	    break;
 	}

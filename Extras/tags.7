@@ -63,7 +63,7 @@ If any client attempts to access the normal file, it will be redirected to this
 file instead.
 .TP
 .B file$$ALWAYS=IP$$
-If any client attempts to access the normal file, it will be redirected to
+If any client attempts to access or create the normal file, it will be redirected to
 .B file$$IP=a.b.c.d$$
 instead, where
 .I a.b.c.d
@@ -71,9 +71,9 @@ is the IP address of the client. It does not matter whether the target
 tagged file exists or not.
 .TP
 .B file$$ALWAYS=CLIENT$$
-If any client attempts to access the normal file, it will be redirected to
+If any client attempts to access or create the normal file, it will be redirected to
 .B file$$CLIENT$$
-instead. It does not matter whether this file exists or not.
+instead. It does not matter whether that file exists or not.
 .TP
 .B $$ALWAYS=CLIENT$$
 Like above, but effective for all files in the directory where it is found.

@@ -5,6 +5,9 @@ Bulding with a 2.95.x or 2.96 gcc was broken in 0.9.9 due to mixed
 code and declarations. Problem report and patch by Simon Matter
 <simix@users.sourceforge.net>.
 
+The ALWAYS cluster tag now also takes effect for creation of
+files. Patch by Bernd Schubert <bernd-schubert@web.de>.
+
 
 ChangeLog
 =========
@@ -12,6 +15,7 @@ ChangeLog
 Version 0.9.10
 
   - fix building with gcc 2.95.x or 2.96
+  - make ALWAYS cluster tag take effect for file creations
 
 Version 0.9.9
 
