@@ -20,7 +20,12 @@
 #include <unistd.h>
 
 #if HAVE_LINUX_EXT2_FS_H == 1
-# include <linux/ext2_fs.h>
+/*
+ * presence of linux/ext2_fs.h is a hint that we are on Linux, really
+ * including that file doesn't work on Debian, so define the ioctl
+ * number here
+ */
+#define EXT2_IOC_GETVERSION	0x80047601
 #endif
 
 #include "nfs.h"
