@@ -147,7 +147,10 @@ READDIR3res read_dir(const char *path, cookie3 cookie, cookieverf3 verf,
 
 	if (strlen(path) + strlen(this->d_name) + 1 < NFS_MAXPATHLEN) {
 
-	    sprintf(scratch, "%s/%s", path, this->d_name);
+	    if (strcmp(path, "/") == 0)
+	        sprintf(scratch, "/%s", this->d_name);
+            else
+	        sprintf(scratch, "%s/%s", path, this->d_name);
 
 	    res = backend_lstat(scratch, &buf);
 	    if (res == -1) {
