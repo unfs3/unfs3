@@ -1,0 +1,271 @@
+
+                   Re: A multi-threaded NFS server for Linux
+
+   Olaf Kirch (okir@monad.swb.de)
+   Tue, 26 Nov 1996 23:09:08 +0100
+
+     * Messages  sorted  by:  [1][  date ][2][ thread ][3][ subject ][4][
+       author ]
+     * Next message: [5]Olaf Kirch: "Re: rpc.lockd/rpc.statd"
+     * Previous message: [6]Paul Christenson: "smail SPAM filter?"
+     * Next  in  thread:  [7]Linus  Torvalds:  "Re:  A multi-threaded NFS
+       server for Linux"
+     * Reply:  [8]Linus  Torvalds:  "Re:  A multi-threaded NFS server for
+       Linux"
+     _________________________________________________________________
+
+   Hi all,
+
+   here are some ramblings about implementing nfsd, the differences
+   between kernel- and user-space, and life in general. It's become quite
+   long, so if you're not interested in either of these topics,
+   just skip it...
+
+   On Sun, 24 Nov 1996 12:01:01 PST, "H.J. Lu" wrote:
+   > With the upcoming the Linux C library 6.0, it is possible to
+   > implement a multi-threaded NFS server in the user space using
+   > the kernel-based pthread and MT-safe API included in libc 6.0.
+
+   In  my  opinion,  servicing NFS from user space is an idea that should
+   die.
+   The current unfsd (and I'm pretty sure this will hold for any other
+   implementation) has a host of problems:
+
+   1. Speed.
+
+   This is only partly related to nfsd being single-threaded. I have
+   run some benchmarks a while ago comparing my kernel-based nfsd to
+   the user-space nfsd.
+
+   In  the  unfsd  case,  I  was  running 4 daemons in parallel (which is
+   possible
+   even now as long as you restrict yourself to read-only access), and
+   found  the  upper  limit  for peak throughput was around 800 KBps; the
+   rate
+   for sustained reads was even lower. In comparison, the kernel-based
+   nfsd achieved around than 1.1 MBps peak throughput which is almost
+   the  theoretical  cheapernet  limit;  its  sustained rate was around 1
+   MBps.
+   Testers of my recent knfsd implementation reported a sustained rate
+   of 3.8 MBps over 100 Mbps Ethernet.
+
+   Even  though  some tweaking of the unfsd source (especially by getting
+   rid
+   of  the  Sun  RPC  code)  may  improve  performance some more, I don't
+   believe
+   the  user-space  can  be  pushed  much  further.  [Speaking of the RPC
+   library,
+   a rewrite would be required anyway to safely support NFS over TCP. You
+   can easily hang a vanilla RPC server by sending an incomplete request
+   over TCP and keeping the connection open]
+
+   Now add to that the synchronization overhead required to keep the file
+   handle cache in sync between the various threads...
+
+   This leads me straight to the next topic:
+
+   2. File Handle Layout
+
+   Traditional  nfsds usually stuff a file's device and inode number into
+   the
+   file handle, along with some information on the exported inode. Since
+   a user space program has no way of opening a file just given its inode
+   number,  unfsd  takes  a  different  approach.  It basically creates a
+   hashed
+   version  of  the  file's  path. Each path component is stat'ed, and an
+   8bit
+   hash of the component's device and inode number is used.
+
+   The first problem is that this kind of file handle is not invariant
+   against renames from one directory to another. Agreed, this doesn't
+   happen too often, but it does break Unix semantics. Try this on an
+   nfs-mounted file system (with appropriate foo and bar):
+
+   (mv bar foo/bar; cat) < bar
+
+   The second problem is a lot worse. When unfsd is presented with a file
+   handle it does not have in its cache, it must map it to a valid path
+   name. This is basically done in the following way:
+
+   path = "/";
+   depth = 0;
+   while (depth < length(fhandle)) {
+   deeper:
+   dirp = opendir(path);
+   while ((entry = readdir(dirp)) != NULL) {
+   if (hash(dev,ino) matches fhandle component) {
+   remember dirp
+   append entry to path
+   depth++;
+   goto deeper;
+   }
+   }
+   closedir(dirp);
+   backtrack;
+   }
+
+   Needless to say, this is not very fast. The file handle cache helps
+   a lot here, but this kind of mapping operation occurs far more often
+   than one might expect (consider a development tree where files get
+   created   and   deleted   continuously).   In  addition,  the  current
+   implementation
+   discards conflicting handles when there's a hash collision.
+
+   This file handle layout also leaves little room for any additional
+   baggage. Unfsd currently uses 4 bytes for an inode hash of the file
+   itself and 28 bytes for the hashed path, but as soon as you add other
+   information like the inode generation number, you will sooner or
+   later run out of room.
+
+   Last not least, the file handle cache must be strictly synchronized
+   between different nfsd processes/threads. Suppose you rename foo to
+   bar,  which  is performed by thread1, then try to read the file, which
+   is
+   performed  by  thread2.  If the latter doesn't know the cached path is
+   stale,
+   it  will  fail.  You  could of course retry every operation that fails
+   with
+   ENOENT, but this will add even more clutter and overhead to the code.
+
+   3. Adherence to the NFSv2 specification
+
+   The  Linux  nfsd  currently  does  not  fulfill  the NFSv2 spec in its
+   entirety.
+   Especially  when  it  comes  to  safe  writes, it is really a fake. It
+   neither
+   makes  an  attempt  to  sync  file  data before replying to the client
+   (which
+   could be implemented, along with the `async' export option for turning
+   off this kind of behavior), nor does it sync meta-data after inode
+   operations (which is impossible from user space). To most people this
+   is no big loss, but this behavior is definitely not acceptable if you
+   want industry-strengh NFS.
+
+   But  even  if  you  did  implement at least synchronous file writes in
+   unfsd,
+   be it as an option or as the default, there seems to be no way to
+   implement some of the more advanced techniques like gathered writes.
+   When implementing gathered writes, the server tries to detect whether
+   other nfsd threads are writing to the file at the same time (which
+   frequently happens when the client's biods flush out the data on file
+   close),  and  if  they  do,  it  delays  syncing  file  data for a few
+   milliseconds
+   so  the  others can finish first, and then flushes all data in one go.
+   You
+   can do this in kernel-land by watching inode->i_writecount, but you're
+   totally at a loss in user-space.
+
+   4. Supporting NFSv3
+
+   A   user-space   NFS  server  is  not  particularly  well  suited  for
+   implementing
+   NFSv3.  For  instance,  NFSv3  tries  to help cache consistency on the
+   client
+   by   providing  pre-operation  attributes  for  some  operations,  for
+   instance
+   the WRITE call. When a client finds that the pre-operation attributes
+   returned by the server agree with those it has cached, it can safely
+   assume that any data it has cached was still valid when the server
+   replied  to  its  call,  so there's no need to discard the cached file
+   data
+   and meta-data.
+
+   However, pre-op attributes can only be provided safely when the server
+   retains  exclusive  access to the inode throughout the operation. This
+   is
+   impossible from user space.
+
+   A similar example is the exclusive create operation where a verifier
+   is stored in the inode's atime/mtime fields by the server to guarantee
+   exactly-once  behavior  even  in  the face of request retransmissions.
+   These
+   values cannot be checked atomically by a user-space server.
+
+   What this boils down to is that a user-space server cannot, without
+   violating the protocol spec, implement many of the advanced features
+   of NFSv3.
+
+   5. File locking over NFS
+
+   Supporting lockd in user-space is close to impossible. I've tried it,
+   and have run into a large number of problems. Some of the highlights:
+
+   * lockd can provide only a limited number of locks at the same
+   time because it has only a limited number of file descriptors.
+
+   * When lockd blocks a client's lock request because of a lock held
+   by a local process on the server, it must continuously poll
+   /proc/locks to see whether the request could be granted. What's
+   more, if there's heavy contention for the file, it may take
+   a long time before it succeeds because it cannot add itself
+   to the inode's lock wait list in the kernel. That is, unless
+   you want it to create a new thread just for blocking on this
+   lock.
+
+   * Lockd must synchronize its file handle cache with that of
+   the NFS servers. Unfortunately, lockd is also needed when
+   running as an NFS client only, so you run into problems with
+   who owns the file handle cache, and how to share it between
+   these to services.
+
+   6. Conclusion
+
+   Alright,  this  has  become  rather  long.  Some  of the problems I've
+   described
+   above  may  be  solvable with more or less effort, but I believe that,
+   taken
+   as a whole, they make a pretty strong argument against sticking with
+   a user-space nfsd.
+
+   In  kernel-space,  most of these issues are addressed most easily, and
+   more
+   efficiently. My current kernel nfsd is fairly small. Together with the
+   RPC  core,  which  is  used  by  both  client  and server, it takes up
+   something
+   like 20 pages--don't quote me on the exact number. As mentioned above,
+   it is also pretty fast, and I hope I'll be able to also provide fully
+   functional file locking soon.
+
+   If you want to take a look at the current snapshot, it's available at
+   ftp.mathematik.th-darmstadt.de/pub/linux/okir/dontuse/linux-nfs-X.Y.ta
+   r.gz.
+   This version still has a bug in the nfsd readdir implementation, but
+   I'll  release  an  updated  (and  fixed) version as soon as I have the
+   necessary
+   lockd rewrite sorted out.
+
+   I  would  particularly  welcome  comments  from  Keepers of the Source
+   whether
+   my NFS rewrite has any chance of being incorporated into the kernel at
+   some time... that would definitely motivate me to sick more time into
+   it than I currently do.
+
+   Happy hacking
+   Olaf
+--
+Olaf Kirch         |  --- o --- Nous sommes du soleil we love when we play
+okir@monad.swb.de  |    / | \   sol.dhoop.naytheet.ah kin.ir.samse.qurax
+             For my PGP public key, finger okir@brewhq.swb.de.
+     _________________________________________________________________
+
+     * Next message: [9]Olaf Kirch: "Re: rpc.lockd/rpc.statd"
+     * Previous message: [10]Paul Christenson: "smail SPAM filter?"
+     * Next  in  thread:  [11]Linus  Torvalds:  "Re: A multi-threaded NFS
+       server for Linux"
+     * Reply:  [12]Linus  Torvalds:  "Re: A multi-threaded NFS server for
+       Linux"
+
+Referenser
+
+   1. http://www.ussg.iu.edu/hypermail/linux/net/9611.3/date.html#18
+   2. http://www.ussg.iu.edu/hypermail/linux/net/9611.3/index.html#18
+   3. http://www.ussg.iu.edu/hypermail/linux/net/9611.3/subject.html#18
+   4. http://www.ussg.iu.edu/hypermail/linux/net/9611.3/author.html#18
+   5. http://www.ussg.iu.edu/hypermail/linux/net/9611.3/0019.html
+   6. http://www.ussg.iu.edu/hypermail/linux/net/9611.3/0017.html
+   7. http://www.ussg.iu.edu/hypermail/linux/net/9611.3/0020.html
+   8. http://www.ussg.iu.edu/hypermail/linux/net/9611.3/0020.html
+   9. http://www.ussg.iu.edu/hypermail/linux/net/9611.3/0019.html
+  10. http://www.ussg.iu.edu/hypermail/linux/net/9611.3/0017.html
+  11. http://www.ussg.iu.edu/hypermail/linux/net/9611.3/0020.html
+  12. http://www.ussg.iu.edu/hypermail/linux/net/9611.3/0020.html
