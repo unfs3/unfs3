@@ -26,6 +26,7 @@
 
 #include "nfs.h"
 #include "fh.h"
+#include "daemon.h"
 
 /*
  * these are the brute-force file searching routines that are used
@@ -101,6 +102,9 @@ char *locate_file(U(uint32 dev), U(uint32 ino))
     FILE *mtab;
     struct stat buf;
     int res;
+
+    if (!opt_brute_force)
+	return NULL;
 
 #if HAVE_MNTENT_H == 1
     struct mntent *ent;

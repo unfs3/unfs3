@@ -58,6 +58,7 @@ int opt_tcponly = FALSE;
 unsigned int opt_nfs_port = NFS_PORT;	/* 0 means RPC_ANYSOCK */
 unsigned int opt_mount_port = NFS_PORT;
 int opt_singleuser = FALSE;
+int opt_brute_force = FALSE;
 
 /* Register with portmapper? */
 int opt_portmapper = TRUE;
@@ -153,6 +154,9 @@ static void parse_options(int argc, char **argv)
 			   "All clients will have root access to all exported files!");
 		}
 		break;
+	    case 'b':
+		opt_brute_force = TRUE;
+		break;
 	    case 'h':
 		printf(UNFS_NAME);
 		printf("Usage: %s [options]\n", argv[0]);
@@ -171,6 +175,7 @@ static void parse_options(int argc, char **argv)
 		    ("\t-t          TCP only, do not listen on UDP ports\n");
 		printf("\t-p          do not register with the portmapper\n");
 		printf("\t-s          single user mode\n");
+		printf("\t-b          enable brute force file searching\n");
 		exit(0);
 		break;
 	    case '?':
