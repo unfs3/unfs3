@@ -36,11 +36,10 @@ class TCPMOUNTClient(PartialMOUNTClient, rpc.RawTCPClient):
 
 
 class NFSOTPClient:
-    def __init__(self, host, port, password):
+    def __init__(self, host, port):
         self.mountcl = TCPMOUNTClient(host, port)
-        self.password = password
 
-    def getotp(self):
+    def getotp(self, password):
         res = self.mountcl.mnt("@getnonce")
 
         if res.fhs_status != mountclient.mountconstants.MNT3_OK:
@@ -48,7 +47,7 @@ class NFSOTPClient:
             sys.exit(1)
         
         fhandle = res.mountinfo.fhandle
-        digest = md5.new(fhandle + self.password).hexdigest()
+        digest = md5.new(fhandle + password).hexdigest()
         return digest
 
 
@@ -72,7 +71,8 @@ if __name__ == "__main__":
         print >>sys.stderr, "Portmapper support not yet implemented"
         sys.exit(1)
 
+    cl = NFSOTPClient(host, port)
     import getpass
     password = getpass.getpass()
     
-    print NFSOTPClient(host, port, password).getotp()
+    print cl.getotp(password)
