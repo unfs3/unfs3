@@ -1,9 +1,13 @@
 What's new or changed in 0.9.7
 ==============================
 
-Renaming of files across directory boundaries should no longer result
-in stale filehandle errors. There is a performance penalty for doing
-such renames, though.
+Renaming of files across directory boundaries should no longer
+result in stale filehandle errors. There is a performance penalty
+for doing such renames, though.
+
+It is now possible to execute files on the client for which the
+requesting user has only execute and not read permissions on the
+server.
 
 
 Old news
