@@ -287,8 +287,14 @@ static void add_option(const char *opt)
 
 static void add_option_with_value(const char *opt, const char *val)
 {
-	if (strcmp(opt,"password") == 0)
-		strncpy(cur_host.password, val, sizeof(password));
+    if (strcmp(opt,"password") == 0) {
+	if (strlen(val) > PASSWORD_MAXLEN) {
+	    putmsg(LOG_WARNING, "Warning: password for export %s truncated to 64 chars",
+		   cur_item.orig);
+	}
+	strncpy(cur_host.password, val, sizeof(password));
+	cur_host.password[PASSWORD_MAXLEN] = '\0';
+    }
 }
 
 /*
