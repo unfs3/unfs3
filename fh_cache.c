@@ -28,7 +28,7 @@ typedef struct {
     uint32 dev;			/* device */
     uint32 ino;			/* inode */
     char path[NFS_MAXPATHLEN];	/* pathname */
-    time_t use;			/* last use */
+    unsigned int use;		/* last use */
 } unfs3_cache_t;
 
 static unfs3_cache_t fh_cache[CACHE_ENTRIES];
@@ -39,12 +39,24 @@ int fh_cache_use = 0;
 int fh_cache_hit = 0;
 
 /* counter for LRU */
-static int fh_cache_time = 0;
+static unsigned int fh_cache_time = 0;
+
+/*
+ * last returned entry
+ *
+ * this entry must not be overwritten before the next lookup, because
+ * operations such as CREATE may still be needing the path inside the
+ * entry for getting directory attributes
+ *
+ * this is needed since fh_cache_time can roll around to 0, thus
+ * making the entry evictable
+ */
+static int fh_last_entry = -1;
 
 /*
  * return next pseudo-time value for LRU counter
  */
-static int fh_cache_next(void)
+static unsigned int fh_cache_next(void)
 {
     return ++fh_cache_time;
 }
@@ -64,7 +76,7 @@ void fh_cache_init(void)
  */
 static int fh_cache_lru(void)
 {
-    int best = INT_MAX;
+    unsigned int best = UINT_MAX;
     int best_idx = 0;
     int i;
 
@@ -73,6 +85,8 @@ static int fh_cache_lru(void)
 	return fh_cache_max++;
 
     for (i = 0; i < CACHE_ENTRIES; i++) {
+	if (i == fh_last_entry)
+	    continue;
 	if (fh_cache[i].use == 0)
 	    return i;
 	if (fh_cache[i].use < best) {
@@ -80,6 +94,11 @@ static int fh_cache_lru(void)
 	    best_idx = i;
 	}
     }
+
+    /* avoid stomping over last returned entry */
+    if (best_idx == 0 && fh_last_entry == 0)
+	best_idx = 1;
+
     return best_idx;
 }
 
@@ -154,9 +173,14 @@ static char *fh_cache_lookup(uint32 dev, uint32 ino)
 	if (buf.st_dev == dev && buf.st_ino == ino) {
 	    /* cache hit, update time on cache entry */
 	    fh_cache[i].use = fh_cache_next();
+
 	    /* update stat cache */
 	    st_cache_valid = TRUE;
 	    st_cache = buf;
+	    
+	    /* prevent next fh_cache_add from overwriting entry */
+	    fh_last_entry = i;
+
 	    return fh_cache[i].path;
 	} else {
 	    /* path to <dev,ino> relation has changed */
