@@ -163,6 +163,9 @@ static void parse_options(int argc, char **argv)
 		printf("\t-p          do not register with the portmapper\n");
 		exit(0);
 		break;
+	    case '?':
+		exit(1);
+		break;
 	}
     }
 }
@@ -190,7 +193,7 @@ void daemon_exit(int error)
 	       fd_cache_readers, fd_cache_writers);
 	return;
     }
-    
+
     if (opt_portmapper) {
 	svc_unregister(MOUNTPROG, MOUNTVERS1);
 	svc_unregister(MOUNTPROG, MOUNTVERS3);
