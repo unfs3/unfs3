@@ -60,9 +60,9 @@ static struct groupnode ne_host;
 /* error status of last parse */
 int e_error = FALSE;
 
-/* secrets. FIXME: This is global variable now, even though the syntax
-   allows for differents secrets per export */
-char secret[SECRET_MAXLEN];
+/* passwords. FIXME: This is global variable now, even though the syntax
+   allows for differents passwords per export */
+char password[PASSWORD_MAXLEN];
 
 
 /*
@@ -287,8 +287,8 @@ static void add_option(const char *opt)
 
 static void add_option_with_value(const char *opt)
 {
-	if (strcmp(opt,"secret") == 0)
-		strncpy(secret, opt, sizeof(secret));
+	if (strcmp(opt,"password") == 0)
+		strncpy(password, opt, sizeof(password));
 }
 
 /*
