@@ -86,31 +86,30 @@ Note that the file needs to be specified using an absolute path.
 Use an unprivileged port for NFS and MOUNT service. Normally,
 .B unfsd
 will use port number 2049, which is the standard port for NFS.
-When this option is in effect, an arbitrary port chosen by the RPC library
-will be used.
+When this option is in effect, arbitrary ports chosen by the RPC library
+will be used. You may need to use this option when running
+.B unfsd
+from a normal user account.
 .TP
 .BI "\-n " "\<port\>"
-Use the specified port for NFS service. A value of 0 makes
-.B unfsd
-choose an arbitrary, unprivileged port.
+Use the specified port for the NFS service.
 .TP
 .BI "\-m " "\<port\>"
-Use the specified port for MOUNT service. The same port as
-for the NFS service, 2049, is used by default. A value of 0 makes
-.B unfsd
-choose an arbitrary, unprivileged port
-different from the port used for the NFS service.
+Use the specified port for the MOUNT service. The default is to
+use port number 2049, the same as for the NFS service. You can use
+the same port for both services if you want.
 .TP
 .B \-t
 TCP only operation. By default,
 .B unfsd
-provides its services to clients using either UDP or TCP as communication
+provides its services to clients using either UDP or TCP as communications
 protocol. When this option is present, only TCP connections are
 serviced.
 .TP
 .B \-p
 Do not register with the portmapper. This will prevent other hosts from
-finding out the port numbers used for the MOUNT and NFS service. Clients
+finding out the port numbers used for the MOUNT and NFS services by
+querying the portmap daemon. Clients
 will need to manually specify the port numbers to use.
 .TP
 .B \-w
