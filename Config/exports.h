@@ -20,7 +20,9 @@ extern int	exports_opts;
 extern unsigned char password[PASSWORD_MAXLEN+1];
 
 void		exports_parse(void);
-int		exports_options(const char *path, struct svc_req *rqstp, char **password);
+int		exports_options(const char *path, struct svc_req *rqstp, char **password, uint32 *fsid);
+int             export_point(const char *path);
+char            *export_point_from_fsid(uint32 fsid);
 nfsstat3	exports_compat(const char *path, struct svc_req *rqstp);
 nfsstat3	exports_rw(void);
 

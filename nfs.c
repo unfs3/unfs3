@@ -46,7 +46,7 @@
  */
 #define PREP(p,f) do {						\
                       p = fh_decomp(f);				\
-                      if (exports_options(p, rqstp, NULL) == -1) {	\
+                      if (exports_options(p, rqstp, NULL, NULL) == -1) { \
                           memset(&result, 0, sizeof(result));	\
                           if (p)				\
                               result.status = NFS3ERR_ACCES;	\

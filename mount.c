@@ -160,7 +160,7 @@ mountres3 *mountproc_mnt_3_svc(dirpath * argp, struct svc_req * rqstp)
 	char pw[PASSWORD_MAXLEN + 1];
 
 	mnt_cmd_argument(&dpath, "@password:", pw, PASSWORD_MAXLEN);
-	if ((exports_opts = exports_options(dpath, rqstp, &password)) != -1) {
+	if (exports_options(dpath, rqstp, &password, NULL) != -1) {
 	    authenticated = !strcmp(password, pw);
 	}
 	/* else leave authenticated unchanged */
@@ -172,7 +172,7 @@ mountres3 *mountproc_mnt_3_svc(dirpath * argp, struct svc_req * rqstp)
 	unsigned char hexdigest[32];
 
 	mnt_cmd_argument(&dpath, "@otp:", otp, PASSWORD_MAXLEN);
-	if ((exports_opts = exports_options(buf, rqstp, &password)) != -1) {
+	if (exports_options(dpath, rqstp, &password, NULL) != -1) {
 	    otp_digest(nonce, password, hexdigest);
 
 	    /* Compare our calculated digest with what the client submitted */
@@ -197,7 +197,7 @@ mountres3 *mountproc_mnt_3_svc(dirpath * argp, struct svc_req * rqstp)
 	return &result;
     }
 
-    if ((exports_options(buf, rqstp, &password) == -1)
+    if ((exports_options(buf, rqstp, &password, NULL) == -1)
 	|| (!authenticated && password[0])) {
 	/* not exported to this host or at all, or a password defined and not 
 	   authenticated */
@@ -205,7 +205,7 @@ mountres3 *mountproc_mnt_3_svc(dirpath * argp, struct svc_req * rqstp)
 	return &result;
     }
 
-    fh = fh_comp(buf, FH_DIR);
+    fh = fh_comp(buf, rqstp, FH_DIR);
 
     if (!fh_valid(fh)) {
 	putmsg(LOG_INFO, "%s attempted to mount non-directory",

@@ -34,7 +34,7 @@ uint32 get_gen(struct stat obuf, int fd, const char *path);
 int nfh_valid(nfs_fh3 fh);
 int fh_valid(unfs3_fh_t fh);
 
-unfs3_fh_t fh_comp_raw(const char *path, int need_dir);
+unfs3_fh_t fh_comp_raw(const char *path, struct svc_req *rqstp, int need_dir);
 u_int fh_len(const unfs3_fh_t *fh);
 
 unfs3_fh_t *fh_extend(nfs_fh3 fh, uint32 dev, uint32 ino, uint32 gen);

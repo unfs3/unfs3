@@ -45,6 +45,7 @@ typedef struct {
 	char		path[NFS_MAXPATHLEN];
 	char		orig[NFS_MAXPATHLEN];
 	e_host		*hosts;
+        uint32          fsid; /* export point fsid (for removables) */
 	struct e_item	*next;
 } e_item;
 
@@ -60,6 +61,37 @@ static struct groupnode ne_host;
 
 /* error status of last parse */
 int e_error = FALSE;
+
+/*
+ * The FNV1a-32 hash algorithm
+ * (http://www.isthe.com/chongo/tech/comp/fnv/)
+ */
+static uint32 fnv1a_32(const char *str)
+{
+    static const uint32 fnv_32_prime = 0x01000193;
+    uint32 hval = fnv_32_prime;
+    
+    while (*str) {
+	hval ^= *str++;
+	hval *= fnv_32_prime;
+    }
+    return hval;
+}
+
+/*
+ * get static fsid, for use with removable media export points
+ */
+static uint32 get_free_fsid(const char *path)
+{
+    uint32 hval;
+
+    /* The 32:th bit is set to one on all special filehandles. The
+       last 31 bits are hashed from the export point path. */
+    hval = fnv1a_32(path);
+    hval |= 0x10000000UL;
+    return hval;
+}
+
 
 /*
  * clear current host
@@ -165,6 +197,7 @@ static void add_item(const char *path)
 	*new = cur_item;
 	strcpy(new->path, buf);
 	strcpy(new->orig, path);
+	new->fsid = get_free_fsid(path);  
 
 	*ne_new = ne_item;
 	ne_new->ex_dir = new->orig;
@@ -555,7 +588,7 @@ int exports_opts = -1;
  * given a path, return client's effective options
  */
 int exports_options(const char *path, struct svc_req *rqstp,
-		    char **password)
+		    char **password, uint32 *fsid)
 {
 	e_item *list;
 	struct in_addr remote;
@@ -579,6 +612,8 @@ int exports_options(const char *path, struct svc_req *rqstp,
 		if (strlen(list->path) > last_len    &&
 		    strstr(path, list->path) == path) {
 			cur_opts = find_host(remote, list, password);
+			if (fsid != NULL)
+			    *fsid = list->fsid;
 			if (cur_opts != -1) {
 				exports_opts = cur_opts;
 				last_len = strlen(list->path);
@@ -591,6 +626,49 @@ int exports_options(const char *path, struct svc_req *rqstp,
 }
 
 /*
+ * check whether path is an export point
+ */
+int export_point(const char *path)
+{
+        e_item *list;
+
+	exports_access = TRUE;
+	list = export_list;
+
+	while (list) {
+	    if (strcmp(path, list->path) == 0) {
+		exports_access = FALSE;
+		return TRUE;
+	    }
+	    list = (e_item *) list->next;
+	}
+	exports_access = FALSE;
+	return FALSE;
+}
+
+/*
+ * return exported path from static fsid
+ */
+char *export_point_from_fsid(uint32 fsid)
+{
+    e_item *list;
+    
+    exports_access = TRUE;
+    list = export_list;
+    
+    while (list) {
+	if (list->fsid == fsid) {
+	    exports_access = FALSE;
+	    return list->path;
+	}
+	list = (e_item *) list->next;
+    }
+    exports_access = FALSE;
+    return NULL;
+}
+
+
+/*
  * check whether export options of a path match with last set of options
  */
 nfsstat3 exports_compat(const char *path, struct svc_req *rqstp)
@@ -598,7 +676,7 @@ nfsstat3 exports_compat(const char *path, struct svc_req *rqstp)
 	int prev;
 	
 	prev = exports_opts;
-	if (exports_options(path, rqstp, NULL) == prev)
+	if (exports_options(path, rqstp, NULL, NULL) == prev)
 		return NFS3_OK;
 	else if (exports_opts == -1)
 		return NFS3ERR_ACCES;

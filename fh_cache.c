@@ -20,6 +20,8 @@
 #include "fh.h"
 #include "locate.h"
 #include "fh_cache.h"
+#include "mount.h"
+#include "Config/exports.h"
 
 /* number of entries in fh cache */
 #define CACHE_ENTRIES	4096
@@ -206,6 +208,23 @@ char *fh_decomp(nfs_fh3 fh)
 	return NULL;
     }
 
+    /* Does the fsid match some static fsid? */
+    if ((result = export_point_from_fsid(obj->dev)) != NULL) {
+	if (obj->ino == 0x1) {
+	    /* This FH refers to the export point itself */
+	    /* Need to fill stat cache */
+	    if (lstat(result, &st_cache) == -1) {
+		/* object does not exist */
+		st_cache_valid = FALSE;
+		return NULL;
+	    }
+	    st_cache_valid = TRUE;
+	    st_cache.st_dev = obj->dev;
+	    st_cache.st_ino = 0x1;
+	    return result;
+	}
+    }
+
     /* try lookup in cache, increase cache usage counter */
     result = fh_cache_lookup(obj->dev, obj->ino);
     fh_cache_use++;
@@ -235,11 +254,11 @@ char *fh_decomp(nfs_fh3 fh)
  * compose a filehandle for a path
  * cache-using wrapper for fh_comp_raw
  */
-unfs3_fh_t fh_comp(const char *path, int need_dir)
+unfs3_fh_t fh_comp(const char *path, struct svc_req * rqstp, int need_dir)
 {
     unfs3_fh_t res;
 
-    res = fh_comp_raw(path, need_dir);
+    res = fh_comp_raw(path, rqstp, need_dir);
     if (fh_valid(res))
 	/* add to cache for later use */
 	fh_cache_add(res.dev, res.ino, path);

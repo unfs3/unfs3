@@ -24,8 +24,10 @@
 #endif
 
 #include "nfs.h"
+#include "mount.h"
 #include "daemon.h"
 #include "fh.h"
+#include "Config/exports.h"
 
 /*
  * hash function for inode numbers
@@ -151,7 +153,7 @@ static const unfs3_fh_t invalid_fh = {.dev = 0,.ino = 0,.gen = 0,.len =
  * path:     path to compose fh for
  * need_dir: if not 0, path must point to a directory
  */
-unfs3_fh_t fh_comp_raw(const char *path, int need_dir)
+unfs3_fh_t fh_comp_raw(const char *path, struct svc_req *rqstp, int need_dir)
 {
     char work[NFS_MAXPATHLEN];
     unfs3_fh_t fh;
@@ -176,6 +178,22 @@ unfs3_fh_t fh_comp_raw(const char *path, int need_dir)
     /* special case for root directory */
     if (strcmp(path, "/") == 0)
 	return fh;
+
+    /* special case for removable device export point: return preset fsid and 
+       inod 1. */
+    if (export_point(path)) {
+	uint32 fsid;
+
+	if (exports_options(path, rqstp, NULL, &fsid) == -1) {
+	    /* Shouldn't happen, unless the exports file changed after the
+	       call to export_point() */
+	    return invalid_fh;
+	}
+	if (exports_opts & OPT_REMOVABLE) {
+	    fh.dev = fsid;
+	    fh.ino = 0x1;
+	}
+    }
 
     strcpy(work, path);
     last = work;
