@@ -520,7 +520,7 @@ static void register_nfs_service(SVCXPRT * udptransp, SVCXPRT * tcptransp)
 	    (udptransp, NFS3_PROGRAM, NFS_V3, nfs3_program_3,
 	     opt_portmapper ? IPPROTO_UDP : 0)) {
 	    fprintf(stderr, "%s\n",
-		    "unable to register (NFS3_PROGRAM, NFS_V3, udp).");
+		    "unable to register (NFS3_PROGRAM, NFS_V3, udp).\n");
 	    daemon_exit(0);
 	}
     }
@@ -610,7 +610,8 @@ static SVCXPRT *create_udp_transport(unsigned int port)
     transp = svcudp_create(sock);
 
     if (transp == NULL) {
-	fprintf(stderr, "%s", "cannot create udp service.");
+      perror("XXX");
+	fprintf(stderr, "%s\n", "cannot create udp service.");
 	daemon_exit(0);
     }
 
@@ -642,7 +643,8 @@ static SVCXPRT *create_tcp_transport(unsigned int port)
     transp = svctcp_create(sock, 0, 0);
 
     if (transp == NULL) {
-	fprintf(stderr, "%s", "cannot create tcp service.");
+      perror("YYYY");
+	fprintf(stderr, "%s\n", "cannot create tcp service.");
 	daemon_exit(0);
     }
 
