@@ -291,7 +291,7 @@ int cluster_lookup_lowlevel(char *path, struct svc_req *rqstp)
 
     if (cluster_count == -1)
 	return CLU_IO;
-    else if (cluster_count == 0 || cluster_count == 1)
+    else if (cluster_count == 0)
 	return CLU_MASTER;
 
     raddr = get_remote(rqstp);	       /* remote IP address */
