@@ -285,7 +285,7 @@ READ3res *nfsproc3_read_3_svc(READ3args * argp, struct svc_req * rqstp)
     char *path;
     int fd, res;
     off_t where;
-    static char buf[8192 + 1];
+    static char buf[NFS_MAXDATA + 1];
 
     PREP(path, argp->file);
     result.status = is_reg();
@@ -294,8 +294,8 @@ READ3res *nfsproc3_read_3_svc(READ3args * argp, struct svc_req * rqstp)
     read_executable(rqstp, st_cache);
 
     /* if bigger than rtmax, truncate length */
-    if (argp->count > 8192)
-	argp->count = 8192;
+    if (argp->count > NFS_MAXDATA)
+	argp->count = NFS_MAXDATA;
 
     if (result.status == NFS3_OK) {
 	fd = fd_open(path, argp->file, FD_READ);
@@ -872,11 +872,11 @@ FSINFO3res *nfsproc3_fsinfo_3_svc(FSINFO3args * argp, struct svc_req * rqstp)
     result.FSINFO3res_u.resok.obj_attributes = get_post_cached(rqstp);
 
     result.status = NFS3_OK;
-    result.FSINFO3res_u.resok.rtmax = 8192;
-    result.FSINFO3res_u.resok.rtpref = 8192;
+    result.FSINFO3res_u.resok.rtmax = NFS_MAXDATA;
+    result.FSINFO3res_u.resok.rtpref = NFS_MAXDATA;
     result.FSINFO3res_u.resok.rtmult = 4096;
-    result.FSINFO3res_u.resok.wtmax = 8192;
-    result.FSINFO3res_u.resok.wtpref = 8192;
+    result.FSINFO3res_u.resok.wtmax = NFS_MAXDATA;
+    result.FSINFO3res_u.resok.wtpref = NFS_MAXDATA;
     result.FSINFO3res_u.resok.wtmult = 4096;
     result.FSINFO3res_u.resok.dtpref = 4096;
     result.FSINFO3res_u.resok.maxfilesize = ~0ULL;
