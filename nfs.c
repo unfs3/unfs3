@@ -589,8 +589,8 @@ static nfsstat3 mknod_args(mknoddata3 what, const char *obj, mode_t * mode,
 	case NF3CHR:
 	    *mode |= S_IFCHR;
 	    break;
-	case NF3REG:
-	    *mode |= S_IFREG;
+	case NF3BLK:
+	    *mode |= S_IFBLK;
 	    break;
 	default:
 	    break;
