@@ -138,6 +138,7 @@ READDIR3res read_dir(const char *path, cookie3 cookie, cookieverf3 verf,
 	    this = readdir(search);
 
     i = 0;
+    entry[0].name = NULL;
     while (this && real_count < count && i < MAX_ENTRIES) {
 	if (i > 0)
 	    entry[i - 1].nextentry = &entry[i];
@@ -181,7 +182,11 @@ READDIR3res read_dir(const char *path, cookie3 cookie, cookieverf3 verf,
     }
     closedir(search);
 
-    resok.reply.entries = &entry[0];
+    if (entry[0].name)
+	resok.reply.entries = &entry[0];
+    else
+	resok.reply.entries = NULL;
+
     if (this)
 	resok.reply.eof = FALSE;
     else
