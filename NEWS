@@ -1,12 +1,24 @@
 What's new or changed in 0.9.12
 ===============================
 
+It is now possible to tell unfs3 to bind only to a specific
+network interface. To do this, use the new -l option with the
+address you want unfs3 to listen to as argument.
+
+Thanks go to Constantin Scheder <scheder@nirvanastorage.com>
+and Sam Sharma <sam.sharma@gat.com> for providing a lot of
+compile fixes that should make it possible to compile unfs3
+under AIX, Irix (gcc and native compiler), and Mac OS X. They
+also provided some fixes for the existing Solaris support.
+
 
 ChangeLog
 =========
 
 Version 0.9.12
+
   - add option for binding to a specified interface
+  - lots of compile fixes for Solaris/AIX/Irix/Mac OS X
 
 Version 0.9.11
 
