@@ -147,7 +147,7 @@ void switch_user(struct svc_req *req)
     uid = seteuid(get_uid(req));
 
     if (uid == -1 || gid == -1) {
-	putmsg(LOG_EMERG, "euid/egid switching failed, aborting");
+	logmsg(LOG_EMERG, "euid/egid switching failed, aborting");
 	daemon_exit(CRISIS);
     }
 }

@@ -130,7 +130,7 @@ static void add_host(void)
 	new = malloc(sizeof(e_host));
 	ne_new = malloc(sizeof(struct groupnode));
 	if (!new || !ne_new) {
-		putmsg(LOG_EMERG, "out of memory, aborting");
+		logmsg(LOG_EMERG, "out of memory, aborting");
 		daemon_exit(CRISIS);
 	}
 
@@ -177,7 +177,7 @@ static void add_item(const char *path)
 	new = malloc(sizeof(e_item));
 	ne_new = malloc(sizeof(struct exportnode));
 	if (!new || !ne_new) {
-		putmsg(LOG_EMERG, "out of memory, aborting");
+		logmsg(LOG_EMERG, "out of memory, aborting");
 		daemon_exit(CRISIS);
 	}
 
@@ -194,7 +194,7 @@ static void add_item(const char *path)
 		   realpath. */
 		strncpy(buf, path, PATH_MAX);
 	} else if (!realpath(path, buf)) {
-		putmsg(LOG_CRIT, "realpath for %s failed", path);
+		logmsg(LOG_CRIT, "realpath for %s failed", path);
 		e_error = TRUE;
 		free(new);
 		free(ne_new);
@@ -203,7 +203,7 @@ static void add_item(const char *path)
 	}
 
 	if (strlen(buf) + 1 > NFS_MAXPATHLEN) {
-		putmsg(LOG_CRIT, "attempted to export too long path");
+		logmsg(LOG_CRIT, "attempted to export too long path");
 		e_error = TRUE;
 		free(new);
 		free(ne_new);
@@ -266,7 +266,7 @@ static void set_hostname(const char *name)
 		       sizeof(struct in_addr));
 		cur_host.mask.s_addr = ~0UL;
 	} else {
-		putmsg(LOG_CRIT, "could not resolve hostname '%s'", name);
+		logmsg(LOG_CRIT, "could not resolve hostname '%s'", name);
 		e_error = TRUE;
 	}
 }	
@@ -345,7 +345,7 @@ static void add_option_with_value(const char *opt, const char *val)
 {
     if (strcmp(opt,"password") == 0) {
 	if (strlen(val) > PASSWORD_MAXLEN) {
-	    putmsg(LOG_WARNING, "Warning: password for export %s truncated to 64 chars",
+	    logmsg(LOG_WARNING, "Warning: password for export %s truncated to 64 chars",
 		   cur_item.orig);
 	}
 	strncpy(cur_host.password, val, sizeof(password));
@@ -546,13 +546,13 @@ void exports_parse(void)
 	 * may currently be accessing the list
 	 */
 	if (exports_access) {
-		putmsg(LOG_CRIT, "export list is being traversed, no reload\n");
+		logmsg(LOG_CRIT, "export list is being traversed, no reload\n");
 		return;
 	}
 
 	efile = fopen(opt_exports, "r");
 	if (!efile) {
-		putmsg(LOG_CRIT, "could not open '%s', exporting nothing",
+		logmsg(LOG_CRIT, "could not open '%s', exporting nothing",
 		       opt_exports);
 		free_list(export_list);
 		free_nfslist(exports_nfslist);
@@ -567,7 +567,7 @@ void exports_parse(void)
 	fclose(efile);
 	
 	if (e_error) {
-		putmsg(LOG_CRIT, "syntax error in '%s', exporting nothing",
+		logmsg(LOG_CRIT, "syntax error in '%s', exporting nothing",
 		       opt_exports);
 		free_list(export_list);
 		free_nfslist(exports_nfslist);

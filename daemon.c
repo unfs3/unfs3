@@ -68,7 +68,7 @@ int opt_portmapper = TRUE;
 /*
  * output message to syslog or stdout
  */
-void putmsg(int prio, const char *fmt, ...)
+void logmsg(int prio, const char *fmt, ...)
 {
     va_list ap;
 
@@ -172,9 +172,9 @@ static void parse_options(int argc, char **argv)
 	    case 's':
 		opt_singleuser = TRUE;
 		if (getuid() == 0) {
-		    putmsg(LOG_WARNING,
+		    logmsg(LOG_WARNING,
 			   "Warning: running as root with -s is dangerous");
-		    putmsg(LOG_WARNING,
+		    logmsg(LOG_WARNING,
 			   "All clients will have root access to all exported files!");
 		}
 		break;
@@ -208,13 +208,13 @@ void daemon_exit(int error)
 
     if (error == SIGUSR1) {
 	if (fh_cache_use > 0)
-	    putmsg(LOG_INFO, "fh entries %i access %i hit %i%s miss %i%s",
+	    logmsg(LOG_INFO, "fh entries %i access %i hit %i%s miss %i%s",
 		   fh_cache_max, fh_cache_use,
 		   fh_cache_hit * 100 / fh_cache_use, "%",
 		   100 - fh_cache_hit * 100 / fh_cache_use, "%");
 	else
-	    putmsg(LOG_INFO, "fh cache unused");
-	putmsg(LOG_INFO, "open file descriptors: read %i, write %i",
+	    logmsg(LOG_INFO, "fh cache unused");
+	logmsg(LOG_INFO, "open file descriptors: read %i, write %i",
 	       fd_cache_readers, fd_cache_writers);
 	return;
     }
@@ -229,7 +229,7 @@ void daemon_exit(int error)
     }
 
     if (error == SIGSEGV)
-	putmsg(LOG_EMERG, "segmentation fault");
+	logmsg(LOG_EMERG, "segmentation fault");
 
     fd_cache_purge();
 
@@ -437,12 +437,12 @@ static void nfs3_program_3(struct svc_req *rqstp, register SVCXPRT * transp)
     if (result != NULL &&
 	!svc_sendreply(transp, (xdrproc_t) _xdr_result, result)) {
 	svcerr_systemerr(transp);
-	putmsg(LOG_CRIT, "unable to send RPC reply, aborting");
+	logmsg(LOG_CRIT, "unable to send RPC reply, aborting");
 	daemon_exit(CRISIS);
     }
     if (!svc_freeargs
 	(transp, (xdrproc_t) _xdr_argument, (caddr_t) & argument)) {
-	putmsg(LOG_CRIT, "unable to free XDR arguments");
+	logmsg(LOG_CRIT, "unable to free XDR arguments");
 	daemon_exit(CRISIS);
     }
     return;
@@ -520,7 +520,7 @@ static void mountprog_3(struct svc_req *rqstp, register SVCXPRT * transp)
     }
     if (!svc_freeargs
 	(transp, (xdrproc_t) _xdr_argument, (caddr_t) & argument)) {
-	putmsg(LOG_CRIT, "unable to free XDR arguments");
+	logmsg(LOG_CRIT, "unable to free XDR arguments");
 	daemon_exit(CRISIS);
     }
     return;

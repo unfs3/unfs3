@@ -145,7 +145,7 @@ mountres3 *mountproc_mnt_3_svc(dirpath * argp, struct svc_req * rqstp)
 
     /* error out if not version 3 */
     if (rqstp->rq_vers != 3) {
-	putmsg(LOG_INFO,
+	logmsg(LOG_INFO,
 	       "%s attempted mount with unsupported protocol version",
 	       inet_ntoa(get_remote(rqstp)));
 	result.fhs_status = MNT3ERR_INVAL;
@@ -200,7 +200,7 @@ mountres3 *mountproc_mnt_3_svc(dirpath * argp, struct svc_req * rqstp)
     }
 
     if (strlen(buf) + 1 > NFS_MAXPATHLEN) {
-	putmsg(LOG_INFO, "%s attempted to mount jumbo path",
+	logmsg(LOG_INFO, "%s attempted to mount jumbo path",
 	       inet_ntoa(get_remote(rqstp)));
 	result.fhs_status = MNT3ERR_NAMETOOLONG;
 	return &result;
@@ -217,7 +217,7 @@ mountres3 *mountproc_mnt_3_svc(dirpath * argp, struct svc_req * rqstp)
     fh = fh_comp(buf, rqstp, FH_DIR);
 
     if (!fh_valid(fh)) {
-	putmsg(LOG_INFO, "%s attempted to mount non-directory",
+	logmsg(LOG_INFO, "%s attempted to mount non-directory",
 	       inet_ntoa(get_remote(rqstp)));
 	result.fhs_status = MNT3ERR_NOTDIR;
 	return &result;

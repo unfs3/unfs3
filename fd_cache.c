@@ -106,7 +106,7 @@ static int fd_cache_lru(void)
     }
 
     if (idx == -1)
-	putmsg(LOG_WARNING, "fd cache full due to UNSTABLE writers");
+	logmsg(LOG_WARNING, "fd cache full due to UNSTABLE writers");
 
     return idx;
 }
@@ -164,7 +164,7 @@ static void fd_cache_add(int fd, unfs3_fh_t * ufh, int kind)
 	    ino = fd_cache[idx].ino;
 	    res = fd_cache_del(idx);
 	    if (res != 0)
-		putmsg(LOG_CRIT,
+		logmsg(LOG_CRIT,
 		       "silent write failure for dev %li, inode %li", dev,
 		       ino);
 	}

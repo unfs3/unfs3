@@ -20,7 +20,7 @@
 
 /* error handling */
 void daemon_exit(int);
-void putmsg(int, const char *, ...);
+void logmsg(int, const char *, ...);
 
 /* remote address */
 struct in_addr get_remote(struct svc_req *);

@@ -102,7 +102,7 @@ uint32 get_gen(struct stat obuf, U(int fd), U(const char *path))
     seteuid(euid);
 
     if (geteuid() != euid || getegid() != egid) {
-	putmsg(LOG_EMERG, "euid/egid switching failed, aborting");
+	logmsg(LOG_EMERG, "euid/egid switching failed, aborting");
 	daemon_exit(CRISIS);
     }
 
