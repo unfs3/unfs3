@@ -7,8 +7,6 @@ removable-fsidhash
 ------------------
 This branch contains the following changes:
 
-* The -s option, for basic uid translation. 
-
 * When using the "removable" option, it's possible to export mount
   points handled by autofs. 
 

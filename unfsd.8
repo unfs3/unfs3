@@ -143,6 +143,18 @@ Debug mode. When this option is present,
 .B unfsd
 will not fork into the background at startup, and all messages that
 would normally go to the system log go to stdout instead.
+.TP
+.B \-s 
+Single user mode; activate basic uid translation. This option is
+useful when the server and client are using different user and group
+ids. All requests from the client will be served using the user that started 
+.B unfsd, 
+no user switching will take place (even if unfsd was started by
+root). The NFS file owner will be set dynamically to the
+user issuing the request, if the file is owned by the user running
+.B unfsd. 
+Otherwise, the reported ownership will be uid 0 (root). The same
+principle applies for the group ownership.
 .SH SIGNALS
 .TP
 .BR "SIGTERM " "and " SIGINT

@@ -26,5 +26,6 @@ extern int	opt_detach;
 extern char	*opt_exports;
 extern int	opt_cluster;
 extern char	*opt_cluster_path;
+extern int opt_singleuser;
 
 #endif

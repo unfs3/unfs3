@@ -127,7 +127,7 @@ void switch_user(struct svc_req *req)
     if (!can_switch)
 	return;
 
-    if (getuid() != 0) {
+    if (opt_singleuser || (getuid() != 0)) {
 	/* 
 	 * have uid/gid functions behave correctly by squashing
 	 * all user and group ids to the current values

@@ -57,6 +57,7 @@ char *opt_cluster_path = "/";
 int opt_tcponly = FALSE;
 unsigned int opt_nfs_port = NFS_PORT;	/* 0 means RPC_ANYSOCK */
 unsigned int opt_mount_port = NFS_PORT;
+int opt_singleuser = FALSE;
 
 /* Register with portmapper? */
 int opt_portmapper = TRUE;
@@ -92,8 +93,7 @@ struct in_addr get_remote(struct svc_req *rqstp)
 static void parse_options(int argc, char **argv)
 {
     int opt = 0;
-
-    char *optstring = "dhwue:cC:n:m:tp";
+    char *optstring = "dhwue:cC:n:m:tps";
 
     while (opt != -1) {
 	opt = getopt(argc, argv, optstring);
@@ -143,6 +143,15 @@ static void parse_options(int argc, char **argv)
 		break;
 	    case 'p':
 		opt_portmapper = FALSE;
+		break;
+	    case 's':
+		opt_singleuser = TRUE;
+		if (getuid() == 0) {
+		    putmsg(LOG_WARNING,
+			   "Warning: running as root with -s is dangerous");
+		    putmsg(LOG_WARNING,
+			   "All clients will have root access to all exported files!");
+		}
 		break;
 	    case 'h':
 		printf(UNFS_NAME);
