@@ -174,6 +174,9 @@ mountproc_mnt_3_svc(dirpath * argp, struct svc_req * rqstp)
     static unfs3_fh_t fh;
     static mountres3 result;
     static int auth = AUTH_UNIX;
+    int authenticated = 1;
+    /* We need to modify the *argp pointer. Make a copy. */
+    char *dpath = *argp;
 
     /* error out if not version 3 */
     if (rqstp->rq_vers != 3) {
@@ -184,8 +187,12 @@ mountproc_mnt_3_svc(dirpath * argp, struct svc_req * rqstp)
         return &result;
     }
 
+    if (password[0])
+        /* If a password is defined, the user must authenticate */
+        authenticated = 0;
+
     /* Check for "mount commands" */
-    if (strncmp(*argp, "@getnonce", sizeof("@getnonce")) == 0) {
+    if (strncmp(dpath, "@getnonce", sizeof("@getnonce") - 1) == 0) {
         gen_nonce(nonce);
         result.fhs_status = MNT3_OK;
         result.mountres3_u.mountinfo.fhandle.fhandle3_len = 32;
@@ -194,15 +201,26 @@ mountproc_mnt_3_svc(dirpath * argp, struct svc_req * rqstp)
         result.mountres3_u.mountinfo.auth_flavors.auth_flavors_val = &auth;
         return &result;
     }
-    else if (strncmp(*argp, "@password", sizeof("@password")) == 0) {
-        printf("password\n");
+    else if (strncmp(dpath, "@password:", sizeof("@password:") - 1) == 0) {
+        char pw[PASSWORD_MAXLEN + 1];
+        char *slash;
+
+        dpath += sizeof("@password:") - 1;
+        strncpy(pw, dpath, PASSWORD_MAXLEN);
+        pw[PASSWORD_MAXLEN] = '\0';
+
+        slash = strchr(pw, '/');
+        if (slash != NULL)
+            *slash = '\0';
+
+        authenticated = !strcmp(password, pw);
+        dpath += strlen(pw);
     }
-    else if (strncmp(*argp, "@otp", sizeof("@otp")) == 0) {
+    else if (strncmp(dpath, "@otp", sizeof("@otp") - 1) == 0) {
         printf("otp\n");
     }
 
-
-    if (!realpath(*argp, buf)) {
+    if (!realpath(dpath, buf)) {
         /* the given path does not exist */
         result.fhs_status = MNT3ERR_NOENT;
         return &result;
@@ -215,7 +233,7 @@ mountproc_mnt_3_svc(dirpath * argp, struct svc_req * rqstp)
         return &result;
     }
 
-    if (exports_options(buf, rqstp) == -1) {
+    if (!authenticated || exports_options(buf, rqstp) == -1) {
         /* not exported to this host or at all */
         result.fhs_status = MNT3ERR_ACCES;
         return &result;
@@ -230,7 +248,7 @@ mountproc_mnt_3_svc(dirpath * argp, struct svc_req * rqstp)
         return &result;
     }
 
-    add_mount(*argp, rqstp);
+    add_mount(dpath, rqstp);
 
     result.fhs_status = MNT3_OK;
     result.mountres3_u.mountinfo.fhandle.fhandle3_len = fh_len(&fh);

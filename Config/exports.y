@@ -62,7 +62,7 @@ int e_error = FALSE;
 
 /* passwords. FIXME: This is global variable now, even though the syntax
    allows for differents passwords per export */
-char password[PASSWORD_MAXLEN] = "";
+char password[PASSWORD_MAXLEN+1] = "";
 
 
 /*
