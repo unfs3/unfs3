@@ -138,7 +138,7 @@ int nfh_valid(nfs_fh3 fh)
 int fh_valid(unfs3_fh_t fh)
 {
     /* invalid filehandles have zero device and inode */
-    return (int) (fh.dev != 0 && fh.ino != 0);
+    return (int) (fh.dev != 0 || fh.ino != 0);
 }
 
 /*
