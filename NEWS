@@ -1,24 +1,11 @@
-What's new or changed in 0.9.11
+What's new or changed in 0.9.12
 ===============================
-
-Thanks go to Bernd Schubert for noticing a few problems with the
-cluster support. First, tags weren't interpreted correctly when
-the master file didn't exist. Second, clustering reported errors
-when the directory itself only had execute permission and not
-read. Both problems are now fixed.
-
-The filehandle resolution code also had problems with directories
-that lack read permission. Therefore, filehandle lookups are now
-performed as root, before user and group id switching takes place.
-
-The file creation code had problems with the CREATE requests
-used by Solaris NFSv3 clients. This should now be fixed. Thanks
-to Brian (bohalloran@users.sf.net) for reporting the problem and
-providing the needed tcpdump data for fixing it.
 
 
 ChangeLog
 =========
+
+Version 0.9.12
 
 Version 0.9.11
 
