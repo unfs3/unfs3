@@ -15,6 +15,11 @@ export entries (useful for indenting exports that span multiple
 lines). Thanks to Jan P. Springer (jsd01@users.sourceforge.net)
 for reporting these problems.
 
+Output is now set to line-buffered when -d (debug) is in effect.
+This means you can redirect output to a log file and all output
+lines will appear immediately. Problem report and patch from
+Thomas Schwinge (schwinge@nic-nac-project.de).
+
 The new export option "removable" makes it possible to change
 removable media on the server without remounting on the client.
 
