@@ -554,6 +554,28 @@ SYMLINK3res *nfsproc3_symlink_3_svc(SYMLINK3args * argp,
 }
 
 /*
+ * create Unix socket
+ */
+static int mksocket(const char *path, mode_t mode)
+{
+    int res, sock;
+    struct sockaddr_un addr;
+    
+    sock = socket(PF_UNIX, SOCK_STREAM, 0);
+    addr.sun_family = AF_UNIX;
+    strcpy(addr.sun_path, path);
+    res = sock;
+    if (res != -1) {
+        umask(~mode);
+        res = bind(sock, (struct sockaddr *) &addr,
+                   sizeof(addr.sun_family) + strlen(addr.sun_path));
+        umask(0);
+        close(sock);
+    }
+    return res;
+}
+
+/*
  * check and process arguments to MKNOD procedure
  */
 static nfsstat3 mknod_args(mknoddata3 what, const char *obj, mode_t * mode,
@@ -606,10 +628,9 @@ MKNOD3res *nfsproc3_mknod_3_svc(MKNOD3args * argp, struct svc_req * rqstp)
     pre_op_attr pre;
     post_op_attr post;
     char obj[NFS_MAXPATHLEN];
-    int res, sock;
+    int res;
     mode_t new_mode;
     dev_t dev = 0;
-    struct sockaddr_un addr;
 
     PREP(path, argp->where.dir);
     pre = get_pre_cached();
@@ -624,19 +645,8 @@ MKNOD3res *nfsproc3_mknod_3_svc(MKNOD3args * argp, struct svc_req * rqstp)
 	    res = mknod(obj, new_mode, dev);	/* device */
 	else if (argp->what.type == NF3FIFO)
 	    res = mkfifo(obj, new_mode);	/* FIFO */
-	else {
-	    sock = socket(PF_UNIX, SOCK_STREAM, 0);	/* socket */
-	    addr.sun_family = AF_UNIX;
-	    strcpy(addr.sun_path, obj);
-	    res = sock;
-	    if (res != -1) {
-		umask(~new_mode);
-		res =
-		    bind(res, (struct sockaddr *) &addr,
-			 sizeof(addr.sun_family) + strlen(addr.sun_path));
-		umask(0);
-	    }
-	}
+	else
+	    res = mksocket(obj, new_mode);	/* socket */
 
 	if (res == -1) {
 	    result.status = mknod_err();
