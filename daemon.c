@@ -58,6 +58,9 @@ int opt_tcponly = FALSE;
 unsigned int opt_nfs_port = NFS_PORT;
 unsigned int opt_mount_port = 0;	/* 0 means RPC_ANYSOCK */
 
+/* Register with portmapper? */
+int opt_portmapper = TRUE;
+
 /*
  * output message to syslog or stdout
  */
@@ -90,7 +93,7 @@ static void parse_options(int argc, char **argv)
 {
     int opt = 0;
 
-    char *optstring = "dhwue:cC:n:m:t";
+    char *optstring = "dhwue:cC:n:m:tp";
 
     while (opt != -1) {
 	opt = getopt(argc, argv, optstring);
@@ -137,7 +140,9 @@ static void parse_options(int argc, char **argv)
 	    case 't':
 		opt_tcponly = TRUE;
 		break;
-
+	    case 'p':
+		opt_portmapper = FALSE;
+		break;
 	    case 'h':
 		printf(UNFS_NAME);
 		printf("Usage: %s [options]\n", argv[0]);
@@ -155,6 +160,7 @@ static void parse_options(int argc, char **argv)
 		printf("\t-m <port>   port to use for MOUNT service\n");
 		printf
 		    ("\t-t          TCP only. Do not listen on UDP ports\n");
+		printf("\t-p          do not register with the portmapper\n");
 		exit(0);
 		break;
 	}
@@ -186,11 +192,15 @@ void daemon_exit(int error)
     }
     svc_unregister(MOUNTPROG, MOUNTVERS1);
     svc_unregister(MOUNTPROG, MOUNTVERS3);
-    pmap_unset(MOUNTPROG, MOUNTVERS1);
-    pmap_unset(MOUNTPROG, MOUNTVERS3);
+    if (opt_portmapper) {
+	pmap_unset(MOUNTPROG, MOUNTVERS1);
+	pmap_unset(MOUNTPROG, MOUNTVERS3);
+    }
 
     svc_unregister(NFS3_PROGRAM, NFS_V3);
-    pmap_unset(NFS3_PROGRAM, NFS_V3);
+    if (opt_portmapper) {
+	pmap_unset(NFS3_PROGRAM, NFS_V3);
+    }
 
     if (error == SIGSEGV)
 	putmsg(LOG_EMERG, "segmentation fault");
@@ -487,12 +497,15 @@ static void mountprog_3(struct svc_req *rqstp, register SVCXPRT * transp)
 
 static void register_nfs_service(SVCXPRT * udptransp, SVCXPRT * tcptransp)
 {
-    pmap_unset(NFS3_PROGRAM, NFS_V3);
+    if (opt_portmapper) {
+	pmap_unset(NFS3_PROGRAM, NFS_V3);
+    }
 
     if (udptransp != NULL) {
 	/* Register NFS service for UDP */
 	if (!svc_register
-	    (udptransp, NFS3_PROGRAM, NFS_V3, nfs3_program_3, IPPROTO_UDP)) {
+	    (udptransp, NFS3_PROGRAM, NFS_V3, nfs3_program_3,
+	     opt_portmapper ? IPPROTO_UDP : 0)) {
 	    fprintf(stderr, "%s",
 		    "unable to register (NFS3_PROGRAM, NFS_V3, udp).");
 	    daemon_exit(0);
@@ -502,7 +515,8 @@ static void register_nfs_service(SVCXPRT * udptransp, SVCXPRT * tcptransp)
     if (tcptransp != NULL) {
 	/* Register NFS service for TCP */
 	if (!svc_register
-	    (tcptransp, NFS3_PROGRAM, NFS_V3, nfs3_program_3, IPPROTO_TCP)) {
+	    (tcptransp, NFS3_PROGRAM, NFS_V3, nfs3_program_3,
+	     opt_portmapper ? IPPROTO_TCP : 0)) {
 	    fprintf(stderr, "%s",
 		    "unable to register (NFS3_PROGRAM, NFS_V3, tcp).");
 	    daemon_exit(0);
@@ -512,13 +526,16 @@ static void register_nfs_service(SVCXPRT * udptransp, SVCXPRT * tcptransp)
 
 static void register_mount_service(SVCXPRT * udptransp, SVCXPRT * tcptransp)
 {
-    pmap_unset(MOUNTPROG, MOUNTVERS1);
-    pmap_unset(MOUNTPROG, MOUNTVERS3);
+    if (opt_portmapper) {
+	pmap_unset(MOUNTPROG, MOUNTVERS1);
+	pmap_unset(MOUNTPROG, MOUNTVERS3);
+    }
 
     if (udptransp != NULL) {
 	/* Register MOUNT service (v1) for UDP */
 	if (!svc_register
-	    (udptransp, MOUNTPROG, MOUNTVERS1, mountprog_3, IPPROTO_UDP)) {
+	    (udptransp, MOUNTPROG, MOUNTVERS1, mountprog_3,
+	     opt_portmapper ? IPPROTO_UDP : 0)) {
 	    fprintf(stderr, "%s",
 		    "unable to register (MOUNTPROG, MOUNTVERS1, udp).");
 	    daemon_exit(0);
@@ -526,7 +543,8 @@ static void register_mount_service(SVCXPRT * udptransp, SVCXPRT * tcptransp)
 
 	/* Register MOUNT service (v3) for UDP */
 	if (!svc_register
-	    (udptransp, MOUNTPROG, MOUNTVERS3, mountprog_3, IPPROTO_UDP)) {
+	    (udptransp, MOUNTPROG, MOUNTVERS3, mountprog_3,
+	     opt_portmapper ? IPPROTO_UDP : 0)) {
 	    fprintf(stderr, "%s",
 		    "unable to register (MOUNTPROG, MOUNTVERS3, udp).");
 	    daemon_exit(0);
@@ -536,7 +554,8 @@ static void register_mount_service(SVCXPRT * udptransp, SVCXPRT * tcptransp)
     if (tcptransp != NULL) {
 	/* Register MOUNT service (v1) for TCP */
 	if (!svc_register
-	    (tcptransp, MOUNTPROG, MOUNTVERS1, mountprog_3, IPPROTO_TCP)) {
+	    (tcptransp, MOUNTPROG, MOUNTVERS1, mountprog_3,
+	     opt_portmapper ? IPPROTO_TCP : 0)) {
 	    fprintf(stderr, "%s",
 		    "unable to register (MOUNTPROG, MOUNTVERS1, tcp).");
 	    daemon_exit(0);
@@ -544,7 +563,8 @@ static void register_mount_service(SVCXPRT * udptransp, SVCXPRT * tcptransp)
 
 	/* Register MOUNT service (v3) for TCP */
 	if (!svc_register
-	    (tcptransp, MOUNTPROG, MOUNTVERS3, mountprog_3, IPPROTO_TCP)) {
+	    (tcptransp, MOUNTPROG, MOUNTVERS3, mountprog_3,
+	     opt_portmapper ? IPPROTO_TCP : 0)) {
 	    fprintf(stderr, "%s",
 		    "unable to register (MOUNTPROG, MOUNTVERS3, tcp).");
 	    daemon_exit(0);
