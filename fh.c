@@ -170,6 +170,7 @@ unfs3_fh_t fh_comp_raw(const char *path, int need_dir)
 
     fh.dev = buf.st_dev;
     fh.ino = buf.st_ino;
+    fh.len = 0;
     fh.gen = get_gen(buf, FD_NONE, path);
 
     /* special case for root directory */
