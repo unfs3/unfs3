@@ -1,6 +1,9 @@
 What's new or changed in 0.9.10
 ===============================
 
+Bulding with a 2.95.x or 2.96 gcc was broken in 0.9.9 due to mixed
+code and declarations. Problem report and patch by Simon Matter
+<simix@users.sourceforge.net>.
 
 
 Old news

@@ -103,12 +103,19 @@ char *locate_file(U(uint32 dev), U(uint32 ino))
     struct stat buf;
     int res;
 
+#if HAVE_MNTENT_H == 1
+    struct mntent *ent;
+#endif
+
+#if HAVE_SYS_MNTTAB_H == 1
+    struct mnttab ent;
+    int found = FALSE;
+#endif
+
     if (!opt_brute_force)
 	return NULL;
 
 #if HAVE_MNTENT_H == 1
-    struct mntent *ent;
-
     mtab = setmntent("/etc/mtab", "r");
     if (!mtab)
 	return NULL;
@@ -133,9 +140,6 @@ char *locate_file(U(uint32 dev), U(uint32 ino))
 #endif
 
 #if HAVE_SYS_MNTTAB_H == 1
-    struct mnttab ent;
-    int found = FALSE;
-
     mtab = fopen("/etc/mnttab", "r");
     if (!mtab)
 	return NULL;
