@@ -37,6 +37,10 @@ NetBSD: 	compiles and runs, but there are compatibility
 		problems with the in-kernel NFS client
 
 
+Note that Solaris and NetBSD support is not checked for all releases,
+so it may break at any time. If it does, a bug report is appreciated.
+
+
 INSTALLATION
 ============
 
