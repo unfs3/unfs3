@@ -1,0 +1,15 @@
+CREDITS
+=======
+
+The design of unfs3's filehandle code owes much to the original NFSv2
+universal user-space NFS server. Thanks to Mark Shand and Don Becker
+for coming up with those concepts.
+
+People who contributed ideas, suggestions, or code to UNFS3:
+
+- Bernd Schubert <bernd-schubert@web.de>
+- Avery Pennarun <apenwarr@nit.ca>
+- Juergen Brendel <juergen@brendel.com>
+- Peter Astrand <peter@cendio.se>
+- Igor Durdanovic <idurdanovic@comcast.net>
+- Jan P. Springer <jsd01@users.sourceforge.net>
