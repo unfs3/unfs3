@@ -246,6 +246,19 @@ the server.
 Allow only read access on the exported directory. When this option
 is present, clients are not allowed to modify files and directories
 on the server. This option is enabled by default.
+.TP
+.B removable
+Consider this directory to be on a removable medium. When this option
+is present,
+.B unfsd
+will not keep files open across multiple read or write requests. This
+allows unmounting of the underlying filesystem at any time.
+.TP
+.B fixed
+Consider this directory to be on a fixed medium. This options is enabled
+by default and allows
+.B unfsd
+to keep files open between multiple read or write requests.
 .PP
 If options not present on this list are encountered by
 .BR unfsd ,

@@ -17,8 +17,10 @@
 #include <unistd.h>
 
 #include "nfs.h"
+#include "mount.h"
 #include "fh.h"
 #include "daemon.h"
+#include "Config/exports.h"
 #include "fd_cache.h"
 
 /*
@@ -258,8 +260,12 @@ int fd_open(const char *path, nfs_fh3 nfh, int kind)
 	    return -1;
 	}
 
-	/* success, add to cache for later use */
-	fd_cache_add(fd, fh, kind);
+	/*
+	 * success, add to cache for later use if not marked
+	 * as removable medium
+	 */
+	if (!(exports_opts & OPT_REMOVABLE))
+	    fd_cache_add(fd, fh, kind);
 	return fd;
     }
 }
@@ -270,7 +276,7 @@ int fd_open(const char *path, nfs_fh3 nfh, int kind)
  */
 int fd_close(int fd, int kind, int really_close)
 {
-    int idx;
+    int idx, res1, res2;
 
     idx = idx_by_fd(fd, kind);
     if (idx != -1) {
@@ -282,9 +288,16 @@ int fd_close(int fd, int kind, int really_close)
 	    return fd_cache_del(idx);
 	else
 	    return 0;
-    } else
-	/* not in cache, close directly */
-	return close(fd);
+    } else {
+	/* not in cache, sync and close directly */
+	res1 = fsync(fd);
+	res2 = close(fd);
+	
+	if (res1 != 0)
+	    return res1;
+	else
+	    return res2;
+    }
 }
 
 /*
