@@ -55,6 +55,9 @@ int opt_detach = TRUE;
 char *opt_exports = "/etc/exports";
 int opt_cluster = FALSE;
 char *opt_cluster_path = "/";
+int opt_tcponly = FALSE;
+int opt_nfs_port = NFS_PORT;
+int opt_mount_port = -1;
 
 /*
  * output message to syslog or stdout
@@ -88,7 +91,7 @@ static void parse_options(int argc, char **argv)
 {
     int opt = 0;
 
-    char *optstring = "dhwue:cC:";
+    char *optstring = "dhwue:cC:n:m:t";
 
     while (opt != -1) {
 	opt = getopt(argc, argv, optstring);
@@ -118,6 +121,24 @@ static void parse_options(int argc, char **argv)
 		opt_cluster_path = optarg;
 		break;
 #endif
+	    case 'n':
+		opt_nfs_port = strtol(optarg, NULL, 10);
+		if (opt_nfs_port == 0) {
+		    fprintf(stderr, "Invalid port\n");
+		    exit(1);
+		}
+		break;
+	    case 'm':
+		opt_mount_port = strtol(optarg, NULL, 10);
+		if (opt_mount_port == 0) {
+		    fprintf(stderr, "Invalid port\n");
+		    exit(1);
+		}
+		break;
+	    case 't':
+		opt_tcponly = TRUE;
+		break;
+
 	    case 'h':
 		printf(UNFS_NAME);
 		printf("Usage: %s [options]\n", argv[0]);
@@ -131,6 +152,9 @@ static void parse_options(int argc, char **argv)
 		printf("\t-c          enable cluster extensions\n");
 		printf("\t-C <path>   set path for cluster extensions\n");
 #endif
+		printf("\t-n <port>   port to use for NFS service\n");
+		printf("\t-m <port>   port to use for MOUNT service\n");
+		printf("\t-t          TCP only. Do not listen on UDP ports");
 		exit(0);
 		break;
 	}
@@ -487,9 +511,10 @@ int main(int argc, char **argv)
 
     pmap_unset(NFS3_PROGRAM, NFS_V3);
 
+    /* UDP transport for NFS */
     if (!opt_anysock) {
 	sin.sin_family = AF_INET;
-	sin.sin_port = htons(NFS_PORT);
+	sin.sin_port = htons(opt_nfs_port);
 	sin.sin_addr.s_addr = INADDR_ANY;
 
 	udp_sock = socket(PF_INET, SOCK_DGRAM, 0);
@@ -502,6 +527,8 @@ int main(int argc, char **argv)
 	fprintf(stderr, "%s", "cannot create udp service.");
 	daemon_exit(0);
     }
+
+    /* Register NFS service for UDP */
     if (!svc_register
 	(transp, NFS3_PROGRAM, NFS_V3, nfs3_program_3, IPPROTO_UDP)) {
 	fprintf(stderr, "%s",
@@ -509,6 +536,7 @@ int main(int argc, char **argv)
 	daemon_exit(0);
     }
 
+    /* TCP transport for NFS */
     if (!opt_anysock) {
 	tcp_sock = socket(PF_INET, SOCK_STREAM, 0);
 	bind(tcp_sock, (struct sockaddr *) &sin, sizeof(struct sockaddr));
@@ -520,6 +548,8 @@ int main(int argc, char **argv)
 	fprintf(stderr, "%s", "cannot create tcp service.");
 	daemon_exit(0);
     }
+
+    /* Register NFS service for TCP */
     if (!svc_register
 	(transp, NFS3_PROGRAM, NFS_V3, nfs3_program_3, IPPROTO_TCP)) {
 	fprintf(stderr, "%s",
@@ -527,20 +557,26 @@ int main(int argc, char **argv)
 	daemon_exit(0);
     }
 
+
     pmap_unset(MOUNTPROG, MOUNTVERS1);
     pmap_unset(MOUNTPROG, MOUNTVERS3);
 
+    /* UDP transport for MOUNT */
     transp = svcudp_create(RPC_ANYSOCK);
     if (transp == NULL) {
 	fprintf(stderr, "%s", "cannot create udp service.");
 	daemon_exit(0);
     }
+
+    /* Register MOUNT service (v1) for UDP */
     if (!svc_register
 	(transp, MOUNTPROG, MOUNTVERS1, mountprog_3, IPPROTO_UDP)) {
 	fprintf(stderr, "%s",
 		"unable to register (MOUNTPROG, MOUNTVERS1, udp).");
 	daemon_exit(0);
     }
+
+    /* Register MOUNT service (v3) for UDP */
     if (!svc_register
 	(transp, MOUNTPROG, MOUNTVERS3, mountprog_3, IPPROTO_UDP)) {
 	fprintf(stderr, "%s",
@@ -548,17 +584,22 @@ int main(int argc, char **argv)
 	daemon_exit(0);
     }
 
+    /* TCP transport for MOUNT */
     transp = svctcp_create(RPC_ANYSOCK, 0, 0);
     if (transp == NULL) {
 	fprintf(stderr, "%s", "cannot create tcp service.");
 	daemon_exit(0);
     }
+
+    /* Register MOUNT service (v1) for TCP */
     if (!svc_register
 	(transp, MOUNTPROG, MOUNTVERS1, mountprog_3, IPPROTO_TCP)) {
 	fprintf(stderr, "%s",
 		"unable to register (MOUNTPROG, MOUNTVERS1, tcp).");
 	daemon_exit(0);
     }
+
+    /* Register MOUNT service (v3) for TCP */
     if (!svc_register
 	(transp, MOUNTPROG, MOUNTVERS3, mountprog_3, IPPROTO_TCP)) {
 	fprintf(stderr, "%s",
