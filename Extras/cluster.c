@@ -399,6 +399,12 @@ void cluster_lookup(char *path, struct svc_req *rqstp, nfsstat3 * nstat)
     if (!want_cluster(path))
 	return;
 
+    res = strlen(path);
+    if (strstr(path, "$$$$") == path + res - 4) {
+	*(path + res - 4) = 0;
+	return;
+    }
+
     res = cluster_lookup_lowlevel(path, rqstp);
     if (res == CLU_TOOLONG)
 	*nstat = NFS3ERR_NAMETOOLONG;
