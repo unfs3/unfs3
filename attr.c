@@ -67,13 +67,7 @@ mode_t type_to_mode(ftype3 ftype)
 /*
  * post_op_attr for error returns
  */
-static inline post_op_attr error_attr(void)
-{
-    post_op_attr result;
-
-    result.attributes_follow = FALSE;
-    return result;
-}
+static post_op_attr error_attr = { .attributes_follow = FALSE };
 
 /*
  * return pre-operation attributes
@@ -190,15 +184,15 @@ static post_op_attr get_post_ll(const char *path, uint32 dev, uint32 ino,
     int res;
 
     if (!path)
-	return error_attr();
+	return error_attr;
 
     res = lstat(path, &buf);
     if (res == -1)
-	return error_attr();
+	return error_attr;
 
     /* protect against local fs race */
     if (dev != buf.st_dev || ino != buf.st_ino)
-	return error_attr();
+	return error_attr;
 
     return get_post_buf(buf, req);
 }
@@ -230,7 +224,7 @@ post_op_attr get_post_stat(const char *path, struct svc_req * req)
 post_op_attr get_post_cached(struct svc_req * req)
 {
     if (!st_cache_valid)
-	return error_attr();
+	return error_attr;
 
     return get_post_buf(st_cache, req);
 }
