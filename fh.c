@@ -16,6 +16,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <syslog.h>
 #include <unistd.h>
 
 #if HAVE_LINUX_EXT2_FS_H == 1
@@ -23,6 +24,7 @@
 #endif
 
 #include "nfs.h"
+#include "daemon.h"
 #include "fh.h"
 
 /*
@@ -60,9 +62,16 @@ uint32 get_gen(struct stat obuf, U(int fd), U(const char *path))
 #if HAVE_STRUCT_STAT_ST_GEN == 0 && HAVE_LINUX_EXT2_FS_H == 1
     int newfd, res;
     uint32 gen;
+    uid_t euid;
+    gid_t egid;
 
     if (!S_ISREG(obuf.st_mode) && !S_ISDIR(obuf.st_mode))
 	return 0;
+
+    euid = geteuid();
+    egid = getegid();
+    setegid(0);
+    seteuid(0);
 
     if (fd != FD_NONE) {
 	res = ioctl(fd, EXT2_IOC_GETVERSION, &gen);
@@ -80,7 +89,15 @@ uint32 get_gen(struct stat obuf, U(int fd), U(const char *path))
 		gen = 0;
 	}
     }
-    
+
+    setegid(egid);
+    seteuid(euid);
+
+    if (geteuid() != euid || getegid() != egid) {
+	putmsg(LOG_EMERG, "euid/egid switching failed, aborting");
+	daemon_exit(CRISIS);
+    }
+
     return gen;
 #endif
 
