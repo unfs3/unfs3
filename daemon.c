@@ -190,16 +190,14 @@ void daemon_exit(int error)
 	       fd_cache_readers, fd_cache_writers);
 	return;
     }
-    svc_unregister(MOUNTPROG, MOUNTVERS1);
-    svc_unregister(MOUNTPROG, MOUNTVERS3);
+    
     if (opt_portmapper) {
-	pmap_unset(MOUNTPROG, MOUNTVERS1);
-	pmap_unset(MOUNTPROG, MOUNTVERS3);
+	svc_unregister(MOUNTPROG, MOUNTVERS1);
+	svc_unregister(MOUNTPROG, MOUNTVERS3);
     }
 
-    svc_unregister(NFS3_PROGRAM, NFS_V3);
     if (opt_portmapper) {
-	pmap_unset(NFS3_PROGRAM, NFS_V3);
+	svc_unregister(NFS3_PROGRAM, NFS_V3);
     }
 
     if (error == SIGSEGV)
