@@ -314,6 +314,20 @@ nfsstat3 set_attr(const char *path, nfs_fh3 nfh, sattr3 new)
     gid_t new_gid;
     struct stat buf;
 
+    res = lstat(path, &buf);
+    if (res != 0)
+	return NFS3ERR_STALE;
+
+    /*
+     * don't open(2) device nodes, it could trigger
+     * module loading on the server
+     */
+    if (S_ISBLK(buf.st_mode) || S_ISCHR(buf.st_mode))
+	return set_attr_unsafe(path, nfh, new);
+
+    /*
+     * open object for atomic setting of attributes
+     */
     fd = open(path, O_WRONLY | O_NONBLOCK);
     if (fd == -1)
 	fd = open(path, O_RDONLY | O_NONBLOCK);
