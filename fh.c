@@ -163,22 +163,7 @@ unfs3_fh_t fh_comp_raw(const char *path, struct svc_req *rqstp, int need_dir)
     char *last;
     int pos = 0;
 
-    res = lstat(path, &buf);
-    if (res == -1)
-	return invalid_fh;
-
-    /* check for dir if need_dir is set */
-    if (need_dir != 0 && !S_ISDIR(buf.st_mode))
-	return invalid_fh;
-
-    fh.dev = buf.st_dev;
-    fh.ino = buf.st_ino;
     fh.len = 0;
-    fh.gen = get_gen(buf, FD_NONE, path);
-
-    /* special case for root directory */
-    if (strcmp(path, "/") == 0)
-	return fh;
 
     /* special case for removable device export point: return preset fsid and 
        inod 1. */
@@ -193,8 +178,26 @@ unfs3_fh_t fh_comp_raw(const char *path, struct svc_req *rqstp, int need_dir)
 	if (exports_opts & OPT_REMOVABLE) {
 	    fh.dev = fsid;
 	    fh.ino = 0x1;
+	    fh.gen = 0;
+	    return fh;
 	}
     }
+
+    res = lstat(path, &buf);
+    if (res == -1)
+	return invalid_fh;
+
+    /* check for dir if need_dir is set */
+    if (need_dir != 0 && !S_ISDIR(buf.st_mode))
+	return invalid_fh;
+
+    fh.dev = buf.st_dev;
+    fh.ino = buf.st_ino;
+    fh.gen = get_gen(buf, FD_NONE, path);
+
+    /* special case for root directory */
+    if (strcmp(path, "/") == 0)
+	return fh;
 
     strcpy(work, path);
     last = work;

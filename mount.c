@@ -184,7 +184,11 @@ mountres3 *mountproc_mnt_3_svc(dirpath * argp, struct svc_req * rqstp)
 	/* else leave authenticated unchanged */
     }
 
-    if (!realpath(dpath, buf)) {
+    if ((exports_opts & OPT_REMOVABLE) && export_point(dpath)) {
+	/* Removable media export point. Do not call realpath; simply copy
+	   path */
+	strncpy(buf, dpath, PATH_MAX);
+    } else if (!realpath(dpath, buf)) {
 	/* the given path does not exist */
 	result.fhs_status = MNT3ERR_NOENT;
 	return &result;

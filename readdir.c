@@ -18,8 +18,10 @@
 #include <unistd.h>
 
 #include "nfs.h"
+#include "mount.h"
 #include "fh.h"
 #include "readdir.h"
+#include "Config/exports.h"
 
 /*
  * maximum number of entries in readdir results
@@ -96,8 +98,19 @@ READDIR3res read_dir(const char *path, cookie3 cookie, cookieverf3 verf,
 
     search = opendir(path);
     if (!search) {
-	result.status = NFS3ERR_STALE;
-	return result;
+	if ((exports_opts & OPT_REMOVABLE) && (export_point(path))) {
+	    /* Removable media export point; probably no media inserted.
+	       Return empty directory. */
+	    memset(resok.cookieverf, 0, NFS3_COOKIEVERFSIZE);
+	    resok.reply.entries = NULL;
+	    resok.reply.eof = TRUE;
+	    result.status = NFS3_OK;
+	    result.READDIR3res_u.resok = resok;
+	    return result;
+	} else {
+	    result.status = NFS3ERR_STALE;
+	    return result;
+	}
     }
 
     this = readdir(search);

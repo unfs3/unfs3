@@ -830,7 +830,20 @@ FSSTAT3res *nfsproc3_fsstat_3_svc(FSSTAT3args * argp, struct svc_req * rqstp)
     res = statvfs(path, &buf);
     if (res == -1) {
 	/* statvfs fell on its nose */
-	result.status = NFS3ERR_IO;
+	if ((exports_opts & OPT_REMOVABLE) && export_point(path)) {
+	    /* Removable media export point; probably no media inserted.
+	       Return dummy values. */
+	    result.status = NFS3_OK;
+	    result.FSSTAT3res_u.resok.tbytes = 0;
+	    result.FSSTAT3res_u.resok.fbytes = 0;
+	    result.FSSTAT3res_u.resok.abytes = 0;
+	    result.FSSTAT3res_u.resok.tfiles = 0;
+	    result.FSSTAT3res_u.resok.ffiles = 0;
+	    result.FSSTAT3res_u.resok.afiles = 0;
+	    result.FSSTAT3res_u.resok.invarsec = 0;
+	} else {
+	    result.status = NFS3ERR_IO;
+	}
     } else {
 	result.status = NFS3_OK;
 	result.FSSTAT3res_u.resok.tbytes =

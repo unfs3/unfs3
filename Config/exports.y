@@ -164,6 +164,9 @@ static void add_item(const char *path)
 	char buf[PATH_MAX];
 	e_item *new;
 	e_item *iter;
+	e_host *host;
+	/* Is this item marked as removable for all hosts? */
+	int removable_for_all = 1;
 	
 	exports ne_new;
 	exports ne_iter;
@@ -175,11 +178,24 @@ static void add_item(const char *path)
 		daemon_exit(CRISIS);
 	}
 
-	if (!realpath(path, buf)) {
+	/* Loop over all hosts and check if marked as removable. */
+	host = cur_item.hosts;
+	while (host) {
+		if (!(host->options & OPT_REMOVABLE))
+			removable_for_all = 0;
+		host = (e_host *) host->next;
+	}
+
+	if (removable_for_all) {
+		/* If marked as removable for all hosts, don't try
+		   realpath. */
+		strncpy(buf, path, PATH_MAX);
+	} else if (!realpath(path, buf)) {
 		putmsg(LOG_CRIT, "realpath for %s failed", path);
 		e_error = TRUE;
 		free(new);
 		free(ne_new);
+		clear_item();
 		return;
 	}
 
@@ -188,6 +204,7 @@ static void add_item(const char *path)
 		e_error = TRUE;
 		free(new);
 		free(ne_new);
+		clear_item();
 		return;
 	}
 
@@ -619,7 +636,7 @@ int exports_options(const char *path, struct svc_req *rqstp,
 		    strstr(path, list->path) == path) {
 			cur_opts = find_host(remote, list, password, &export_password_hash);
 			if (fsid != NULL)
-			    *fsid = list->fsid;
+				*fsid = list->fsid;
 			if (cur_opts != -1) {
 				exports_opts = cur_opts;
 				last_len = strlen(list->path);

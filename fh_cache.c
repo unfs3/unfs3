@@ -213,12 +213,25 @@ char *fh_decomp(nfs_fh3 fh)
 	if (obj->ino == 0x1) {
 	    /* This FH refers to the export point itself */
 	    /* Need to fill stat cache */
-	    if (lstat(result, &st_cache) == -1) {
-		/* object does not exist */
-		st_cache_valid = FALSE;
-		return NULL;
-	    }
 	    st_cache_valid = TRUE;
+
+	    if (lstat(result, &st_cache) == -1) {
+		/* export point does not exist. This probably means that we
+		   are using autofs and no media is inserted. Fill stat cache 
+		   with dummy information */
+		st_cache.st_mode = S_IFDIR | S_IRWXU | S_IRWXG | S_IRWXO;
+		st_cache.st_nlink = 2;
+		st_cache.st_uid = 0;
+		st_cache.st_gid = 0;
+		st_cache.st_rdev = 0;
+		st_cache.st_size = 0;
+		st_cache.st_blksize = 0;
+		st_cache.st_blocks = 0;
+		st_cache.st_atime = 0;
+		st_cache.st_mtime = 0;
+		st_cache.st_ctime = 0;
+	    }
+
 	    st_cache.st_dev = obj->dev;
 	    st_cache.st_ino = 0x1;
 	    return result;
