@@ -62,7 +62,7 @@ int e_error = FALSE;
 
 /* passwords. FIXME: This is global variable now, even though the syntax
    allows for differents passwords per export */
-char password[PASSWORD_MAXLEN];
+char password[PASSWORD_MAXLEN] = "";
 
 
 /*
@@ -285,10 +285,10 @@ static void add_option(const char *opt)
 		cur_host.options &= ~OPT_RW;
 }
 
-static void add_option_with_value(const char *opt)
+static void add_option_with_value(const char *opt, const char *val)
 {
 	if (strcmp(opt,"password") == 0)
-		strncpy(password, opt, sizeof(password));
+		strncpy(password, val, sizeof(password));
 }
 
 /*
@@ -354,7 +354,7 @@ opts:
 
 opt:
 	ID                      { add_option($1); }
-        | ID '=' ID             { add_option_with_value($1); } 
+        | ID '=' ID             { add_option_with_value($1,$3); } 
 
 %%
 
