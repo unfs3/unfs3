@@ -1,11 +1,11 @@
-%define version 0.9.12
+%define version 0.9.13
 Summary: UNFS3 user-space NFSv3 server
 Group: Applications/System
 Name: unfs3
 Version: %{version}
 Release: 1
 Copyright: BSD
-Packager: Pascal Schmidt <der.eremit@email.de>
+Packager: Pascal Schmidt <pascal.schmidt@email.de>
 Vendor: none
 Source: unfs3-%{version}.tar.gz
 Buildroot: /tmp/unfs3

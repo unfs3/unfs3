@@ -1,35 +1,11 @@
-What's new or changed in 0.9.12
+What's new or changed in 0.9.13
 ===============================
-
-It is now possible to tell unfs3 to bind only to a specific
-network interface. To do this, use the new -l option with the
-address you want unfs3 to listen to as argument.
-
-Thanks go to Constantin Scheder <scheder@nirvanastorage.com>
-and Sam Sharma <sam.sharma@gat.com> for providing a lot of
-compile fixes that should make it possible to compile unfs3
-under AIX, Irix (gcc and native compiler), and Mac OS X. They
-also provided some fixes for the existing Solaris support.
-
-Preparations have been made to allow redirection of operating
-system calls, so that it becomes easy to redirect syscalls like
-stat() or read() to different functions. Take a look at the
-files backend.h and backend_unix.h if you are interested in the
-concept. This feature is only useful for people who want to do
-some hacking on the unfs3 source. No real documentation yet,
-please feel free to ask questions per email.
-
-Bernd Schubert <bernd-schubert@web.de> rewrote the error reporting
-part of the READDIR procedure code to make it more in line with
-both the NFS specification and the rest of unfs3's error handling.
-
-Thanks go to Brian <bohalloran@users.sourceforge.net> for notifying
-me about a problem with SGI clients and providing the needed
-tcpdump data to get it fixed.
 
 
 ChangeLog
 =========
+
+Version 0.9.13
 
 Version 0.9.12
 
