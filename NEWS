@@ -1,21 +1,16 @@
-What's new or changed in 0.9.6
+What's new or changed in 0.9.7
 ==============================
 
-The source code has been re-formatted with indent to achieve a more
-consistent indentation style. See the "indent-all" script for the
-indent options that were used.
-
-The 0.9.5 release introduced a new bug in READDIR that could lead
-to truncated replies being sent to clients.
-
-It is now possible to specify which ports unfsd should use for the
-NFS and MOUNT services. It is also possible to only use TCP connections
-and to refrain from registering with the portmapper (implemented by
-Peter Astrand <peter@cendio.se>).
 
 
 Old news
 ========
+
+Version 0.9.6
+
+  - run the source through indent to improve style consistency
+  - fix bug in READDIR that resulted in truncated replies
+  - add options to specify which ports and protocols to use
 
 Version 0.9.5
 
