@@ -151,6 +151,7 @@ static const unfs3_fh_t invalid_fh = {.dev = 0,.ino = 0,.gen = 0,.len =
 /*
  * compose a filehandle for a given path
  * path:     path to compose fh for
+ * rqstp:    If not NULL, generate special FHs for removables
  * need_dir: if not 0, path must point to a directory
  */
 unfs3_fh_t fh_comp_raw(const char *path, struct svc_req *rqstp, int need_dir)
@@ -181,7 +182,7 @@ unfs3_fh_t fh_comp_raw(const char *path, struct svc_req *rqstp, int need_dir)
 
     /* special case for removable device export point: return preset fsid and 
        inod 1. */
-    if (export_point(path)) {
+    if (rqstp && export_point(path)) {
 	uint32 fsid;
 
 	if (exports_options(path, rqstp, NULL, &fsid) == -1) {
@@ -240,10 +241,24 @@ unfs3_fh_t *fh_extend(nfs_fh3 nfh, uint32 dev, uint32 ino, uint32 gen)
     static unfs3_fh_t new;
     unfs3_fh_t *fh = (void *) nfh.data.data_val;
 
-    if (fh->len == FH_MAXLEN)
-	return NULL;
-
     memcpy(&new, fh, fh_len(fh));
+
+    if (new.len == 0) {
+	char *path;
+	path = export_point_from_fsid(new.dev);
+	if (path != NULL) {
+	    /* Our FH to extend refers to a removable device export
+	       point, which lacks .inos. We need to construct a real
+	       FH to extend, which can be done by passing rqstp=NULL
+	       to fh_comp_raw. */
+	    new = fh_comp_raw(path, NULL, FH_ANY);
+	    if (!fh_valid(new))
+		return NULL;
+	}
+    }
+
+    if (new.len == FH_MAXLEN)
+	return NULL;
 
     new.dev = dev;
     new.ino = ino;
