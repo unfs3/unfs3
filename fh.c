@@ -67,22 +67,21 @@ uint32 get_gen(struct stat obuf, U(int fd), U(const char *path))
     if (fd != FD_NONE) {
 	res = ioctl(fd, EXT2_IOC_GETVERSION, &gen);
 	if (res == -1)
-	    return 0;
-	else
-	    return gen;
+	    gen = 0;
     } else {
 	newfd = open(path, O_RDONLY);
 	if (newfd == -1)
-	    return 0;
+	    gen = 0;
+	else {
+	    res = ioctl(newfd, EXT2_IOC_GETVERSION, &gen);
+	    close(newfd);
 
-	res = ioctl(newfd, EXT2_IOC_GETVERSION, &gen);
-	close(newfd);
-
-	if (res == -1)
-	    return 0;
-	else
-	    return gen;
+	    if (res == -1)
+		gen = 0;
+	}
     }
+    
+    return gen;
 #endif
 
 #if HAVE_STRUCT_STAT_ST_GEN == 0 && HAVE_LINUX_EXT2_FS_H == 0
