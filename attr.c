@@ -67,7 +67,11 @@ mode_t type_to_mode(ftype3 ftype)
 /*
  * post_op_attr for error returns
  */
+#ifdef __GNUC__
 static post_op_attr error_attr = {.attributes_follow = FALSE };
+#else
+static post_op_attr error_attr = { FALSE };
+#endif
 
 /*
  * return pre-operation attributes
