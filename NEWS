@@ -1,16 +1,18 @@
-What's new or changed in 0.9.5
+What's new or changed in 0.9.6
 ==============================
 
-Some code cleanup was done; all functions requiring filehandles now
-directly take the NFS filehandle (nfs_fh3) instead of a char pointer.
-
-A bug in the READDIR implementation was fixed which could lead to
-READDIR returning EOF to the client although the last directory entry
-was not read by the client (thanks to Juergen Brendel).
+The source code has been re-formatted with indent to achieve a more
+consistent indentation style. See the "indent-all" script for the
+indent options that were used.
 
 
 Old news
 ========
+
+Version 0.9.5
+
+  - code cleanups, remove now impossible cases (stale filehandles)
+  - fix bug in READDIR that could return EOF one entry too early
 
 Version 0.9.4
 

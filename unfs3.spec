@@ -1,12 +1,12 @@
 Summary: UNFS3 user-space NFSv3 server
 Group: Applications/System
 Name: unfs3
-Version: 0.9.5
+Version: 0.9.6
 Release: 1
 Copyright: BSD
 Packager: Pascal Schmidt <der.eremit@email.de>
 Vendor: none
-Source: unfs3-0.9.5.tar.gz
+Source: unfs3-0.9.6.tar.gz
 Buildroot: /tmp/unfs3
 
 %prep
