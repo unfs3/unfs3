@@ -160,14 +160,27 @@ bool_t xdr_uint64(XDR * xdrs, uint64 * objp)
 {
     char buf[8];
     
-    buf[0] = (*objp >> 56) & 0xFF;
-    buf[1] = (*objp >> 48) & 0xFF;
-    buf[2] = (*objp >> 40) & 0xFF;
-    buf[3] = (*objp >> 32) & 0xFF;
-    buf[4] = (*objp >> 24) & 0xFF;
-    buf[5] = (*objp >> 16) & 0xFF;
-    buf[6] = (*objp >>  8) & 0xFF;
-    buf[7] = *objp & 0xFF;
+    if (xdrs->x_op == XDR_ENCODE) {
+        buf[0] = (*objp >> 56) & 0xFF;
+        buf[1] = (*objp >> 48) & 0xFF;
+        buf[2] = (*objp >> 40) & 0xFF;
+        buf[3] = (*objp >> 32) & 0xFF;
+        buf[4] = (*objp >> 24) & 0xFF;
+        buf[5] = (*objp >> 16) & 0xFF;
+        buf[6] = (*objp >>  8) & 0xFF;
+        buf[7] =  *objp        & 0xFF;
+        if (!xdr_opaque(xdrs, buf, 8))
+            return FALSE;
+        return TRUE;
+    } else if (xdrs->x_op == XDR_DECODE) {
+        uint32 *top = (void *) &buf[0];
+        uint32 *bottom = (void *) &buf[4];
+        if (!xdr_opaque(xdrs, buf, 8))
+            return FALSE;
+        *objp = (uint64) (ntohl(*top)) << 32 | ntohl(*bottom);
+        return TRUE;
+    }
+
     if (!xdr_opaque(xdrs, buf, 8))
         return FALSE;
     return TRUE;
