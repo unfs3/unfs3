@@ -1,6 +1,12 @@
 What's new or changed in 0.9.8
 ==============================
 
+The cache LRU code was broken since 0.9.4 and always reused the first
+cache entry in the filehandle and file descriptor cache. This
+effectively disabled the caches and caused some NFS operations to
+return wrong directory attributes. Thanks once again to
+Igor Durdanovic <idurdanovic@comcast.net> for bringing this issue
+to my attention.
 
 
 Old news
