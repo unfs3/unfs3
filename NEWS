@@ -1,30 +1,18 @@
-What's new or changed in 0.9.7
+What's new or changed in 0.9.8
 ==============================
-
-Renaming of files across directory boundaries should no longer
-result in stale filehandle errors. There is a performance penalty
-for doing such renames, though, especially when the renamed object
-is a directory seeing heavy use.
-
-It is now possible for clients to run executable files exported by
-the server without having read access to them on the server. This
-is important for some setuid root files, for example the XFree86
-server binary.
-
-The restrictions on attribute setting have been lifted. It is now
-possible to revoke all access permission to a file and to set
-attributes on sockets and other special files without restrictions.
-
-A bug that happened when exporting the / directory itself was
-uncovered and fixed. The clustering extensions now understand the
-$$$$ tag for unconditional redirection to the master file (thanks
-to Igor Durdanovic <idurdanovic@comcast.net> for finding these
-issues).
 
 
 
 Old news
 ========
+
+Version 0.9.7
+
+  - make renames across directories not cause stale filehandles
+  - allow clients to read files they only have execute permission for
+  - lift restrictions on attribute setting
+  - fix bug in special-casing of root directory filehandles
+  - add file$$$$ tag to clustering extensions
 
 Version 0.9.6
 
