@@ -1,2 +1,2 @@
 #!/bin/sh
-indent -i4 -br -npcs -nut *.c Config/*.y Extras/*.c
+indent -i4 -br -npcs -nut *.c Extras/*.c
