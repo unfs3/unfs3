@@ -13,6 +13,7 @@
 /* maximum depth of pathname described by filehandle */
 #define FH_MAXLEN 47
 
+#ifdef __GNUC__
 typedef struct {
 	uint32			dev;
 	uint32			ino;
@@ -21,6 +22,18 @@ typedef struct {
 	unsigned char	len;
 	unsigned char	inos[FH_MAXLEN];
 } __attribute__((packed)) unfs3_fh_t;
+#else
+#pragma pack(1)
+typedef struct {
+	uint32			dev;
+	uint32			ino;
+	uint32			gen;
+        uint32                  pwhash;
+	unsigned char	len;
+	unsigned char	inos[FH_MAXLEN];
+} unfs3_fh_t;
+#pragma pack(4)
+#endif
 
 #define FH_ANY 0
 #define FH_DIR 1
