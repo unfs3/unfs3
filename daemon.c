@@ -652,6 +652,10 @@ int main(int argc, char **argv)
     sigset_t actset;
 
     parse_options(argc, argv);
+    if (optind < argc) {
+	fprintf(stderr, "Error: extra arguments on command line\n");
+	exit(1);
+    }
 
     /* init write verifier */
     *(wverf + 0) = (uint32) getpid();
