@@ -259,6 +259,12 @@ Consider this directory to be on a fixed medium. This options is enabled
 by default and allows
 .B unfsd
 to keep files open between multiple read or write requests.
+.TP
+.B password=<password>
+To be able to mount this export, the specified password is
+required. The password should be given as a part of the path to mount,
+as in "mount yourhost:@password:gazonk/tmp /mnt". One time passwords
+are also supported. See the file "passwords.txt" for more information.
 .PP
 If options not present on this list are encountered by
 .BR unfsd ,
