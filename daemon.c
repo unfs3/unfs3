@@ -71,6 +71,7 @@ int opt_portmapper = TRUE;
 void logmsg(int prio, const char *fmt, ...)
 {
     va_list ap;
+
 #if HAVE_VSYSLOG == 0
     char mesg[1024];
 #endif
@@ -80,8 +81,8 @@ void logmsg(int prio, const char *fmt, ...)
 #if HAVE_VSYSLOG == 1
 	vsyslog(prio, fmt, ap);
 #else
-        vsnprintf(mesg, 1024, fmt, ap);
-        syslog(prio, mesg, 1024);
+	vsnprintf(mesg, 1024, fmt, ap);
+	syslog(prio, mesg, 1024);
 #endif
     } else {
 	vprintf(fmt, ap);
@@ -150,7 +151,8 @@ static void parse_options(int argc, char **argv)
 		printf("\t-p          do not register with the portmapper\n");
 		printf("\t-s          single user mode\n");
 		printf("\t-b          enable brute force file searching\n");
-		printf("\t-l <addr>   bind to interface with specified address\n");
+		printf
+		    ("\t-l <addr>   bind to interface with specified address\n");
 		exit(0);
 		break;
 	    case 'l':
