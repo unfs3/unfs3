@@ -1,22 +1,11 @@
-What's new or changed in 0.9.10
+What's new or changed in 0.9.11
 ===============================
-
-Bulding with a 2.95.x or 2.96 gcc was broken in 0.9.9 due to mixed
-code and declarations. Problem report and patch by Simon Matter
-<simix@users.sourceforge.net>.
-
-The ALWAYS cluster tag now also takes effect for creation of
-files. Patch by Bernd Schubert <bernd-schubert@web.de>.
-
-There was a possible use-after-free bug in the filehandle
-resolution routines, closedir() was called before copying
-the results of a previous readdir(). Depending on the glibc
-version in use, this can lead to segfaults. Report and patch
-by Bernd Schubert <bernd-schubert@web.de>.
 
 
 ChangeLog
 =========
+
+Version 0.9.11
 
 Version 0.9.10
 
