@@ -71,11 +71,19 @@ int opt_portmapper = TRUE;
 void logmsg(int prio, const char *fmt, ...)
 {
     va_list ap;
+#if HAVE_VSYSLOG == 0
+    char mesg[1024];
+#endif
 
     va_start(ap, fmt);
-    if (opt_detach)
+    if (opt_detach) {
+#if HAVE_VSYSLOG == 1
 	vsyslog(prio, fmt, ap);
-    else {
+#else
+        vsnprintf(mesg, 1024, fmt, ap);
+        syslog(prio, mesg, 1024);
+#endif
+    } else {
 	vprintf(fmt, ap);
 	putchar('\n');
     }
@@ -208,10 +216,9 @@ void daemon_exit(int error)
 
     if (error == SIGUSR1) {
 	if (fh_cache_use > 0)
-	    logmsg(LOG_INFO, "fh entries %i access %i hit %i%s miss %i%s",
-		   fh_cache_max, fh_cache_use,
-		   fh_cache_hit * 100 / fh_cache_use, "%",
-		   100 - fh_cache_hit * 100 / fh_cache_use, "%");
+	    logmsg(LOG_INFO, "fh entries %i access %i hit %i miss %i",
+		   fh_cache_max, fh_cache_use, fh_cache_hit,
+		   fh_cache_use - fh_cache_hit);
 	else
 	    logmsg(LOG_INFO, "fh cache unused");
 	logmsg(LOG_INFO, "open file descriptors: read %i, write %i",
