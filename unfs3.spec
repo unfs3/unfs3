@@ -30,7 +30,7 @@ version 3 server specification. It provides a daemon that supports both
 the MOUNT and NFS protocol.
 
 %files
-%attr (  -, root, root) %doc README LICENSE NEWS
+%attr (  -, root, root) %doc CREDITS README LICENSE NEWS
 %attr (755, root, root) /usr/sbin/unfsd
 %attr (644, root, root) %doc /usr/share/man/man7/tags.7.gz
 %attr (644, root, root) %doc /usr/share/man/man8/unfsd.8.gz
