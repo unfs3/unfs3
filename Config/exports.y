@@ -372,7 +372,7 @@ void yyerror(char *s)
 
 %token <text> PATH
 %token <text> ID
-%token <text> OPTVAL
+%token <text> OPTVALUE
 %token <text> WHITE
 %token <text> IP
 %token <text> NET
@@ -419,7 +419,7 @@ opts:
  
 opt: 
 	ID                      { add_option($1); }
-        | ID OPTVAL             { add_option_with_value($1,$2); } 
+        | ID OPTVALUE           { add_option_with_value($1,$2); } 
 	;
 %%
 
