@@ -28,9 +28,6 @@ extern bool_t xdr_nfspath (XDR *, nfspath*);
 #if HAVE_XDR_UINT64 == 0
 extern bool_t xdr_uint64 (XDR *, uint64*);
 #endif
-#if HAVE_XDR_INT64 == 0
-extern bool_t xdr_int64 (XDR *, int64*);
-#endif
 #if HAVE_XDR_UINT32 == 0
 extern bool_t xdr_uint32 (XDR *, uint32*);
 #endif

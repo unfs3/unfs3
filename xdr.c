@@ -175,34 +175,6 @@ bool_t xdr_uint64(XDR * xdrs, uint64 * objp)
 #endif
 #endif
 
-#if HAVE_XDR_INT64 == 0
-#if HAVE_XDR_INT64_T == 1
-bool_t xdr_int64(XDR * xdrs, int64 * objp)
-{
-    if (!xdr_int64_t(xdrs, objp))
-	return FALSE;
-    return TRUE;
-}
-#else
-bool_t xdr_int64(XDR * xdrs, int64 * objp)
-{
-    char buf[8];
-    
-    buf[0] = (*objp >> 56) & 0xFF;
-    buf[1] = (*objp >> 48) & 0xFF;
-    buf[2] = (*objp >> 40) & 0xFF;
-    buf[3] = (*objp >> 32) & 0xFF;
-    buf[4] = (*objp >> 24) & 0xFF;
-    buf[5] = (*objp >> 16) & 0xFF;
-    buf[6] = (*objp >>  8) & 0xFF;
-    buf[7] = *objp & 0xFF;
-    if (!xdr_opaque(xdrs, buf, 8))
-        return FALSE;
-    return TRUE;
-}
-#endif
-#endif
-
 #if HAVE_XDR_UINT32 == 0 && HAVE_XDR_U_LONG == 1
 bool_t xdr_uint32(XDR * xdrs, uint32 * objp)
 {
