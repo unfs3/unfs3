@@ -6,6 +6,10 @@
 #ifndef _NFS_PROT_H_RPCGEN
 #define _NFS_PROT_H_RPCGEN
 
+#if HAVE_STDINT_H == 1
+#include <stdint.h>
+#endif
+
 #define UNIX_PATH_MAX 108
 
 #define NFS_PORT 2049
@@ -30,13 +34,29 @@ typedef char *nfspath;
 #define NFS3_CREATEVERFSIZE 8
 #define NFS3_WRITEVERFSIZE 8
 
+#if HAVE_UINT64 == 0
 typedef uint64_t uint64;
+#endif
 
+#if HAVE_INT64 == 0
 typedef int64_t int64;
+#endif
 
+#if HAVE_UINT32 == 0
+#if HAVE_XDR_U_LONG == 1
 typedef u_long uint32;
+#else
+typedef uint32_t uint32;
+#endif
+#endif
 
+#if HAVE_INT32 == 0
+#if HAVE_XDR_LONG == 1
 typedef long int32;
+#else
+typedef int32_t int32;
+#endif
+#endif
 
 typedef char *filename3;
 
