@@ -7,6 +7,7 @@
 
 #include <sys/types.h>
 #include <rpc/rpc.h>
+#include <netinet/in.h>
 
 #if HAVE_XDR_U_INT64_T == 1
 #define xdr_uint64_t xdr_u_int64_t
