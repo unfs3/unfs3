@@ -100,6 +100,7 @@ static void parse_options(int argc, char **argv)
 	switch (opt) {
 	    case 'u':
 		opt_nfs_port = 0;
+		opt_mount_port = 0;
 		break;
 	    case 'w':
 		opt_expire_writers = TRUE;
@@ -149,7 +150,7 @@ static void parse_options(int argc, char **argv)
 		printf("\t-h          display this short option summary\n");
 		printf("\t-w          expire writers from fd cache\n");
 		printf
-		    ("\t-u          use unprivileged port for NFS service\n");
+		    ("\t-u          use unprivileged port for services\n");
 		printf("\t-d          do not detach from terminal\n");
 		printf("\t-e <file>   file to use instead of /etc/exports\n");
 #if WANT_CLUSTER == 1
@@ -159,7 +160,7 @@ static void parse_options(int argc, char **argv)
 		printf("\t-n <port>   port to use for NFS service\n");
 		printf("\t-m <port>   port to use for MOUNT service\n");
 		printf
-		    ("\t-t          TCP only. Do not listen on UDP ports\n");
+		    ("\t-t          TCP only, do not listen on UDP ports\n");
 		printf("\t-p          do not register with the portmapper\n");
 		exit(0);
 		break;
