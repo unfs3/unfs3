@@ -355,7 +355,7 @@ opts:
 opt:
 	ID                      { add_option($1); }
         | ID '=' ID             { add_option_with_value($1,$3); } 
-
+	;
 %%
 
 /*
