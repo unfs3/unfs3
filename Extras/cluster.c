@@ -19,6 +19,7 @@
 #include <netdb.h>
 #include <stdlib.h>
 #include <string.h>
+#include <syslog.h>
 #include <unistd.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -182,6 +183,20 @@ int compar(const void *x, const void *y)
 }
 
 /*
+ * reset euid/egid to specific values
+ */
+static void reset_ids(uid_t euid, gid_t egid)
+{
+    setegid(egid);
+    seteuid(euid);
+	
+    if (geteuid() != euid || getegid() != egid) {
+	putmsg(LOG_EMERG, "euid/egid switching failed, aborting");
+	daemon_exit(CRISIS);
+    }
+}
+
+/*
  * scan directory for filenames beginning with master name as prefix
  */
 void cluster_scandir(const char *path)
@@ -190,12 +205,23 @@ void cluster_scandir(const char *path)
     DIR *scan;
     struct dirent *entry;
     char **new, *name;
+    uid_t euid;
+    gid_t egid;
 
     strcpy(prefix, cluster_basename(path));
+
+    /*
+     * need to read directory as root, temporarily switch back
+     */
+    euid = geteuid();
+    egid = getegid();
+    setegid(0);
+    seteuid(0);
 
     scan = opendir(cluster_dirname(path));
     if (!scan) {
 	cluster_count = -1;
+	reset_ids(euid, egid);
 	return;
     }
 
@@ -213,7 +239,10 @@ void cluster_scandir(const char *path)
 	if (!new || !name) {
 	    cluster_freedir();
 	    cluster_count = -1;
+	    free(new);
+	    free(name);
 	    closedir(scan);
+	    reset_ids(euid, egid);
 	    return;
 	}
 
@@ -224,6 +253,7 @@ void cluster_scandir(const char *path)
     }
 
     closedir(scan);
+    reset_ids(euid, egid);
 
     /* list needs to be sorted for cluster_lookup_lowlevel to work */
     qsort(cluster_dirents, cluster_count, sizeof(char *), compar);
