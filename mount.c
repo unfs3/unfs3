@@ -59,9 +59,14 @@ static void add_mount(const char *path, struct svc_req *rqstp)
 
     host = inet_ntoa(get_remote(rqstp));
     new->ml_hostname = malloc(strlen(host) + 1);
-    new->ml_directory = malloc(strlen(path) + 1);
+    if (!new->ml_hostname) {
+	free(new);
+	return;
+    }
 
-    if (!new->ml_hostname || !new->ml_directory) {
+    new->ml_directory = malloc(strlen(path) + 1);
+    if (!new->ml_directory) {
+	free(new->ml_hostname);
 	free(new);
 	return;
     }
