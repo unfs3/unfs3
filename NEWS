@@ -8,6 +8,12 @@ supported. Mount passwords are primarily intended for secure
 communication links, such as SSH tunnels. See the file passwords.txt
 in the doc/ directory for more information. Implemented by Peter
 Astrand <peter@cendio.se>.
+
+A few deficiencies in the exports file parser were fixed. Dashes
+within hostnames are now accepted, as is leading whitespace in
+export entries (useful for indenting exports that span multiple
+lines). Thanks to Jan P. Springer (jsd01@users.sourceforge.net)
+for reporting these problems.
   
 
 Old news
