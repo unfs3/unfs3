@@ -290,7 +290,6 @@ READ3res *nfsproc3_read_3_svc(READ3args * argp, struct svc_req * rqstp)
     static READ3res result;
     char *path;
     int fd, res;
-    off_t where;
     static char buf[NFS_MAXDATA + 1];
 
     PREP(path, argp->file);
@@ -306,41 +305,33 @@ READ3res *nfsproc3_read_3_svc(READ3args * argp, struct svc_req * rqstp)
     if (result.status == NFS3_OK) {
 	fd = fd_open(path, argp->file, FD_READ);
 	if (fd != -1) {
-	    where = backend_lseek(fd, argp->offset, SEEK_SET);
-	    if (where == (int64) argp->offset) {
+	    /* read one more to check for eof */
+            res = backend_pread(fd, buf, argp->count + 1, argp->offset);
 
-		/* read one more to check for eof */
-		res = backend_read(fd, buf, argp->count + 1);
+            /* eof if we could not read one more */
+            result.READ3res_u.resok.eof = (res <= (int64) argp->count);
 
-		/* eof if we could not read one more */
-		result.READ3res_u.resok.eof = (res <= (int64) argp->count);
+            /* close for real when hitting eof */
+            if (result.READ3res_u.resok.eof)
+                fd_close(fd, FD_READ, FD_CLOSE_REAL);
+            else {
+                fd_close(fd, FD_READ, FD_CLOSE_VIRT);
+                res--;
+            }
 
-		/* close for real when hitting eof */
-		if (result.READ3res_u.resok.eof)
-		    fd_close(fd, FD_READ, FD_CLOSE_REAL);
-		else {
-		    fd_close(fd, FD_READ, FD_CLOSE_VIRT);
-		    res--;
-		}
+            if (res >= 0) {
+                result.READ3res_u.resok.count = res;
+                result.READ3res_u.resok.data.data_len = res;
+                result.READ3res_u.resok.data.data_val = buf;
+            } else {
+                /* error during read() */
 
-		if (res >= 0) {
-		    result.READ3res_u.resok.count = res;
-		    result.READ3res_u.resok.data.data_len = res;
-		    result.READ3res_u.resok.data.data_val = buf;
-		} else {
-		    /* error during read() */
-
-		    /* EINVAL means unreadable object */
-		    if (errno == EINVAL)
-			result.status = NFS3ERR_INVAL;
-		    else
-			result.status = NFS3ERR_IO;
-		}
-	    } else {
-		/* could not seek to file position */
-		fd_close(fd, FD_READ, FD_CLOSE_REAL);
-		result.status = NFS3ERR_IO;
-	    }
+                /* EINVAL means unreadable object */
+                if (errno == EINVAL)
+                    result.status = NFS3ERR_INVAL;
+                else
+                    result.status = NFS3ERR_IO;
+            }
 	} else
 	    /* opening for read failed */
 	    result.status = read_err();
@@ -357,7 +348,6 @@ WRITE3res *nfsproc3_write_3_svc(WRITE3args * argp, struct svc_req * rqstp)
     static WRITE3res result;
     char *path;
     int fd, res;
-    off_t where;
 
     PREP(path, argp->file);
     result.status = join(is_reg(), exports_rw());
@@ -365,35 +355,28 @@ WRITE3res *nfsproc3_write_3_svc(WRITE3args * argp, struct svc_req * rqstp)
     if (result.status == NFS3_OK) {
 	fd = fd_open(path, argp->file, FD_WRITE);
 	if (fd != -1) {
-	    where = backend_lseek(fd, argp->offset, SEEK_SET);
-	    if (where == (int64) argp->offset) {
-		res = backend_write(fd, argp->data.data_val,
-		                    argp->data.data_len);
+            res = backend_pwrite(fd, argp->data.data_val,
+                                 argp->data.data_len, argp->offset);
 
-		/* close for real if not UNSTABLE write */
-		if (argp->stable == UNSTABLE)
-		    fd_close(fd, FD_WRITE, FD_CLOSE_VIRT);
-		else
-		    fd_close(fd, FD_WRITE, FD_CLOSE_REAL);
+            /* close for real if not UNSTABLE write */
+            if (argp->stable == UNSTABLE)
+                fd_close(fd, FD_WRITE, FD_CLOSE_VIRT);
+            else
+                fd_close(fd, FD_WRITE, FD_CLOSE_REAL);
 
-		/* we always do fsync(), never fdatasync() */
-		if (argp->stable == DATA_SYNC)
-		    argp->stable = FILE_SYNC;
+            /* we always do fsync(), never fdatasync() */
+            if (argp->stable == DATA_SYNC)
+                argp->stable = FILE_SYNC;
 
-		if (res != -1) {
-		    result.WRITE3res_u.resok.count = res;
-		    result.WRITE3res_u.resok.committed = argp->stable;
-		    memcpy(result.WRITE3res_u.resok.verf, wverf,
-			   NFS3_WRITEVERFSIZE);
-		} else {
-		    /* error during write */
-		    result.status = write_write_err();
-		}
-	    } else {
-		/* could not seek to file position */
-		fd_close(fd, FD_WRITE, FD_CLOSE_REAL);
-		result.status = NFS3ERR_IO;
-	    }
+            if (res != -1) {
+                result.WRITE3res_u.resok.count = res;
+                result.WRITE3res_u.resok.committed = argp->stable;
+                memcpy(result.WRITE3res_u.resok.verf, wverf,
+                       NFS3_WRITEVERFSIZE);
+            } else {
+                /* error during write */
+                result.status = write_write_err();
+            }
 	} else
 	    /* could not open for writing */
 	    result.status = write_open_err();

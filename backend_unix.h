@@ -41,7 +41,8 @@
 #define backend_open open
 #define backend_open_create open
 #define backend_opendir opendir
-#define backend_read read
+#define backend_pread pread
+#define backend_pwrite pwrite
 #define backend_readdir readdir
 #define backend_readlink readlink
 #define backend_realpath realpath
@@ -53,6 +54,5 @@
 #define backend_symlink symlink
 #define backend_truncate truncate
 #define backend_utime utime
-#define backend_write write
 
 #endif
