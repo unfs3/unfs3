@@ -9,5 +9,6 @@
 
 READDIR3res
 read_dir(const char *path, cookie3 cookie, cookieverf3 verf, count3 count);
+uint32 directory_hash(const char *path);
 
 #endif

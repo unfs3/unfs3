@@ -60,6 +60,25 @@ static int cookie_check(time_t time, cookieverf3 verf)
     return (int) (time == *(time_t *) verf);
 }
 
+uint32 directory_hash(const char *path)
+{
+    DIR *search;
+    struct dirent *this;
+    uint32 hval = 0;
+
+    search = opendir(path);
+    if (!search) {
+	return 0;
+    }
+
+    while ((this = readdir(search)) != NULL) {
+	hval = fnv1a_32(this->d_name, hval);
+    }
+
+    closedir(search);
+    return hval;
+}
+
 /*
  * perform a READDIR operation
  *

@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <time.h>
 
 #include "nfs.h"
 #include "fh.h"
@@ -22,6 +23,7 @@
 #include "fh_cache.h"
 #include "mount.h"
 #include "Config/exports.h"
+#include "readdir.h"
 
 /* number of entries in fh cache */
 #define CACHE_ENTRIES	4096
@@ -202,6 +204,8 @@ char *fh_decomp(nfs_fh3 fh)
 {
     char *result;
     unfs3_fh_t *obj = (void *) fh.data.data_val;
+    time_t *last_mtime;
+    uint32 *dir_hash, new_dir_hash;
 
     if (!nfh_valid(fh)) {
 	st_cache_valid = FALSE;
@@ -209,7 +213,8 @@ char *fh_decomp(nfs_fh3 fh)
     }
 
     /* Does the fsid match some static fsid? */
-    if ((result = export_point_from_fsid(obj->dev)) != NULL) {
+    if ((result =
+	 export_point_from_fsid(obj->dev, &last_mtime, &dir_hash)) != NULL) {
 	if (obj->ino == 0x1) {
 	    /* This FH refers to the export point itself */
 	    /* Need to fill stat cache */
@@ -227,13 +232,43 @@ char *fh_decomp(nfs_fh3 fh)
 		st_cache.st_size = 0;
 		st_cache.st_blksize = 0;
 		st_cache.st_blocks = 0;
-		st_cache.st_atime = 0;
-		st_cache.st_mtime = 0;
-		st_cache.st_ctime = 0;
 	    }
 
 	    st_cache.st_dev = obj->dev;
 	    st_cache.st_ino = 0x1;
+
+	    /* It's very important that we get mtime correct, since it's used 
+	       as verifier in READDIR. The generation of mtime is tricky,
+	       because with some filesystems, such as the Linux 2.4 FAT fs,
+	       the mtime value for the mount point is set to *zero* on each
+	       mount. I consider this a bug, but we need to work around it
+	       anyway.
+
+	       We store the last mtime returned. When stat returns a smaller
+	       value than this, we double-check by doing a hash of the names
+	       in the directory. If this hash is different from what we had
+	       earlier, return current time.
+
+	       Note: Since dir_hash is stored in memory, we have introduced a 
+	       little statefulness here. This means that if unfsd is
+	       restarted during two READDIR calls, NFS3ERR_BAD_COOKIE will be 
+	       returned, and the client has to retry the READDIR operation
+	       with a zero cookie */
+
+	    if (st_cache.st_mtime > *last_mtime) {
+		/* stat says our directory has changed */
+		*last_mtime = st_cache.st_mtime;
+	    } else if (*dir_hash != (new_dir_hash = directory_hash(result))) {
+		/* The names in the directory has changed. Return current
+		   time. */
+		st_cache.st_mtime = time(NULL);
+		*last_mtime = st_cache.st_mtime;
+		*dir_hash = new_dir_hash;
+	    } else {
+		/* Hash unchanged. Returned stored mtime. */
+		st_cache.st_mtime = *last_mtime;
+	    }
+
 	    return result;
 	}
     }

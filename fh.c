@@ -249,7 +249,7 @@ unfs3_fh_t *fh_extend(nfs_fh3 nfh, uint32 dev, uint32 ino, uint32 gen)
     if (new.len == 0) {
 	char *path;
 
-	path = export_point_from_fsid(new.dev);
+	path = export_point_from_fsid(new.dev, NULL, NULL);
 	if (path != NULL) {
 	    /* Our FH to extend refers to a removable device export point,
 	       which lacks .inos. We need to construct a real FH to extend,

@@ -47,6 +47,8 @@ typedef struct {
 	char		orig[NFS_MAXPATHLEN];
 	e_host		*hosts;
         uint32          fsid; /* export point fsid (for removables) */
+        time_t          last_mtime; /* Last returned mtime (for removables) */
+        uint32          dir_hash; /* Hash of dir contents (for removables) */
 	struct e_item	*next;
 } e_item;
 
@@ -67,10 +69,9 @@ int e_error = FALSE;
  * The FNV1a-32 hash algorithm
  * (http://www.isthe.com/chongo/tech/comp/fnv/)
  */
-static uint32 fnv1a_32(const char *str)
+uint32 fnv1a_32(const char *str, uint32 hval)
 {
     static const uint32 fnv_32_prime = 0x01000193;
-    uint32 hval = fnv_32_prime;
     
     while (*str) {
 	hval ^= *str++;
@@ -88,7 +89,7 @@ static uint32 get_free_fsid(const char *path)
 
     /* The 32:th bit is set to one on all special filehandles. The
        last 31 bits are hashed from the export point path. */
-    hval = fnv1a_32(path);
+    hval = fnv1a_32(path, 0);
     hval |= 0x10000000UL;
     return hval;
 }
@@ -216,6 +217,8 @@ static void add_item(const char *path)
 	strcpy(new->path, buf);
 	strcpy(new->orig, path);
 	new->fsid = get_free_fsid(path);  
+	new->last_mtime = 0;
+	new->dir_hash = 0;
 
 	*ne_new = ne_item;
 	ne_new->ex_dir = new->orig;
@@ -346,7 +349,7 @@ static void add_option_with_value(const char *opt, const char *val)
 	strncpy(cur_host.password, val, sizeof(password));
 	cur_host.password[PASSWORD_MAXLEN] = '\0';
 	/* Calculate hash */
-	cur_host.password_hash = fnv1a_32(cur_host.password);
+	cur_host.password_hash = fnv1a_32(cur_host.password, 0);
     }
 }
 
@@ -672,7 +675,7 @@ int export_point(const char *path)
 /*
  * return exported path from static fsid
  */
-char *export_point_from_fsid(uint32 fsid)
+char *export_point_from_fsid(uint32 fsid, time_t **last_mtime, uint32 **dir_hash)
 {
     e_item *list;
     
@@ -681,6 +684,10 @@ char *export_point_from_fsid(uint32 fsid)
     
     while (list) {
 	if (list->fsid == fsid) {
+	    if (last_mtime != NULL)
+		*last_mtime = &list->last_mtime;
+	    if (dir_hash != NULL)
+		*dir_hash = &list->dir_hash;
 	    exports_access = FALSE;
 	    return list->path;
 	}
