@@ -217,7 +217,10 @@ void daemon_exit(int error)
 	putmsg(LOG_EMERG, "segmentation fault");
 
     fd_cache_purge();
-    closelog();
+
+    if (opt_detach)
+	closelog();
+
     exit(1);
 }
 
