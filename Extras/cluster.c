@@ -187,10 +187,7 @@ int compar(const void *x, const void *y)
  */
 static void reset_ids(uid_t euid, gid_t egid)
 {
-    setegid(egid);
-    seteuid(euid);
-	
-    if (geteuid() != euid || getegid() != egid) {
+    if (setegid(egid) || seteuid(euid)) {	
 	putmsg(LOG_EMERG, "euid/egid switching failed, aborting");
 	daemon_exit(CRISIS);
     }
