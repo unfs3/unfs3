@@ -94,7 +94,6 @@ struct in_addr get_remote(struct svc_req *rqstp)
 static void parse_options(int argc, char **argv)
 {
     int opt = 0;
-
     char *optstring = "bcC:de:hm:n:pstuw";
 
     while (opt != -1) {
