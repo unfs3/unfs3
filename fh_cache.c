@@ -329,3 +329,17 @@ unfs3_fh_t fh_comp(const char *path, struct svc_req * rqstp, int need_dir)
     res.pwhash = export_password_hash;
     return res;
 }
+
+/*
+ * return pointer to composed filehandle
+ * wrapper for fh_comp
+ */
+unfs3_fh_t *fh_comp_ptr(const char *path, struct svc_req * rqstp, int need_dir)
+{
+    static unfs3_fh_t res;
+    res = fh_comp(path, rqstp, need_dir);
+    if (fh_valid(res))
+        return &res;
+    else
+        return NULL;
+}

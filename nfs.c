@@ -76,6 +76,8 @@
  */
 nfsstat3 cat_name(const char *path, const char *name, char *result)
 {
+    char *last;
+
     if (!path)
 	return NFS3ERR_STALE;
 
@@ -87,6 +89,30 @@ nfsstat3 cat_name(const char *path, const char *name, char *result)
 
     if (strlen(path) + strlen(name) + 2 > NFS_MAXPATHLEN)
 	return NFS3ERR_NAMETOOLONG;
+
+    if (strcmp(name, ".") == 0) {
+        strcpy(result, path);
+        return NFS3_OK;
+    }
+
+    /*
+     * Irix clients do lookups for .. and then use the
+     * resulting filehandle for more lookups, causing them
+     * to get filehandles that fh_decomp_raw will refuse to
+     * resolve. Export list handling will also get very
+     * confused if we allow such filehandles.
+     */    
+    if (strcmp(name, "..") == 0) {
+        last = strrchr(path, '/');
+        if (!last || last == path)
+            strcpy(result, "/");
+        else {
+            *last = 0;
+            strcpy(result, path);
+            *last = '/';
+        }
+        return NFS3_OK;
+    }
 
     sprintf(result, "%s/%s", path, name);
     return NFS3_OK;
@@ -175,9 +201,14 @@ LOOKUP3res *nfsproc3_lookup_3_svc(LOOKUP3args * argp, struct svc_req * rqstp)
 	if (res == -1)
 	    result.status = lookup_err();
 	else {
-	    gen = backend_get_gen(buf, FD_NONE, obj);
-	    fh = fh_extend(argp->what.dir, buf.st_dev, buf.st_ino, gen);
-	    fh_cache_add(buf.st_dev, buf.st_ino, obj);
+	    if (strcmp(argp->what.name, ".")  == 0 ||
+	        strcmp(argp->what.name, "..") == 0) {
+	        fh = fh_comp_ptr(obj, rqstp, 0);
+	    } else {
+	        gen = backend_get_gen(buf, FD_NONE, obj);
+	        fh = fh_extend(argp->what.dir, buf.st_dev, buf.st_ino, gen);
+	        fh_cache_add(buf.st_dev, buf.st_ino, obj);
+	    }
 
 	    if (fh) {
 		result.LOOKUP3res_u.resok.object.data.data_len = fh_length(fh);
