@@ -240,8 +240,8 @@ ACCESS3res *nfsproc3_access_3_svc(ACCESS3args * argp, struct svc_req * rqstp)
     return &result;
 }
 
-READLINK3res * nfsproc3_readlink_3_svc(READLINK3args * argp,
-				       struct svc_req * rqstp)
+READLINK3res *nfsproc3_readlink_3_svc(READLINK3args * argp,
+				      struct svc_req * rqstp)
 {
     static READLINK3res result;
     char *path;
@@ -786,8 +786,8 @@ READDIR3res *nfsproc3_readdir_3_svc(READDIR3args * argp,
     return &result;
 }
 
-READDIRPLUS3res * nfsproc3_readdirplus_3_svc(U(READDIRPLUS3args * argp),
-					     U(struct svc_req * rqstp))
+READDIRPLUS3res *nfsproc3_readdirplus_3_svc(U(READDIRPLUS3args * argp),
+					    U(struct svc_req * rqstp))
 {
     static READDIRPLUS3res result;
 
@@ -860,8 +860,8 @@ FSINFO3res *nfsproc3_fsinfo_3_svc(FSINFO3args * argp, struct svc_req * rqstp)
     return &result;
 }
 
-PATHCONF3res * nfsproc3_pathconf_3_svc(PATHCONF3args * argp,
-				       struct svc_req * rqstp)
+PATHCONF3res *nfsproc3_pathconf_3_svc(PATHCONF3args * argp,
+				      struct svc_req * rqstp)
 {
     static PATHCONF3res result;
     char *path;
