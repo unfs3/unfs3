@@ -23,6 +23,9 @@ following options are recognized in the exports file: ro, rw,
 root_squash, all_squash, no_root_squash, no_all_squash. If
 other options are present, they are ignored.
 
+Cluster extensions compatible to the older ClusterNFS project
+are supported when the source is configured with --enable-cluster.
+
 
 SUPPORTED SYSTEMS
 =================
@@ -44,7 +47,7 @@ so it may break at any time. If it does, a bug report is appreciated.
 INSTALLATION
 ============
 
-You will need gcc, lex, and yacc to compile UNFS3.
+You will need gcc, lex (flex), and yacc (bison) to compile UNFS3.
 
 	./configure
 	make
