@@ -5,6 +5,9 @@ The source code has been re-formatted with indent to achieve a more
 consistent indentation style. See the "indent-all" script for the
 indent options that were used.
 
+The 0.9.5 release introduced a new bug in READDIR that could lead
+to truncated replies being sent to clients.
+
 
 Old news
 ========
