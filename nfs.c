@@ -433,7 +433,7 @@ CREATE3res *nfsproc3_create_3_svc(CREATE3args * argp, struct svc_req * rqstp)
 
     if (result.status == NFS3_OK) {
 	if (argp->how.mode != EXCLUSIVE) {
-	    fd = backend_open(obj, flags, create_mode(new_attr));
+	    fd = backend_open_create(obj, flags, create_mode(new_attr));
 
 	    if (fd != -1) {
 		res = backend_fstat(fd, &buf);

@@ -39,6 +39,7 @@
 #define backend_mkfifo mkfifo
 #define backend_mknod mknod
 #define backend_open open
+#define backend_open_create open
 #define backend_opendir opendir
 #define backend_read read
 #define backend_readdir readdir
