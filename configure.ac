@@ -1,7 +1,8 @@
 AC_INIT(fd_cache.c)
 AC_CONFIG_HEADER(config.h)
 AC_PROG_INSTALL
-AC_PROG_CC([gcc egcs kgcc])
+AC_PROG_CC([gcc egcs kgcc cc])
+AC_COMPILE_WARNINGS
 AC_PROG_LEX
 AC_PROG_YACC
 AC_HEADER_STDC
