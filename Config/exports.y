@@ -24,6 +24,8 @@
 # define PATH_MAX	4096
 #endif
 
+#define SECRET_MAXLEN   1024
+
 /* lexer stuff, to avoid compiler warnings */
 int yylex(void);
 extern FILE *yyin;
@@ -59,6 +61,11 @@ static struct groupnode ne_host;
 
 /* error status of last parse */
 int e_error = FALSE;
+
+/* secrets. FIXME: This is global variable now, even though the syntax
+   allows for differents secrets per export */
+char secret[SECRET_MAXLEN];
+
 
 /*
  * clear current host
@@ -280,6 +287,12 @@ static void add_option(const char *opt)
 		cur_host.options &= ~OPT_RW;
 }
 
+static void add_option_with_value(const char *opt)
+{
+	if (strcmp(opt,"secret") == 0)
+		strncpy(secret, opt, sizeof(secret));
+}
+
 /*
  * dummy error function
  */
@@ -336,10 +349,14 @@ name:
 	;
 	
 opts:
-	ID			{ add_option($1); }
-	| ID ',' opts		{ add_option($1); }
+	opt			
+	| opt ',' opts		
 	|
 	;
+
+opt:
+	ID                      { add_option($1); }
+        | ID '=' ID             { add_option_with_value($1); } 
 
 %%
 
