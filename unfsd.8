@@ -83,11 +83,35 @@ Use the given file as the exports file, instead of using
 Note that the file needs to be specified using an absolute path.
 .TP
 .B \-u
-Use an unprivileged port for NFS service. Normally,
+Use an unprivileged port for NFS and MOUNT service. Normally,
 .B unfsd
 will use port number 2049, which is the standard port for NFS.
 When this option is in effect, an arbitrary port chosen by the RPC library
 will be used.
+.TP
+.BI "\-n " "\<port\>"
+Use the specified port for NFS service. A value of 0 makes
+.B unfsd
+choose an arbitrary, unprivileged port.
+.TP
+.BI "\-m " "\<port\>"
+Use the specified port for MOUNT service. The same port as
+for the NFS service, 2049, is used by default. A value of 0 makes
+.B unfsd
+choose an arbitrary, unprivileged port
+different from the port used for the NFS service.
+.TP
+.B \-t
+TCP only operation. By default,
+.B unfsd
+provides its services to clients using either UDP or TCP as communication
+protocol. When this option is present, only TCP connections are
+serviced.
+.TP
+.B \-p
+Do not register with the portmapper. This will prevent other hosts from
+finding out the port numbers used for the MOUNT and NFS service. Clients
+will need to manually specify the port numbers to use.
 .TP
 .B \-w
 Allow the built-in file descriptor cache to expire writers. For
