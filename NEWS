@@ -8,6 +8,11 @@ indent options that were used.
 The 0.9.5 release introduced a new bug in READDIR that could lead
 to truncated replies being sent to clients.
 
+It is now possible to specify which ports unfsd should use for the
+NFS and MOUNT services. It is also possible to only use TCP connections
+and to refrain from registering with the portmapper (implemented by
+Peter Astrand <peter@cendio.se>).
+
 
 Old news
 ========
