@@ -2,7 +2,6 @@ AC_INIT(fd_cache.c)
 AC_CONFIG_HEADER(config.h)
 AC_PROG_INSTALL
 AC_PROG_CC([gcc egcs kgcc cc])
-AC_COMPILE_WARNINGS
 AC_PROG_LEX
 AC_PROG_YACC
 AC_HEADER_STDC
@@ -31,5 +30,6 @@ AC_CHECK_FUNCS(setresuid setresgid)
 AC_CHECK_FUNCS(vsyslog)
 UNFS3_SOLARIS_RPC
 UNFS3_PORTMAP_DEFINE
+UNFS3_COMPILE_WARNINGS
 AC_ARG_ENABLE(cluster,[  --enable-cluster        include clustering extensions],[AC_DEFINE([WANT_CLUSTER], [], [Cluster extensions]) AC_SUBST([SUBDIRS],[Extras]) AC_SUBST([EXTRAOBJ],[Extras/lib.a])])
 AC_OUTPUT(Makefile Config/Makefile Extras/Makefile)
