@@ -138,12 +138,6 @@ directories. When this option is present, the performance hit caused by
 clustering extensions only applies to the listed directories and their
 subdirectories.
 .TP
-.B \-d
-Debug mode. When this option is present,
-.B unfsd
-will not fork into the background at startup, and all messages that
-would normally go to the system log go to stdout instead.
-.TP
 .B \-s 
 Single user mode; activate basic uid translation. This option is
 useful when the server and client are using different user and group
@@ -157,6 +151,22 @@ running
 will look as if they are owned by the client's user. Other files will
 look as if they are owned by root. The same principle applies to
 group ownership.
+.TP
+.B \-b
+Enable brute force file searching. Normally, when you rename a file
+across several directories on an NFS volume, the filehandle for that
+file becomes stale. When this option is enabled,
+.B unfsd
+will attempt a recursive search on the relevant server filesystem to
+find the file referenced by the filehandle. This can have a huge
+performance impact as this will also happen for files that were
+really deleted (by another NFS client) instead of moved, and cannot be found.
+.TP
+.B \-d
+Debug mode. When this option is present,
+.B unfsd
+will not fork into the background at startup, and all messages that
+would normally go to the system log go to stdout instead.
 .SH SIGNALS
 .TP
 .BR "SIGTERM " "and " SIGINT
