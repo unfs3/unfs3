@@ -1,0 +1,2 @@
+#!/bin/sh
+indent -i4 -br -npcs -nut *.c
