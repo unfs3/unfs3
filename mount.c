@@ -16,6 +16,9 @@
 #include <unistd.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <sys/time.h>           /* gettimeofday */
+#include <sys/times.h>          /* times */
+#include <fcntl.h>
 
 #include "nfs.h"
 #include "mount.h"
@@ -24,6 +27,7 @@
 #include "fh_cache.h"
 #include "fd_cache.h"
 #include "Config/exports.h"
+#include "md5.h"
 
 #ifndef PATH_MAX
 # define PATH_MAX	4096
@@ -38,6 +42,8 @@ static int mount_cnt = 0;
 
 /* list of currently mounted directories */
 static mountlist mount_list = NULL;
+
+static char nonce[32] = "";
 
 /*
  * add entry to mount list
@@ -118,6 +124,41 @@ remove_mount(const char *path, struct svc_req *rqstp)
     }
 }
 
+
+static void
+gen_nonce(char *nonce)
+{
+    struct stat st;
+    struct tms tmsbuf;
+    md5_state_t state;
+    uint32 *arr;
+    int bytes_read, fd;
+
+    if (((fd = open("/dev/urandom", O_RDONLY)) != -1)
+        || ((fd = open("/dev/random", O_RDONLY)) != -1)) {
+        bytes_read = read(fd, nonce, 32);
+        close(fd);
+        if (bytes_read == 32)
+            return;
+    }
+
+    /* No /dev/random; do it by hand */
+    arr = (uint32 *) nonce;
+    stat("/tmp", &st);
+    arr[0] = st.st_mtime;
+    arr[1] = st.st_atime;
+    arr[2] = st.st_ctime;
+    arr[3] = times(&tmsbuf);
+    arr[4] = tmsbuf.tms_cutime;
+    arr[5] = tmsbuf.tms_cstime;
+    gettimeofday((struct timeval *) &arr[6], NULL);
+
+    md5_init(&state);
+    md5_append(&state, nonce, 32);
+    md5_finish(&state, nonce);
+}
+
+
 void *
 mountproc_null_3_svc(U(void *argp), U(struct svc_req *rqstp))
 {
@@ -142,6 +183,24 @@ mountproc_mnt_3_svc(dirpath * argp, struct svc_req * rqstp)
         result.fhs_status = MNT3ERR_INVAL;
         return &result;
     }
+
+    /* Check for "mount commands" */
+    if (strncmp(*argp, "@getnonce", sizeof("@getnonce")) == 0) {
+        gen_nonce(nonce);
+        result.fhs_status = MNT3_OK;
+        result.mountres3_u.mountinfo.fhandle.fhandle3_len = 32;
+        result.mountres3_u.mountinfo.fhandle.fhandle3_val = nonce;
+        result.mountres3_u.mountinfo.auth_flavors.auth_flavors_len = 1;
+        result.mountres3_u.mountinfo.auth_flavors.auth_flavors_val = &auth;
+        return &result;
+    }
+    else if (strncmp(*argp, "@password", sizeof("@password")) == 0) {
+        printf("password\n");
+    }
+    else if (strncmp(*argp, "@otp", sizeof("@otp")) == 0) {
+        printf("otp\n");
+    }
+
 
     if (!realpath(*argp, buf)) {
         /* the given path does not exist */
