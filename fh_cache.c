@@ -39,7 +39,7 @@ int fh_cache_use = 0;
 int fh_cache_hit = 0;
 
 /* counter for LRU */
-static int fh_cache_time = 1;
+static int fh_cache_time = 0;
 
 /*
  * return next pseudo-time value for LRU counter
@@ -124,16 +124,11 @@ void fh_cache_add(uint32 dev, uint32 ino, const char *path)
     if (idx == -1)
 	idx = fh_cache_lru();
 
-    fh_cache_inval(idx);
-
     fh_cache[idx].dev = dev;
     fh_cache[idx].ino = ino;
     fh_cache[idx].use = fh_cache_next();
 
-    if (strstr(path, "//") == path)
-	strcpy(fh_cache[idx].path, path+1);
-    else
-	strcpy(fh_cache[idx].path, path);
+    strcpy(fh_cache[idx].path, path);
 }
 
 /*
