@@ -14,6 +14,7 @@
 #include <rpc/rpc.h>
 #include <rpc/pmap_clnt.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <fcntl.h>
 #include <memory.h>
 #include <signal.h>
@@ -59,6 +60,7 @@ unsigned int opt_nfs_port = NFS_PORT;	/* 0 means RPC_ANYSOCK */
 unsigned int opt_mount_port = NFS_PORT;
 int opt_singleuser = FALSE;
 int opt_brute_force = FALSE;
+in_addr_t opt_bind_addr = INADDR_ANY;
 
 /* Register with portmapper? */
 int opt_portmapper = TRUE;
@@ -94,7 +96,7 @@ struct in_addr get_remote(struct svc_req *rqstp)
 static void parse_options(int argc, char **argv)
 {
     int opt = 0;
-    char *optstring = "bcC:de:hm:n:pstuw";
+    char *optstring = "bcC:de:hl:m:n:pstuw";
 
     while (opt != -1) {
 	opt = getopt(argc, argv, optstring);
@@ -140,7 +142,15 @@ static void parse_options(int argc, char **argv)
 		printf("\t-p          do not register with the portmapper\n");
 		printf("\t-s          single user mode\n");
 		printf("\t-b          enable brute force file searching\n");
+		printf("\t-l <addr>   bind to interface with specified address\n");
 		exit(0);
+		break;
+	    case 'l':
+		opt_bind_addr = inet_addr(optarg);
+		if (opt_bind_addr == (unsigned) -1) {
+		    fprintf(stderr, "Invalid bind address\n");
+		    exit(1);
+		}
 		break;
 	    case 'm':
 		opt_mount_port = strtol(optarg, NULL, 10);
@@ -605,7 +615,7 @@ static SVCXPRT *create_udp_transport(unsigned int port)
     else {
 	sin.sin_family = AF_INET;
 	sin.sin_port = htons(port);
-	sin.sin_addr.s_addr = INADDR_ANY;
+	sin.sin_addr.s_addr = opt_bind_addr;
 	sock = socket(PF_INET, SOCK_DGRAM, 0);
 	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *) &on, sizeof(on));
 	if (bind(sock, (struct sockaddr *) &sin, sizeof(struct sockaddr))) {
@@ -637,7 +647,7 @@ static SVCXPRT *create_tcp_transport(unsigned int port)
     else {
 	sin.sin_family = AF_INET;
 	sin.sin_port = htons(port);
-	sin.sin_addr.s_addr = INADDR_ANY;
+	sin.sin_addr.s_addr = opt_bind_addr;
 	sock = socket(PF_INET, SOCK_STREAM, 0);
 	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *) &on, sizeof(on));
 	if (bind(sock, (struct sockaddr *) &sin, sizeof(struct sockaddr))) {

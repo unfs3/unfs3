@@ -162,6 +162,10 @@ find the file referenced by the filehandle. This can have a huge
 performance impact as this will also happen for files that were
 really deleted (by another NFS client) instead of moved, and cannot be found.
 .TP
+.B \-l <addr>
+Bind to interface with specified address. The default is to bind to
+all local interfaces. 
+.TP
 .B \-d
 Debug mode. When this option is present,
 .B unfsd
