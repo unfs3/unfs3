@@ -84,11 +84,6 @@ READDIR3res read_dir(const char *path, cookie3 cookie, cookieverf3 verf,
     /* account for size of information heading resok structure */
     real_count = RESOK_SIZE;
 
-    memset(&result, 0, sizeof(result));
-
-    /* memset first entry in case we have zero entries to report */
-    memset(&entry[0], 0, sizeof(entry3));
-
     /* check verifier against directory's modification time */
     if (cookie != 0 && !cookie_check(st_cache.st_mtime, verf)) {
 	result.status = NFS3ERR_BAD_COOKIE;
