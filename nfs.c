@@ -13,7 +13,6 @@
 #include <sys/mount.h>		       /* dito */
 #include <sys/socket.h>
 #include <sys/un.h>
-#define PORTMAP
 #include <rpc/rpc.h>
 #include <errno.h>
 #include <fcntl.h>

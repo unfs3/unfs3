@@ -11,7 +11,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/socket.h>
-#define PORTMAP
 #include <rpc/rpc.h>
 #include <rpc/pmap_clnt.h>
 #include <netinet/in.h>

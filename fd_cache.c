@@ -9,7 +9,6 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
-#define PORTMAP
 #include <rpc/rpc.h>
 #include <errno.h>
 #include <fcntl.h>

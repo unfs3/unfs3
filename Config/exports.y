@@ -4,7 +4,8 @@
  * (C) 2004, Pascal Schmidt <der.eremit@email.de>
  * see file LICENSE for license details
  */
-#define PORTMAP
+#include "../config.h"
+
 #include <rpc/rpc.h>
 #include <limits.h>
 #include <netdb.h>
