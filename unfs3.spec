@@ -8,6 +8,7 @@ Copyright: BSD
 Packager: Pascal Schmidt <der.eremit@email.de>
 Vendor: none
 Source: unfs3-%{version}.tar.gz
+Requires: libc.so.6(GLIBC_2.3)
 Buildroot: /tmp/unfs3
 
 %prep
