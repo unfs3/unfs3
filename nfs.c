@@ -10,7 +10,12 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/param.h>		       /* needed for statfs() on NetBSD */
+#if HAVE_SYS_MOUNT_H == 1
 #include <sys/mount.h>		       /* dito */
+#endif
+#if HAVE_SYS_VMOUNT_H == 1
+#include <sys/vmount.h>		       /* AIX */
+#endif
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <rpc/rpc.h>
