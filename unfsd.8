@@ -280,6 +280,12 @@ is present,
 .B unfsd
 will not keep files open across multiple read or write requests. This
 allows unmounting of the underlying filesystem on the server at any time.
+Also, 
+.B unfsd
+will not require that the exported path exists at startup or mount
+time. If the path does not exist, an empty directory will be presented
+to the client. This is useful for exporting mount points handled by
+autofs. 
 .TP
 .B fixed
 Consider this directory to be on a fixed medium. This options is enabled
