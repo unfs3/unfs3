@@ -174,7 +174,7 @@ LOOKUP3res *nfsproc3_lookup_3_svc(LOOKUP3args * argp, struct svc_req * rqstp)
 	    fh_cache_add(buf.st_dev, buf.st_ino, obj);
 
 	    if (fh) {
-		result.LOOKUP3res_u.resok.object.data.data_len = fh_len(fh);
+		result.LOOKUP3res_u.resok.object.data.data_len = fh_length(fh);
 		result.LOOKUP3res_u.resok.object.data.data_val = (char *) fh;
 		result.LOOKUP3res_u.resok.obj_attributes =
 		    get_post_buf(buf, rqstp);

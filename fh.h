@@ -49,7 +49,7 @@ int nfh_valid(nfs_fh3 fh);
 int fh_valid(unfs3_fh_t fh);
 
 unfs3_fh_t fh_comp_raw(const char *path, struct svc_req *rqstp, int need_dir);
-u_int fh_len(const unfs3_fh_t *fh);
+u_int fh_length(const unfs3_fh_t *fh);
 
 unfs3_fh_t *fh_extend(nfs_fh3 fh, uint32 dev, uint32 ino, uint32 gen);
 post_op_fh3 fh_extend_post(nfs_fh3 fh, uint32 dev, uint32 ino, uint32 gen);

@@ -226,7 +226,7 @@ mountres3 *mountproc_mnt_3_svc(dirpath * argp, struct svc_req * rqstp)
     add_mount(dpath, rqstp);
 
     result.fhs_status = MNT3_OK;
-    result.mountres3_u.mountinfo.fhandle.fhandle3_len = fh_len(&fh);
+    result.mountres3_u.mountinfo.fhandle.fhandle3_len = fh_length(&fh);
     result.mountres3_u.mountinfo.fhandle.fhandle3_val = (char *) &fh;
     result.mountres3_u.mountinfo.auth_flavors.auth_flavors_len = 1;
     result.mountres3_u.mountinfo.auth_flavors.auth_flavors_val = &auth;

@@ -132,7 +132,7 @@ int nfh_valid(nfs_fh3 fh)
 	return FALSE;
 
     /* encoded length different from real length? */
-    if (fh.data.data_len != fh_len(obj))
+    if (fh.data.data_len != fh_length(obj))
 	return FALSE;
 
     return TRUE;
@@ -240,7 +240,7 @@ unfs3_fh_t fh_comp_raw(const char *path, struct svc_req *rqstp, int need_dir)
 /*
  * get real length of a filehandle
  */
-u_int fh_len(const unfs3_fh_t * fh)
+u_int fh_length(const unfs3_fh_t * fh)
 {
     return fh->len + sizeof(fh->len) + sizeof(fh->dev) + sizeof(fh->ino) +
 	sizeof(fh->gen) + sizeof(fh->pwhash);
@@ -254,7 +254,7 @@ unfs3_fh_t *fh_extend(nfs_fh3 nfh, uint32 dev, uint32 ino, uint32 gen)
     static unfs3_fh_t new;
     unfs3_fh_t *fh = (void *) nfh.data.data_val;
 
-    memcpy(&new, fh, fh_len(fh));
+    memcpy(&new, fh, fh_length(fh));
 
     if (new.len == 0) {
 	char *path;
@@ -295,7 +295,7 @@ post_op_fh3 fh_extend_post(nfs_fh3 fh, uint32 dev, uint32 ino, uint32 gen)
 
     if (new) {
 	post.handle_follows = TRUE;
-	post.post_op_fh3_u.handle.data.data_len = fh_len(new);
+	post.post_op_fh3_u.handle.data.data_len = fh_length(new);
 	post.post_op_fh3_u.handle.data.data_val = (char *) new;
     } else
 	post.handle_follows = FALSE;
