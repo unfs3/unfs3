@@ -6,6 +6,13 @@
 #ifndef _NFS_PROT_H_RPCGEN
 #define _NFS_PROT_H_RPCGEN
 
+/* for lack of a better place */
+#ifdef __GNUC__
+#define U(x) x __attribute__ ((unused))
+#else
+#define U(x) x
+#endif
+
 #if HAVE_STDINT_H == 1
 #include <stdint.h>
 #endif

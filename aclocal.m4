@@ -1,3 +1,8 @@
+dnl PORTMAP define needed for Solaris
+dnl
+AC_DEFUN([UNFS3_PORTMAP_DEFINE],[
+  AC_DEFINE([PORTMAP], [], [Define to an empty value if you use Solaris.])
+])
 dnl Available from the GNU Autoconf Macro Archive at:
 dnl http://www.gnu.org/software/ac-archive/htmldoc/ac_compile_warnings.html
 dnl

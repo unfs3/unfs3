@@ -40,4 +40,5 @@ AC_CHECK_FUNC(svc_tli_create, [
     )
 ])
 
+UNFS3_PORTMAP_DEFINE
 AC_OUTPUT(Makefile Config/Makefile Extras/Makefile)
