@@ -7,7 +7,7 @@
 #ifndef UNFS3_CLUSTER_H
 #define UNFS3_CLUSTER_H
 
-#if WANT_CLUSTER == 1
+#ifdef WANT_CLUSTER
 
 #define CLU_TOOLONG		0	/* name got too long   */
 #define CLU_SLAVE		1	/* slave file matched  */

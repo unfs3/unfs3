@@ -7,7 +7,7 @@
 
 #include "../config.h"
 
-#if WANT_CLUSTER == 1
+#ifdef WANT_CLUSTER
 
 #include <sys/types.h>
 #include <sys/stat.h>

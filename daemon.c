@@ -116,7 +116,7 @@ static void parse_options(int argc, char **argv)
 		}
 		opt_exports = optarg;
 		break;
-#if WANT_CLUSTER == 1
+#ifdef WANT_CLUSTER
 	    case 'c':
 		opt_cluster = TRUE;
 		break;
@@ -153,7 +153,7 @@ static void parse_options(int argc, char **argv)
 		    ("\t-u          use unprivileged port for services\n");
 		printf("\t-d          do not detach from terminal\n");
 		printf("\t-e <file>   file to use instead of /etc/exports\n");
-#if WANT_CLUSTER == 1
+#ifdef WANT_CLUSTER
 		printf("\t-c          enable cluster extensions\n");
 		printf("\t-C <path>   set path for cluster extensions\n");
 #endif
