@@ -11,8 +11,12 @@
 #define OPT_ALL_SQUASH		2
 #define OPT_RW				4
 
+#define SECRET_MAXLEN   1024
+
 extern exports	exports_nfslist;
 extern int		exports_opts;
+
+extern char secret[SECRET_MAXLEN];
 
 void		exports_parse(void);
 int			exports_options(const char *path, struct svc_req *rqstp);

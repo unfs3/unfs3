@@ -24,8 +24,6 @@
 # define PATH_MAX	4096
 #endif
 
-#define SECRET_MAXLEN   1024
-
 /* lexer stuff, to avoid compiler warnings */
 int yylex(void);
 extern FILE *yyin;
