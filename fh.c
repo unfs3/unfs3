@@ -150,9 +150,13 @@ int fh_valid(unfs3_fh_t fh)
 /*
  * invalid fh for error returns
  */
+#ifdef __GNUC__
 static const unfs3_fh_t invalid_fh = {.dev = 0,.ino = 0,.gen = 0,.len =
 	0,.inos = {0}
 };
+#else
+static const unfs3_fh_t invalid_fh = { 0, 0, 0, 0, {0} };
+#endif
 
 /*
  * compose a filehandle for a given path
