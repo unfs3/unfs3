@@ -20,6 +20,10 @@
 #include <mntent.h>
 #endif
 
+#if HAVE_SYS_MNTTAB_H == 1
+#include <sys/mnttab.h>
+#endif
+
 #include "nfs.h"
 #include "fh.h"
 
@@ -34,7 +38,7 @@
  * clients
  */
 
-#if HAVE_MNTENT_H == 1
+#if HAVE_MNTENT_H == 1 || HAVE_SYS_MNTTAB_H == 1
 /*
  * locate file given prefix, device, and inode number
  */
@@ -92,12 +96,12 @@ static int locate_pfx(const char *pfx, uint32 dev, uint32 ino, char *result)
  */
 char *locate_file(U(uint32 dev), U(uint32 ino))
 {
-#if HAVE_MNTENT_H == 1
     static char path[NFS_MAXPATHLEN];
     FILE *mtab;
-    struct mntent *ent;
     struct stat buf;
     int res;
+#if HAVE_MNTENT_H == 1
+    struct mntent *ent;
 
     mtab = setmntent("/etc/mtab", "r");
     if (!mtab)
@@ -111,8 +115,6 @@ char *locate_file(U(uint32 dev), U(uint32 ino))
 
 	if (res == 0 && buf.st_dev == dev)
 	    break;
-
-	ent = getmntent(mtab);
     }
     endmntent(mtab);
 
@@ -122,7 +124,36 @@ char *locate_file(U(uint32 dev), U(uint32 ino))
 	if (res == TRUE)
 	    return path;
     }
-
 #endif
+
+#if HAVE_SYS_MNTTAB_H == 1
+    struct mnttab ent;
+    int found = FALSE;
+
+    mtab = fopen("/etc/mnttab", "r");
+    if (!mtab)
+	return NULL;
+	
+    /*
+     * look for mnttab entry with matching device
+     */
+    while (getmntent(mtab, &ent) == 0) {
+	res = lstat(ent.mnt_mountp, &buf);
+	
+	if (res == 0 && buf.st_dev == dev) {
+	    found = TRUE;
+	    break;
+	}
+    }
+    fclose(mtab);
+
+    /* found matching entry? */
+    if (found) {
+	res = locate_pfx(ent.mnt_mountp, dev, ino, path);
+	if (res == TRUE)
+	    return path;
+    }
+#endif
+
     return NULL;
 }
