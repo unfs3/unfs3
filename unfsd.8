@@ -147,14 +147,16 @@ would normally go to the system log go to stdout instead.
 .B \-s 
 Single user mode; activate basic uid translation. This option is
 useful when the server and client are using different user and group
-ids. All requests from the client will be served using the user that started 
+ids. All requests from the client will be served from the user id that started 
 .B unfsd, 
-no user switching will take place (even if unfsd was started by
-root). The NFS file owner will be set dynamically to the
-user issuing the request, if the file is owned by the user running
-.B unfsd. 
-Otherwise, the reported ownership will be uid 0 (root). The same
-principle applies for the group ownership.
+no user id switching will take place (even if unfsd was started by
+root).
+Ownership is reported as follows: files belonging to the user id 
+running
+.B unfsd
+will look as if they are owned by the client's user. Other files will
+look as if they are owned by root. The same principle applies to
+group ownership.
 .SH SIGNALS
 .TP
 .BR "SIGTERM " "and " SIGINT
