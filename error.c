@@ -208,6 +208,21 @@ nfsstat3 setattr_err(void)
 	return NFS3ERR_IO;
 }
 
+nfsstat3 readdir_err(void)
+{
+    if (errno == EPERM)
+	return NFS3ERR_PERM;
+    else if (errno == EACCES)
+	return NFS3ERR_ACCES;
+    else if (errno == ENOTDIR)
+	return NFS3ERR_NOTDIR;
+    else if (is_stale())
+	return NFS3ERR_STALE;
+    else
+	return NFS3ERR_IO;
+}
+
+
 /*
  * combine two error values
  */

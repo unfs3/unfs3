@@ -23,6 +23,7 @@
 #include "readdir.h"
 #include "backend.h"
 #include "Config/exports.h"
+#include "error.h"
 
 /*
  * maximum number of entries in readdir results
@@ -128,7 +129,7 @@ READDIR3res read_dir(const char *path, cookie3 cookie, cookieverf3 verf,
 	    result.READDIR3res_u.resok = resok;
 	    return result;
 	} else {
-	    result.status = NFS3ERR_STALE;
+	    result.status = readdir_err();
 	    return result;
 	}
     }
@@ -150,7 +151,7 @@ READDIR3res read_dir(const char *path, cookie3 cookie, cookieverf3 verf,
 
 	    res = backend_lstat(scratch, &buf);
 	    if (res == -1) {
-		result.status = NFS3ERR_IO;
+		result.status = readdir_err();
 		backend_closedir(search);
 		return result;
 	    }

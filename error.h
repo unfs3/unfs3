@@ -11,6 +11,7 @@ nfsstat3 symlink_err(void);
 nfsstat3 remove_err(void);
 nfsstat3 rmdir_err(void);
 nfsstat3 setattr_err(void);
+nfsstat3 readdir_err(void);
 nfsstat3 mkdir_err(void);
 nfsstat3 mknod_err(void);
 nfsstat3 link_err(void);
