@@ -65,3 +65,20 @@ If you decide to modify the code yourself, you can run
 to append dependency information to the Makefile, so that make
 knows which files depend on each other and recompiles all the
 necessary files on changes.
+
+
+CVS REPOSITORY
+==============
+
+The unfs3 CVS repository is accessible via anonymous CVS. The source
+can be checked out with:
+
+  cvs -d:pserver:anonymous@cvs.lysator.liu.se:/cvsroot/unfs3 login
+  cvs -d:pserver:anonymous@cvs.lysator.liu.se:/cvsroot/unfs3 co unfs3
+
+You can also use the web-based CVS repository viewer at: 
+
+  http://cvs.lysator.liu.se/viewcvs/viewcvs.cgi/?cvsroot=unfs3
+
+In the HEAD branch, you will find a file called "BRANCHES", which
+describes the different branches in this repository. 
