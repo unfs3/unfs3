@@ -580,6 +580,7 @@ static SVCXPRT *create_udp_transport(unsigned int port)
     SVCXPRT *transp = NULL;
     struct sockaddr_in sin;
     int sock;
+    const int on = 1;
 
     if (port == 0)
 	sock = RPC_ANYSOCK;
@@ -588,6 +589,7 @@ static SVCXPRT *create_udp_transport(unsigned int port)
 	sin.sin_port = htons(port);
 	sin.sin_addr.s_addr = INADDR_ANY;
 	sock = socket(PF_INET, SOCK_DGRAM, 0);
+	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof(on));
 	if (bind(sock, (struct sockaddr *) &sin, sizeof(struct sockaddr))) {
 	    perror("bind");
 	    fprintf(stderr, "Couldn't bind to port %d\n", port);
@@ -610,6 +612,7 @@ static SVCXPRT *create_tcp_transport(unsigned int port)
     SVCXPRT *transp = NULL;
     struct sockaddr_in sin;
     int sock;
+    const int on = 1;
 
     if (port == 0)
 	sock = RPC_ANYSOCK;
@@ -618,6 +621,7 @@ static SVCXPRT *create_tcp_transport(unsigned int port)
 	sin.sin_port = htons(port);
 	sin.sin_addr.s_addr = INADDR_ANY;
 	sock = socket(PF_INET, SOCK_STREAM, 0);
+	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *)&on, sizeof(on));
 	if (bind(sock, (struct sockaddr *) &sin, sizeof(struct sockaddr))) {
 	    perror("bind");
 	    fprintf(stderr, "Couldn't bind to port %d\n", port);
