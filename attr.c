@@ -199,6 +199,103 @@ post_op_attr get_post_cached(void)
 }
 
 /*
+ * setting of time, races with local filesystem
+ *
+ * there is no futimes() function in POSIX or Linux
+ */
+static nfsstat3 set_time(const char *path, struct stat buf, sattr3 new)
+{
+    time_t new_atime, new_mtime;
+    struct utimbuf utim;
+    int res;
+
+    /* set atime and mtime */
+    if (new.atime.set_it != DONT_CHANGE || new.mtime.set_it != DONT_CHANGE) {
+
+	/* compute atime to set */
+	if (new.atime.set_it == SET_TO_SERVER_TIME)
+	    new_atime = time(NULL);
+	else if (new.atime.set_it == SET_TO_CLIENT_TIME)
+	    new_atime = new.atime.set_atime_u.atime.seconds;
+	else			       /* DONT_CHANGE */
+	    new_atime = buf.st_atime;
+
+	/* compute mtime to set */
+	if (new.mtime.set_it == SET_TO_SERVER_TIME)
+	    new_mtime = time(NULL);
+	else if (new.mtime.set_it == SET_TO_CLIENT_TIME)
+	    new_mtime = new.mtime.set_mtime_u.mtime.seconds;
+	else			       /* DONT_CHANGE */
+	    new_mtime = buf.st_mtime;
+
+	utim.actime = new_atime;
+	utim.modtime = new_mtime;
+
+	res = utime(path, &utim);
+	if (res == -1)
+	    return setattr_err();
+    }
+    
+    return NFS3_OK;
+}
+
+/*
+ * race unsafe setting of attributes
+ */
+static nfsstat3 set_attr_unsafe(const char *path, nfs_fh3 nfh, sattr3 new)
+{
+    unfs3_fh_t *fh = (void *) nfh.data.data_val;
+    uid_t new_uid;
+    gid_t new_gid;
+    struct stat buf;
+    int res;
+
+    res = stat(path, &buf);
+    if (res != 0)
+	return NFS3ERR_STALE;
+
+    /* check local fs race */
+    if (buf.st_dev != fh->dev || buf.st_ino != fh->ino)
+	return NFS3ERR_STALE;
+
+    /* set file size */
+    if (new.size.set_it == TRUE) {
+	res = truncate(path, new.size.set_size3_u.size);
+	if (res == -1)
+	    return setattr_err();
+    }
+
+    /* set uid and gid */
+    if (new.uid.set_it == TRUE || new.gid.set_it == TRUE) {
+	if (new.uid.set_it == TRUE)
+	    new_uid = new.uid.set_uid3_u.uid;
+	else
+	    new_uid = -1;
+	if (new_uid == buf.st_uid)
+	    new_uid = -1;
+
+	if (new.gid.set_it == TRUE)
+	    new_gid = new.gid.set_gid3_u.gid;
+	else
+	    new_gid = -1;
+
+	res = chown(path, new_uid, new_gid);
+	if (res == -1)
+	    return setattr_err();
+    }
+
+    /* set mode */
+    if (new.mode.set_it == TRUE) {
+	res = chmod(path, new.mode.set_mode3_u.mode);
+	if (res == -1)
+	    return setattr_err();
+    }
+
+    return set_time(path, buf, new);
+}
+
+
+/*
  * set attributes of an object
  */
 nfsstat3 set_attr(const char *path, nfs_fh3 nfh, sattr3 new)
@@ -207,25 +304,14 @@ nfsstat3 set_attr(const char *path, nfs_fh3 nfh, sattr3 new)
     int res, fd;
     uid_t new_uid;
     gid_t new_gid;
-    time_t new_atime, new_mtime;
-    struct utimbuf utim;
     struct stat buf;
-
-    /* 
-     * deny clearing both the owner read and write bit since we need
-     * to open() the file to set attributes
-     */
-    if (new.mode.set_it == TRUE &&
-	(new.mode.set_mode3_u.mode & S_IRUSR) != S_IRUSR &&
-	(new.mode.set_mode3_u.mode & S_IWUSR) != S_IWUSR)
-	return NFS3ERR_INVAL;
 
     fd = open(path, O_WRONLY | O_NONBLOCK);
     if (fd == -1)
 	fd = open(path, O_RDONLY | O_NONBLOCK);
 
     if (fd == -1)
-	return NFS3ERR_INVAL;
+	return set_attr_unsafe(path, nfh, new);
 
     res = fstat(fd, &buf);
     if (res == -1) {
@@ -285,40 +371,8 @@ nfsstat3 set_attr(const char *path, nfs_fh3 nfh, sattr3 new)
 	return NFS3ERR_IO;
     }
 
-    /* 
-     * setting of times races with local filesystem
-     *
-     * we may set the time on the wrong file system object
-     */
-
-    if (new.atime.set_it != DONT_CHANGE || new.mtime.set_it != DONT_CHANGE) {
-
-	/* compute atime to set */
-	if (new.atime.set_it == SET_TO_SERVER_TIME)
-	    new_atime = time(NULL);
-	else if (new.atime.set_it == SET_TO_CLIENT_TIME)
-	    new_atime = new.atime.set_atime_u.atime.seconds;
-	else			       /* DONT_CHANGE */
-	    new_atime = buf.st_atime;
-
-	/* compute mtime to set */
-	if (new.mtime.set_it == SET_TO_SERVER_TIME)
-	    new_mtime = time(NULL);
-	else if (new.mtime.set_it == SET_TO_CLIENT_TIME)
-	    new_mtime = new.mtime.set_mtime_u.mtime.seconds;
-	else			       /* DONT_CHANGE */
-	    new_mtime = buf.st_mtime;
-
-	utim.actime = new_atime;
-	utim.modtime = new_mtime;
-
-	/* set atime and mtime */
-	res = utime(path, &utim);
-	if (res == -1)
-	    return setattr_err();
-    }
-
-    return NFS3_OK;
+    /* finally, set times */
+    return set_time(path, buf, new);
 }
 
 /*
@@ -328,15 +382,7 @@ nfsstat3 set_attr(const char *path, nfs_fh3 nfh, sattr3 new)
 mode_t create_mode(sattr3 new)
 {
     if (new.mode.set_it == TRUE)
-	if ((new.mode.set_mode3_u.mode & S_IRUSR) != S_IRUSR &&
-	    (new.mode.set_mode3_u.mode & S_IWUSR) != S_IWUSR)
-	    /* 
-	     * keep owner read access always on since
-	     * other further chmod() would get impossible
-	     */
-	    return new.mode.set_mode3_u.mode | S_IRUSR;
-	else
-	    return new.mode.set_mode3_u.mode;
+	return new.mode.set_mode3_u.mode;
     else
 	return S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IWGRP | S_IXGRP |
 	    S_IROTH | S_IXOTH;

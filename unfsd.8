@@ -56,12 +56,6 @@ Some NFS clients may attempt to perform operations that
 .B unfsd
 cannot fully support.
 .TP
-.B "Attribute Setting"
-When changing the mode of an object, the owner's read and write permission
-cannot both be revoked. Depending on the operating system on the server, it
-may also be impossible to change the attributes on special files (block or
-character devices, sockets, and FIFOs).
-.TP
 .B "Object Creation"
 When creating filesystem objects, it is only possible to specify the
 initial mode for the object. The initial user and group ownership,
