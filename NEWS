@@ -1,11 +1,25 @@
 What's new or changed in 0.9.11
 ===============================
 
+Thanks go to Bernd Schubert for noticing a few problems with the
+cluster support. First, tags weren't interpreted correctly when
+the master file didn't exist. Second, clustering reported errors
+when the directory itself only had execute permission and not
+read. Both problems are now fixed.
+
+The filehandle resolution code also had problems with directories
+that lack read permission. Therefore, filehandle lookups are now
+performed as root, before user and group id switching takes place.
+
 
 ChangeLog
 =========
 
 Version 0.9.11
+
+  - handle case where a tagged file exists but the master file doesn't
+  - make clustering work in non-readable directories
+  - make filehandle resolution work on non-readable directories
 
 Version 0.9.10
 
