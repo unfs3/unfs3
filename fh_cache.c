@@ -113,7 +113,7 @@ static int fh_cache_index(uint32 dev, uint32 ino)
 /*
  * add an entry to the filehandle cache
  */
-void fh_cache_add(uint32 dev, uint32 ino, const char *path)
+char *fh_cache_add(uint32 dev, uint32 ino, const char *path)
 {
     int idx;
 
@@ -129,6 +129,8 @@ void fh_cache_add(uint32 dev, uint32 ino, const char *path)
     fh_cache[idx].use = fh_cache_next();
 
     strcpy(fh_cache[idx].path, path);
+
+    return fh_cache[idx].path;
 }
 
 /*
@@ -194,7 +196,7 @@ char *fh_decomp(nfs_fh3 fh)
 
 	if (result)
 	    /* add to cache for later use if resolution ok */
-	    fh_cache_add(obj->dev, obj->ino, result);
+	    result = fh_cache_add(obj->dev, obj->ino, result);
 	else
 	    /* could not resolve in any way */
 	    st_cache_valid = FALSE;
