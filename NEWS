@@ -5,6 +5,16 @@ Renaming of files across directory boundaries should no longer
 result in stale filehandle errors. There is a performance penalty
 for doing such renames, though.
 
+It is now possible for clients to run executable files exported by
+the server without having read access to them on the server. This
+is important for some setuid root files, for example the XFree86
+server binary.
+
+The restrictions on attribute setting have been lifted. It is now
+possible to revoke all access permission to a file and to set
+attributes on sockets and other special files without restrictions.
+
+
 
 Old news
 ========
