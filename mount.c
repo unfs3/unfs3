@@ -16,8 +16,6 @@
 #include <unistd.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <sys/time.h>           /* gettimeofday */
-#include <sys/times.h>          /* times */
 #include <fcntl.h>
 
 #include "nfs.h"
@@ -27,7 +25,7 @@
 #include "fh_cache.h"
 #include "fd_cache.h"
 #include "Config/exports.h"
-#include "md5.h"
+#include "password.h"
 
 #ifndef PATH_MAX
 # define PATH_MAX	4096
@@ -125,83 +123,6 @@ remove_mount(const char *path, struct svc_req *rqstp)
 }
 
 
-static void
-gen_nonce(char *nonce)
-{
-    struct stat st;
-    struct tms tmsbuf;
-    md5_state_t state;
-    uint32 *arr;
-    int bytes_read, fd;
-
-    if (((fd = open("/dev/urandom", O_RDONLY)) != -1)
-        || ((fd = open("/dev/random", O_RDONLY)) != -1)) {
-        bytes_read = read(fd, nonce, 32);
-        close(fd);
-        if (bytes_read == 32)
-            return;
-    }
-
-    /* No /dev/random; do it by hand */
-    arr = (uint32 *) nonce;
-    stat("/tmp", &st);
-    arr[0] = st.st_mtime;
-    arr[1] = st.st_atime;
-    arr[2] = st.st_ctime;
-    arr[3] = times(&tmsbuf);
-    arr[4] = tmsbuf.tms_cutime;
-    arr[5] = tmsbuf.tms_cstime;
-    gettimeofday((struct timeval *) &arr[6], NULL);
-
-    md5_init(&state);
-    md5_append(&state, nonce, 32);
-    md5_finish(&state, nonce);
-}
-
-static unsigned char
-nibble_as_hexchar(unsigned char c)
-{
-    if (c <= 9)
-        return c + '0';
-
-    return c - 10 + 'a';
-}
-
-static void
-hexify(unsigned char digest[16], unsigned char hexdigest[32])
-{
-    int i, j;
-
-    for (i = j = 0; i < 16; i++) {
-        char c;
-        /* The first four bits */
-        c = (digest[i] >> 4) & 0xf;
-        hexdigest[j++] = nibble_as_hexchar(c);
-        /* The next four bits */
-        c = (digest[i] & 0xf);
-        hexdigest[j++] = nibble_as_hexchar(c);
-    }
-}
-
-/* Handle mount commands:
- * Advance dpath to first slash
- * Copy command arguments to arg. 
-*/
-static void
-mnt_cmd_argument(char **dpath, const char *cmd, char *arg, size_t maxlen)
-{
-    char *slash;
-
-    *dpath += strlen(cmd);
-    strncpy(arg, *dpath, maxlen);
-    arg[maxlen] = '\0';
-
-    slash = strchr(arg, '/');
-    if (slash != NULL)
-        *slash = '\0';
-
-    *dpath += strlen(arg);
-}
 
 void *
 mountproc_null_3_svc(U(void *argp), U(struct svc_req *rqstp))
@@ -252,21 +173,14 @@ mountproc_mnt_3_svc(dirpath * argp, struct svc_req * rqstp)
         authenticated = !strcmp(password, pw);
     }
     else if (strncmp(dpath, "@otp:", sizeof("@otp:") - 1) == 0) {
-        md5_state_t state;
         /* The otp from the client */
         char otp[PASSWORD_MAXLEN + 1];
+
         /* Our calculated otp */
-        unsigned char digest[16];
         unsigned char hexdigest[32];
 
         mnt_cmd_argument(&dpath, "@otp:", otp, PASSWORD_MAXLEN);
-
-        /* Calculate the digest, in the same way as the client did */
-        md5_init(&state);
-        md5_append(&state, nonce, 32);
-        md5_append(&state, password, strlen(password));
-        md5_finish(&state, digest);
-        hexify(digest, hexdigest);
+	otp_digest(nonce, password, hexdigest);
 
         /* Compare our calculated digest with what the client
            submitted */
