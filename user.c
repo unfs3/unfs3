@@ -151,23 +151,3 @@ void switch_user(struct svc_req *req)
 	daemon_exit(CRISIS);
     }
 }
-
-/*
- * re-switch to root if user is trying to read a file with exec rights
- */
-void execute_check(struct svc_req *req, struct stat buf)
-{
-    int have_exec = 0;
-
-    if (is_owner(buf.st_uid, req) && (buf.st_mode & S_IXUSR))
-	have_exec = 1;
-    else if (has_group(buf.st_gid, req) && (buf.st_mode & S_IXGRP))
-	have_exec = 1;
-    else if (buf.st_mode & S_IXOTH)
-	have_exec = 1;
-	
-    if (have_exec) {
-	setegid(0);
-	seteuid(0);
-    }
-}
