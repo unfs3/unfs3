@@ -12,6 +12,7 @@
 #include <rpc/rpc.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <limits.h>
 #include <syslog.h>
 #include <unistd.h>
 
@@ -84,7 +85,7 @@ void fd_cache_init(void)
  */
 static int fd_cache_lru(void)
 {
-    int best = -1;
+    int best = INT_MAX;
     int i;
     int idx = -1;
 
