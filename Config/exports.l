@@ -47,6 +47,7 @@ OLDNET {IP}"/"{IP}
 %%
 
 ^{WHITE}*\n		{ /* eat empty line */ }
+^{WHITE}*		{ /* eat whitespace at beginning of line */ }
 "\\"\n			{ /* eat escaped newline */ }
 ^{WHITE}*"#".*\n	{ /* eat one-line comment */ }
 {WHITE}*"#".*		{ /* eat trailing comment */ }
