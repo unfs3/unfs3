@@ -35,7 +35,7 @@ static void copy_text(const char *from, int leng)
 WHITE [ \t]
 NOWHITE [^ \n\t]
 PATH "/"{NOWHITE}*
-ID [a-z][\._a-z0-9]*
+ID [a-z][\.\-_a-z0-9]*
 OPTVAL [^ \n\t,)]*
 
 IPCOMP [0-9]{1,3}
