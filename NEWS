@@ -1,32 +1,17 @@
-What's new or changed in 0.9.9
-==============================
+What's new or changed in 0.9.10
+===============================
 
-Support for mount passwords added. When in use, unfsd will only
-allow a mount if the correct password is given as a part of the
-path to mount. Both cleartext passwords and one time passwords are
-supported. Mount passwords are primarily intended for secure
-communication links, such as SSH tunnels. See the file passwords.txt
-in the doc/ directory for more information. Implemented by Peter
-Astrand <peter@cendio.se>.
-
-A few deficiencies in the exports file parser were fixed. Dashes
-within hostnames are now accepted, as is leading whitespace in
-export entries (useful for indenting exports that span multiple
-lines). Thanks to Jan P. Springer (jsd01@users.sourceforge.net)
-for reporting these problems.
-
-Output is now set to line-buffered when -d (debug) is in effect.
-This means you can redirect output to a log file and all output
-lines will appear immediately. Problem report and patch from
-Thomas Schwinge (schwinge@nic-nac-project.de).
-
-The new export option "removable" makes it possible to change
-removable media on the server without remounting on the client.
-The option can also be used to export autofs-mounted directories.
 
 
 Old news
 ========
+
+Version 0.9.9
+
+  - add support for mount passwords, for use with secure links
+  - make exports parser accept dashes in hostnames and leading whitespace
+  - fix debug mode to use line buffering, useful for redirections
+  - make exporting of (automounted) removable media possible
 
 Version 0.9.8
 
