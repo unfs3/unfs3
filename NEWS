@@ -6,8 +6,12 @@ code and declarations. Problem report and patch by Simon Matter
 <simix@users.sourceforge.net>.
 
 
-Old news
-========
+ChangeLog
+=========
+
+Version 0.9.10
+
+  - fix building with gcc 2.95.x or 2.96
 
 Version 0.9.9
 
