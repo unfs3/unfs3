@@ -19,6 +19,14 @@ concept. This feature is only useful for people who want to do
 some hacking on the unfs3 source. No real documentation yet,
 please feel free to ask questions per email.
 
+Bernd Schubert <bernd-schubert@web.de> rewrote the error reporting
+part of the READDIR procedure code to make it more in line with
+both the NFS specification and the rest of unfs3's error handling.
+
+Thanks go to Brian <bohalloran@users.sourceforge.net> for notifying
+me about a problem with SGI clients and providing the needed
+tcpdump data to get it fixed.
+
 
 ChangeLog
 =========
@@ -28,6 +36,8 @@ Version 0.9.12
   - add option for binding to a specified interface
   - lots of compile fixes for Solaris/AIX/Irix/Mac OS X
   - make redirection of operating system calls possible
+  - fix READDIR error reporting
+  - fix handling of . and .. lookups for Irix clients
 
 Version 0.9.11
 
