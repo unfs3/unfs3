@@ -7,8 +7,6 @@ removable-fsidhash
 ------------------
 This branch contains the following changes:
 
-* When using passwords, the filehandles includes the password hash. 
-
 * The -s option, for basic uid translation. 
 
 
