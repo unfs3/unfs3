@@ -7,12 +7,7 @@ removable-fsidhash
 ------------------
 This branch contains the following changes:
 
-* Enhanced support for removable devices: Uses static fsid and
-  filehandle for mountpoint. This makes it possible to mount/unmount
-  the media, without needing to remount the NFS export. 
-
-* When using passwords, the filehandles are scrambled with a password
-  hash. 
+* When using passwords, the filehandles includes the password hash. 
 
 * The -s option, for basic uid translation. 
 
