@@ -22,6 +22,7 @@ Thomas Schwinge (schwinge@nic-nac-project.de).
 
 The new export option "removable" makes it possible to change
 removable media on the server without remounting on the client.
+The option can also be used to export autofs-mounted directories.
 
 
 Old news
