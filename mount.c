@@ -158,6 +158,30 @@ gen_nonce(char *nonce)
     md5_finish(&state, nonce);
 }
 
+static unsigned char
+nibble_as_hexchar(unsigned char c)
+{
+    if (c <= 9)
+        return c + '0';
+
+    return c - 10 + 'a';
+}
+
+static void
+hexify(unsigned char digest[16], unsigned char hexdigest[32])
+{
+    int i, j;
+
+    for (i = j = 0; i < 16; i++) {
+        char c;
+        /* The first four bits */
+        c = (digest[i] >> 4) & 0xf;
+        hexdigest[j++] = nibble_as_hexchar(c);
+        /* The next four bits */
+        c = (digest[i] & 0xf);
+        hexdigest[j++] = nibble_as_hexchar(c);
+    }
+}
 
 void *
 mountproc_null_3_svc(U(void *argp), U(struct svc_req *rqstp))
@@ -216,8 +240,34 @@ mountproc_mnt_3_svc(dirpath * argp, struct svc_req * rqstp)
         authenticated = !strcmp(password, pw);
         dpath += strlen(pw);
     }
-    else if (strncmp(dpath, "@otp", sizeof("@otp") - 1) == 0) {
-        printf("otp\n");
+    else if (strncmp(dpath, "@otp:", sizeof("@otp:") - 1) == 0) {
+        md5_state_t state;
+        char otp[PASSWORD_MAXLEN + 1];
+        char *slash;
+        unsigned char digest[16];
+        unsigned char hexdigest[32];
+
+        dpath += sizeof("@otp:") - 1;
+        strncpy(otp, dpath, PASSWORD_MAXLEN);
+        otp[PASSWORD_MAXLEN] = '\0';
+
+        slash = strchr(otp, '/');
+        if (slash != NULL)
+            *slash = '\0';
+
+        /* Calculate the digest, in the same way as the client did */
+        md5_init(&state);
+        md5_append(&state, nonce, 32);
+        md5_append(&state, password, strlen(password));
+        md5_finish(&state, digest);
+        hexify(digest, hexdigest);
+
+        /* Compare our calculated digest with what the client
+           submitted */
+        authenticated = !strncmp(hexdigest, otp, 32);
+
+        dpath += strlen(otp);
+        gen_nonce(nonce);
     }
 
     if (!realpath(dpath, buf)) {

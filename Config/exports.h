@@ -16,7 +16,7 @@
 extern exports	exports_nfslist;
 extern int		exports_opts;
 
-extern char password[PASSWORD_MAXLEN+1];
+extern unsigned char password[PASSWORD_MAXLEN+1];
 
 void		exports_parse(void);
 int			exports_options(const char *path, struct svc_req *rqstp);
