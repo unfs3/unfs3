@@ -9,7 +9,7 @@ OBJS = cluster.o
 all: lib.a
 
 lib.a: $(OBJS)
-	$(AR) cr lib.a $(OBJS)
+	$(AR) crs lib.a $(OBJS)
 
 dep: $(SOURCES)
 	$(CC) $(CFLAGS) -MM $(SOURCES) >> Makefile

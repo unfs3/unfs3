@@ -10,7 +10,7 @@ OBJS = @LEX_OUTPUT_ROOT@.o y.tab.o
 all: lib.a
 
 lib.a: $(OBJS)
-	$(AR) cr lib.a $(OBJS)
+	$(AR) crs lib.a $(OBJS)
 
 y.tab.h y.tab.c: exports.y
 	$(YACC) -d exports.y
