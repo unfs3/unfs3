@@ -8,10 +8,6 @@
 #include <sys/types.h>
 #include <rpc/rpc.h>
 
-#if HAVE_RPC_INLINE_T == 0
-typedef int32_t rpc_inline_t;
-#endif
-
 #if HAVE_XDR_U_INT64_T == 1
 #define xdr_uint64_t xdr_u_int64_t
 #undef HAVE_XDR_UINT64_T
@@ -1585,58 +1581,6 @@ bool_t xdr_PATHCONF3args(XDR * xdrs, PATHCONF3args * objp)
 
 bool_t xdr_PATHCONF3resok(XDR * xdrs, PATHCONF3resok * objp)
 {
-    register rpc_inline_t *buf;
-
-    if (xdrs->x_op == XDR_ENCODE) {
-	if (!xdr_post_op_attr(xdrs, &objp->obj_attributes))
-	    return FALSE;
-	if (!xdr_uint32(xdrs, &objp->linkmax))
-	    return FALSE;
-	if (!xdr_uint32(xdrs, &objp->name_max))
-	    return FALSE;
-	buf = XDR_INLINE(xdrs, 4 * BYTES_PER_XDR_UNIT);
-	if (buf == NULL) {
-	    if (!xdr_bool(xdrs, &objp->no_trunc))
-		return FALSE;
-	    if (!xdr_bool(xdrs, &objp->chown_restricted))
-		return FALSE;
-	    if (!xdr_bool(xdrs, &objp->case_insensitive))
-		return FALSE;
-	    if (!xdr_bool(xdrs, &objp->case_preserving))
-		return FALSE;
-	} else {
-	    IXDR_PUT_BOOL(buf, objp->no_trunc);
-	    IXDR_PUT_BOOL(buf, objp->chown_restricted);
-	    IXDR_PUT_BOOL(buf, objp->case_insensitive);
-	    IXDR_PUT_BOOL(buf, objp->case_preserving);
-	}
-	return TRUE;
-    } else if (xdrs->x_op == XDR_DECODE) {
-	if (!xdr_post_op_attr(xdrs, &objp->obj_attributes))
-	    return FALSE;
-	if (!xdr_uint32(xdrs, &objp->linkmax))
-	    return FALSE;
-	if (!xdr_uint32(xdrs, &objp->name_max))
-	    return FALSE;
-	buf = XDR_INLINE(xdrs, 4 * BYTES_PER_XDR_UNIT);
-	if (buf == NULL) {
-	    if (!xdr_bool(xdrs, &objp->no_trunc))
-		return FALSE;
-	    if (!xdr_bool(xdrs, &objp->chown_restricted))
-		return FALSE;
-	    if (!xdr_bool(xdrs, &objp->case_insensitive))
-		return FALSE;
-	    if (!xdr_bool(xdrs, &objp->case_preserving))
-		return FALSE;
-	} else {
-	    objp->no_trunc = IXDR_GET_BOOL(buf);
-	    objp->chown_restricted = IXDR_GET_BOOL(buf);
-	    objp->case_insensitive = IXDR_GET_BOOL(buf);
-	    objp->case_preserving = IXDR_GET_BOOL(buf);
-	}
-	return TRUE;
-    }
-
     if (!xdr_post_op_attr(xdrs, &objp->obj_attributes))
 	return FALSE;
     if (!xdr_uint32(xdrs, &objp->linkmax))
