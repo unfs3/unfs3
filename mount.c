@@ -160,7 +160,7 @@ mountres3 *mountproc_mnt_3_svc(dirpath * argp, struct svc_req * rqstp)
 	char pw[PASSWORD_MAXLEN + 1];
 
 	mnt_cmd_argument(&dpath, "@password:", pw, PASSWORD_MAXLEN);
-	if ((exports_opts = exports_options(buf, rqstp, &password)) != -1) {
+	if ((exports_opts = exports_options(dpath, rqstp, &password)) != -1) {
 	    authenticated = !strcmp(password, pw);
 	}
 	/* else leave authenticated unchanged */
@@ -190,12 +190,6 @@ mountres3 *mountproc_mnt_3_svc(dirpath * argp, struct svc_req * rqstp)
 	return &result;
     }
 
-    /* If the export has no password, do not require authentication */
-    if ((exports_opts = exports_options(buf, rqstp, &password)) != -1) {
-	if (!password[0])
-	    authenticated = 1;
-    }
-
     if (strlen(buf) + 1 > NFS_MAXPATHLEN) {
 	putmsg(LOG_INFO, "%s attempted to mount jumbo path",
 	       inet_ntoa(get_remote(rqstp)));
@@ -203,8 +197,10 @@ mountres3 *mountproc_mnt_3_svc(dirpath * argp, struct svc_req * rqstp)
 	return &result;
     }
 
-    if (!authenticated || exports_options(buf, rqstp, NULL) == -1) {
-	/* not exported to this host or at all */
+    if ((exports_options(buf, rqstp, &password) == -1)
+	|| (!authenticated && password[0])) {
+	/* not exported to this host or at all, or a password defined and not 
+	   authenticated */
 	result.fhs_status = MNT3ERR_ACCES;
 	return &result;
     }
