@@ -1,6 +1,12 @@
 What's new or changed in 0.9.9
 ==============================
 
+- support for mount passwords. When in use, unfsd will only allow a
+  mount if the correct password is given as a part of the path to
+  mount. Both cleartext passwords and one time passwords are
+  supported. Mount passwords are primarily intended for secure
+  communication links, such as SSH tunnels.
+  
 
 Old news
 ========
