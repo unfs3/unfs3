@@ -5,15 +5,20 @@
  * see file LICENSE for license details
  */
 
+#include "config.h"
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <rpc/rpc.h>
 #include <dirent.h>
-#include <mntent.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+
+#if HAVE_MNTENT_H == 1
+#include <mntent.h>
+#endif
 
 #include "nfs.h"
 #include "fh.h"
@@ -29,6 +34,7 @@
  * clients
  */
 
+#if HAVE_MNTENT_H == 1
 /*
  * locate file given prefix, device, and inode number
  */
@@ -77,6 +83,7 @@ static int locate_pfx(const char *pfx, uint32 dev, uint32 ino, char *result)
     closedir(search);
     return FALSE;
 }
+#endif
 
 /*
  * locate file given device and inode number
@@ -85,6 +92,7 @@ static int locate_pfx(const char *pfx, uint32 dev, uint32 ino, char *result)
  */
 char *locate_file(uint32 dev, uint32 ino)
 {
+#if HAVE_MNTENT_H == 1
     static char path[NFS_MAXPATHLEN];
     FILE *mtab;
     struct mntent *ent;
@@ -115,5 +123,6 @@ char *locate_file(uint32 dev, uint32 ino)
 	    return path;
     }
 
+#endif
     return NULL;
 }

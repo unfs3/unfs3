@@ -9,6 +9,7 @@ AC_SYS_LARGEFILE
 AC_SEARCH_LIBS(xdr_int, nsl)
 AC_SEARCH_LIBS(socket, socket)
 AC_SEARCH_LIBS(inet_aton, resolv)
+AC_CHECK_HEADERS(mntent.h,,,[#include <stdio.h>])
 AC_CHECK_HEADERS(rpc/svc_soc.h,,,[#include <rpc/types.h>
 #include <rpc/rpc.h>])
 AC_CHECK_HEADERS(linux/ext2_fs.h,,,[#include <unistd.h>])
