@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <utime.h>
 
 #if HAVE_STATVFS == 1
 # include <sys/statvfs.h>
@@ -422,13 +423,37 @@ WRITE3res *nfsproc3_write_3_svc(WRITE3args * argp, struct svc_req * rqstp)
     return &result;
 }
 
+/*
+ * store verifier in atime and mtime 
+ */
+static int store_create_verifier(char *obj, createverf3 verf)
+{
+    struct utimbuf ubuf;
+
+    ubuf.actime = verf[0] | verf[1] << 8 | verf[2] << 16 | verf[3] << 24;
+    ubuf.modtime = verf[4] | verf[5] << 8 | verf[6] << 16 | verf[7] << 24;
+
+    return backend_utime(obj, &ubuf);
+}
+
+/*
+ * check if a create verifier matches
+ */
+static int check_create_verifier(struct stat *buf, createverf3 verf)
+{
+    return ((buf->st_atime ==
+	     (verf[0] | verf[1] << 8 | verf[2] << 16 | verf[3] << 24))
+	    && (buf->st_mtime ==
+		(verf[4] | verf[5] << 8 | verf[6] << 16 | verf[7] << 24)));
+}
+
 CREATE3res *nfsproc3_create_3_svc(CREATE3args * argp, struct svc_req * rqstp)
 {
     static CREATE3res result;
     char *path;
     char obj[NFS_MAXPATHLEN];
     sattr3 new_attr;
-    int fd, res;
+    int fd = -1, res = -1;
     struct stat buf;
     uint32 gen;
     int flags = O_RDWR | O_CREAT | O_TRUNC | O_NONBLOCK;
@@ -438,8 +463,8 @@ CREATE3res *nfsproc3_create_3_svc(CREATE3args * argp, struct svc_req * rqstp)
 
     cluster_create(obj, rqstp, &result.status);
 
-    /* GUARDED maps to Unix exclusive create */
-    if (argp->how.mode == GUARDED)
+    /* GUARDED and EXCLUSIVE maps to Unix exclusive create */
+    if (argp->how.mode != UNCHECKED)
 	flags = flags | O_EXCL;
 
     if (argp->how.mode != EXCLUSIVE) {
@@ -447,17 +472,56 @@ CREATE3res *nfsproc3_create_3_svc(CREATE3args * argp, struct svc_req * rqstp)
 	result.status = join(result.status, atomic_attr(new_attr));
     }
 
+    /* Try to open the file */
     if (result.status == NFS3_OK) {
 	if (argp->how.mode != EXCLUSIVE) {
 	    fd = backend_open_create(obj, flags, create_mode(new_attr));
+	} else {
+	    fd = backend_open_create(obj, flags);
+	}
+    }
 
+    if (fd != -1) {
+	/* Successful open */
+	res = backend_fstat(fd, &buf);
+	if (res != -1) {
+	    /* Successful stat */
+	    if (argp->how.mode == EXCLUSIVE) {
+		/* Save verifier in atime and mtime */
+		res = store_create_verifier(obj, argp->how.createhow3_u.verf);
+	    }
+	}
+
+	if (res != -1) {
+	    /* So far, so good */
+	    gen = backend_get_gen(buf, fd, obj);
+	    fh_cache_add(buf.st_dev, buf.st_ino, obj);
+	    backend_close(fd);
+
+	    result.CREATE3res_u.resok.obj =
+		fh_extend_post(argp->where.dir, buf.st_dev, buf.st_ino, gen);
+	    result.CREATE3res_u.resok.obj_attributes =
+		get_post_buf(buf, rqstp);
+	}
+
+	if (res == -1) {
+	    /* backend_fstat() or store_create_verifier() failed */
+	    backend_close(fd);
+	    result.status = NFS3ERR_IO;
+	}
+
+    } else {
+	/* open() failed */
+	if (argp->how.mode == EXCLUSIVE && errno == EEXIST) {
+	    /* Check if verifier matches */
+	    fd = backend_open(obj, O_NONBLOCK);
 	    if (fd != -1) {
 		res = backend_fstat(fd, &buf);
-		if (res == -1) {
-		    /* could not stat our own file?! */
-		    close(fd);
-		    result.status = NFS3ERR_IO;
-		} else {
+	    }
+
+	    if (res != -1) {
+		if (check_create_verifier(&buf, argp->how.createhow3_u.verf)) {
+		    /* The verifier matched. Return success */
 		    gen = backend_get_gen(buf, fd, obj);
 		    fh_cache_add(buf.st_dev, buf.st_ino, obj);
 		    backend_close(fd);
@@ -467,13 +531,15 @@ CREATE3res *nfsproc3_create_3_svc(CREATE3args * argp, struct svc_req * rqstp)
 				       buf.st_ino, gen);
 		    result.CREATE3res_u.resok.obj_attributes =
 			get_post_buf(buf, rqstp);
+		} else {
+		    /* The verifier doesn't match */
+		    result.status = NFS3ERR_EXIST;
 		}
-	    } else
-		/* creation via open() failed */
-		result.status = create_err();
-	} else
-	    /* EXCLUSIVE create */
-	    result.status = NFS3ERR_NOTSUPP;
+	    }
+	}
+	if (res == -1) {
+	    result.status = create_err();
+	}
     }
 
     /* overlaps with resfail */
