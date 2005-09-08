@@ -12,6 +12,8 @@
 #include "../nfs.h"
 #include "y.tab.h"
 
+#define YY_NO_UNPUT
+
 YYSTYPE yylval;
 extern int e_error;
 

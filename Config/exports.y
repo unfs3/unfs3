@@ -27,6 +27,13 @@
 # define PATH_MAX	4096
 #endif
 
+/* for lack of a better place */
+#ifdef __GNUC__
+#define U(x) x __attribute__ ((unused))
+#else
+#define U(x) x
+#endif
+
 /* lexer stuff, to avoid compiler warnings */
 int yylex(void);
 extern FILE *yyin;
@@ -359,7 +366,7 @@ static void add_option_with_value(const char *opt, const char *val)
 /*
  * dummy error function
  */
-void yyerror(char *s)
+void yyerror(U(char *s))
 {
 	e_error = TRUE;
 	return;
