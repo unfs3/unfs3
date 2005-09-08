@@ -222,7 +222,6 @@ nfsstat3 readdir_err(void)
 	return NFS3ERR_IO;
 }
 
-
 /*
  * combine two error values
  */

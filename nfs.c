@@ -91,27 +91,27 @@ nfsstat3 cat_name(const char *path, const char *name, char *result)
 	return NFS3ERR_NAMETOOLONG;
 
     if (strcmp(name, ".") == 0) {
-        strcpy(result, path);
-        return NFS3_OK;
+	strcpy(result, path);
+	return NFS3_OK;
     }
 
-    /*
+    /* 
      * Irix clients do lookups for .. and then use the
      * resulting filehandle for more lookups, causing them
      * to get filehandles that fh_decomp_raw will refuse to
      * resolve. Export list handling will also get very
      * confused if we allow such filehandles.
-     */    
+     */
     if (strcmp(name, "..") == 0) {
-        last = strrchr(path, '/');
-        if (!last || last == path)
-            strcpy(result, "/");
-        else {
-            *last = 0;
-            strcpy(result, path);
-            *last = '/';
-        }
-        return NFS3_OK;
+	last = strrchr(path, '/');
+	if (!last || last == path)
+	    strcpy(result, "/");
+	else {
+	    *last = 0;
+	    strcpy(result, path);
+	    *last = '/';
+	}
+	return NFS3_OK;
     }
 
     sprintf(result, "%s/%s", path, name);
@@ -201,17 +201,18 @@ LOOKUP3res *nfsproc3_lookup_3_svc(LOOKUP3args * argp, struct svc_req * rqstp)
 	if (res == -1)
 	    result.status = lookup_err();
 	else {
-	    if (strcmp(argp->what.name, ".")  == 0 ||
-	        strcmp(argp->what.name, "..") == 0) {
-	        fh = fh_comp_ptr(obj, rqstp, 0);
+	    if (strcmp(argp->what.name, ".") == 0 ||
+		strcmp(argp->what.name, "..") == 0) {
+		fh = fh_comp_ptr(obj, rqstp, 0);
 	    } else {
-	        gen = backend_get_gen(buf, FD_NONE, obj);
-	        fh = fh_extend(argp->what.dir, buf.st_dev, buf.st_ino, gen);
-	        fh_cache_add(buf.st_dev, buf.st_ino, obj);
+		gen = backend_get_gen(buf, FD_NONE, obj);
+		fh = fh_extend(argp->what.dir, buf.st_dev, buf.st_ino, gen);
+		fh_cache_add(buf.st_dev, buf.st_ino, obj);
 	    }
 
 	    if (fh) {
-		result.LOOKUP3res_u.resok.object.data.data_len = fh_length(fh);
+		result.LOOKUP3res_u.resok.object.data.data_len =
+		    fh_length(fh);
 		result.LOOKUP3res_u.resok.object.data.data_val = (char *) fh;
 		result.LOOKUP3res_u.resok.obj_attributes =
 		    get_post_buf(buf, rqstp);
@@ -337,32 +338,32 @@ READ3res *nfsproc3_read_3_svc(READ3args * argp, struct svc_req * rqstp)
 	fd = fd_open(path, argp->file, FD_READ);
 	if (fd != -1) {
 	    /* read one more to check for eof */
-            res = backend_pread(fd, buf, argp->count + 1, argp->offset);
+	    res = backend_pread(fd, buf, argp->count + 1, argp->offset);
 
-            /* eof if we could not read one more */
-            result.READ3res_u.resok.eof = (res <= (int64) argp->count);
+	    /* eof if we could not read one more */
+	    result.READ3res_u.resok.eof = (res <= (int64) argp->count);
 
-            /* close for real when hitting eof */
-            if (result.READ3res_u.resok.eof)
-                fd_close(fd, FD_READ, FD_CLOSE_REAL);
-            else {
-                fd_close(fd, FD_READ, FD_CLOSE_VIRT);
-                res--;
-            }
+	    /* close for real when hitting eof */
+	    if (result.READ3res_u.resok.eof)
+		fd_close(fd, FD_READ, FD_CLOSE_REAL);
+	    else {
+		fd_close(fd, FD_READ, FD_CLOSE_VIRT);
+		res--;
+	    }
 
-            if (res >= 0) {
-                result.READ3res_u.resok.count = res;
-                result.READ3res_u.resok.data.data_len = res;
-                result.READ3res_u.resok.data.data_val = buf;
-            } else {
-                /* error during read() */
+	    if (res >= 0) {
+		result.READ3res_u.resok.count = res;
+		result.READ3res_u.resok.data.data_len = res;
+		result.READ3res_u.resok.data.data_val = buf;
+	    } else {
+		/* error during read() */
 
-                /* EINVAL means unreadable object */
-                if (errno == EINVAL)
-                    result.status = NFS3ERR_INVAL;
-                else
-                    result.status = NFS3ERR_IO;
-            }
+		/* EINVAL means unreadable object */
+		if (errno == EINVAL)
+		    result.status = NFS3ERR_INVAL;
+		else
+		    result.status = NFS3ERR_IO;
+	    }
 	} else
 	    /* opening for read failed */
 	    result.status = read_err();
@@ -386,28 +387,29 @@ WRITE3res *nfsproc3_write_3_svc(WRITE3args * argp, struct svc_req * rqstp)
     if (result.status == NFS3_OK) {
 	fd = fd_open(path, argp->file, FD_WRITE);
 	if (fd != -1) {
-            res = backend_pwrite(fd, argp->data.data_val,
-                                 argp->data.data_len, argp->offset);
+	    res =
+		backend_pwrite(fd, argp->data.data_val, argp->data.data_len,
+			       argp->offset);
 
-            /* close for real if not UNSTABLE write */
-            if (argp->stable == UNSTABLE)
-                fd_close(fd, FD_WRITE, FD_CLOSE_VIRT);
-            else
-                fd_close(fd, FD_WRITE, FD_CLOSE_REAL);
+	    /* close for real if not UNSTABLE write */
+	    if (argp->stable == UNSTABLE)
+		fd_close(fd, FD_WRITE, FD_CLOSE_VIRT);
+	    else
+		fd_close(fd, FD_WRITE, FD_CLOSE_REAL);
 
-            /* we always do fsync(), never fdatasync() */
-            if (argp->stable == DATA_SYNC)
-                argp->stable = FILE_SYNC;
+	    /* we always do fsync(), never fdatasync() */
+	    if (argp->stable == DATA_SYNC)
+		argp->stable = FILE_SYNC;
 
-            if (res != -1) {
-                result.WRITE3res_u.resok.count = res;
-                result.WRITE3res_u.resok.committed = argp->stable;
-                memcpy(result.WRITE3res_u.resok.verf, wverf,
-                       NFS3_WRITEVERFSIZE);
-            } else {
-                /* error during write */
-                result.status = write_write_err();
-            }
+	    if (res != -1) {
+		result.WRITE3res_u.resok.count = res;
+		result.WRITE3res_u.resok.committed = argp->stable;
+		memcpy(result.WRITE3res_u.resok.verf, wverf,
+		       NFS3_WRITEVERFSIZE);
+	    } else {
+		/* error during write */
+		result.status = write_write_err();
+	    }
 	} else
 	    /* could not open for writing */
 	    result.status = write_open_err();
@@ -576,17 +578,18 @@ static int mksocket(const char *path, mode_t mode)
 {
     int res, sock;
     struct sockaddr_un addr;
-    
+
     sock = socket(PF_UNIX, SOCK_STREAM, 0);
     addr.sun_family = AF_UNIX;
     strcpy(addr.sun_path, path);
     res = sock;
     if (res != -1) {
-        umask(~mode);
-        res = bind(sock, (struct sockaddr *) &addr,
-                   sizeof(addr.sun_family) + strlen(addr.sun_path));
-        umask(0);
-        close(sock);
+	umask(~mode);
+	res =
+	    bind(sock, (struct sockaddr *) &addr,
+		 sizeof(addr.sun_family) + strlen(addr.sun_path));
+	umask(0);
+	close(sock);
     }
     return res;
 }
@@ -658,11 +661,11 @@ MKNOD3res *nfsproc3_mknod_3_svc(MKNOD3args * argp, struct svc_req * rqstp)
 
     if (result.status == NFS3_OK) {
 	if (argp->what.type == NF3CHR || argp->what.type == NF3BLK)
-	    res = backend_mknod(obj, new_mode, dev); /* device */
+	    res = backend_mknod(obj, new_mode, dev);	/* device */
 	else if (argp->what.type == NF3FIFO)
-	    res = backend_mkfifo(obj, new_mode);     /* FIFO */
+	    res = backend_mkfifo(obj, new_mode);	/* FIFO */
 	else
-	    res = backend_mksocket(obj, new_mode);   /* socket */
+	    res = backend_mksocket(obj, new_mode);	/* socket */
 
 	if (res == -1) {
 	    result.status = mknod_err();
