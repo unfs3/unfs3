@@ -1,11 +1,24 @@
 What's new or changed in 0.9.13
 ===============================
 
+The one big change in this release is that unfs3 now supports
+the CREATE EXCLUSIVE procedure call where it only supported
+regular CREATE and CREATE GUARDED before. This is implemented
+by storing the create verifier passed in by the client in the
+mtime and atime attributes of the created file, which is the
+approach suggested by the NFSv3 specification itself. For the
+minor caveat of this approach, see the BUGS section of the
+manpage. Thanks go to Peter Åstrand <astrand@cendio.se> for
+providing the code.
+
 
 ChangeLog
 =========
 
 Version 0.9.13
+
+  - add support for CREATE EXCLUSIVE procedure call
+  - fix some minor compiler warnings
 
 Version 0.9.12
 
