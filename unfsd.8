@@ -319,6 +319,14 @@ creating a new object of the same name. If this happens,
 .B unfsd
 will attempt to perform the operation on the wrong, new object.
 The time window in which this can happen is small.
+.PP
+When a client does a CREATE EXCLUSIVE procedure call,
+.B unfsd
+stores the verifier data in the mtime and atime attributes of the
+created file. Malicious processes on the server could manipulate
+those attributes, breaking the semantics of the exclusive create
+operation. A process attempting to do so would need to be able
+to see the NFS network traffic.
 .SH FILES
 .TP 20
 .I /etc/exports
