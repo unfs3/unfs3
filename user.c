@@ -19,6 +19,7 @@
 #include "mount.h"
 #include "daemon.h"
 #include "user.h"
+#include "backend.h"
 #include "Config/exports.h"
 
 /* user and group id we squash to */
@@ -127,24 +128,24 @@ void switch_user(struct svc_req *req)
     if (!can_switch)
 	return;
 
-    if (opt_singleuser || (getuid() != 0)) {
+    if (opt_singleuser || (backend_getuid() != 0)) {
 	/* 
 	 * have uid/gid functions behave correctly by squashing
 	 * all user and group ids to the current values
 	 *
 	 * otherwise ACCESS would malfunction
 	 */
-	squash_uid = getuid();
-	squash_gid = getgid();
+	squash_uid = backend_getuid();
+	squash_gid = backend_getgid();
 
 	can_switch = FALSE;
 	return;
     }
 
-    setegid(0);
-    seteuid(0);
-    gid = setegid(get_gid(req));
-    uid = seteuid(get_uid(req));
+    backend_setegid(0);
+    backend_seteuid(0);
+    gid = backend_setegid(get_gid(req));
+    uid = backend_seteuid(get_uid(req));
 
     if (uid == -1 || gid == -1) {
 	logmsg(LOG_EMERG, "euid/egid switching failed, aborting");
@@ -176,7 +177,7 @@ void read_executable(struct svc_req *req, struct stat buf)
 	have_exec = 1;
 
     if (have_exec) {
-	setegid(0);
-	seteuid(0);
+	backend_setegid(0);
+	backend_seteuid(0);
     }
 }

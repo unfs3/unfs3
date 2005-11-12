@@ -141,7 +141,7 @@ post_op_attr get_post_buf(struct stat buf, struct svc_req * req)
 	unsigned int req_uid = 0;
 	unsigned int req_gid = 0;
 	struct authunix_parms *auth = (void *) req->rq_clntcred;
-	uid_t ruid = getuid();
+	uid_t ruid = backend_getuid();
 
 	if (req->rq_cred.oa_flavor == AUTH_UNIX) {
 	    req_uid = auth->aup_uid;
@@ -153,7 +153,7 @@ post_op_attr get_post_buf(struct stat buf, struct svc_req * req)
 	else
 	    result.post_op_attr_u.attributes.uid = 0;
 
-	if ((buf.st_gid == getgid()) || (ruid == 0))
+	if ((buf.st_gid == backend_getgid()) || (ruid == 0))
 	    result.post_op_attr_u.attributes.gid = req_gid;
 	else
 	    result.post_op_attr_u.attributes.gid = 0;
@@ -444,8 +444,10 @@ mode_t create_mode(sattr3 new)
  */
 nfsstat3 atomic_attr(sattr3 attr)
 {
-    if ((attr.uid.set_it == TRUE && attr.uid.set_uid3_u.uid != geteuid()) ||
-	(attr.gid.set_it == TRUE && attr.gid.set_gid3_u.gid != getegid()) ||
+    if ((attr.uid.set_it == TRUE &&
+         attr.uid.set_uid3_u.uid != backend_geteuid()) ||
+	(attr.gid.set_it == TRUE &&
+	 attr.gid.set_gid3_u.gid != backend_getegid()) ||
 	(attr.size.set_it == TRUE && attr.size.set_size3_u.size != 0) ||
 	attr.atime.set_it != DONT_CHANGE || attr.mtime.set_it != DONT_CHANGE)
 	return NFS3ERR_INVAL;

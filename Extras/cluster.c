@@ -188,7 +188,7 @@ int compar(const void *x, const void *y)
  */
 static void reset_ids(uid_t euid, gid_t egid)
 {
-    if (setegid(egid) || seteuid(euid)) {
+    if (backend_setegid(egid) || backend_seteuid(euid)) {
 	logmsg(LOG_EMERG, "euid/egid switching failed, aborting");
 	daemon_exit(CRISIS);
     }
@@ -211,10 +211,10 @@ void cluster_scandir(const char *path)
     /* 
      * need to read directory as root, temporarily switch back
      */
-    euid = geteuid();
-    egid = getegid();
-    setegid(0);
-    seteuid(0);
+    euid = backend_geteuid();
+    egid = backend_getegid();
+    backend_setegid(0);
+    backend_seteuid(0);
 
     scan = backend_opendir(cluster_dirname(path));
     if (!scan) {

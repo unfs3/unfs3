@@ -182,7 +182,7 @@ static void parse_options(int argc, char **argv)
 		break;
 	    case 's':
 		opt_singleuser = TRUE;
-		if (getuid() == 0) {
+		if (backend_getuid() == 0) {
 		    logmsg(LOG_WARNING,
 			   "Warning: running as root with -s is dangerous");
 		    logmsg(LOG_WARNING,

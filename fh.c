@@ -77,10 +77,10 @@ uint32 get_gen(struct stat obuf, U(int fd), U(const char *path))
     if (!S_ISREG(obuf.st_mode) && !S_ISDIR(obuf.st_mode))
 	return 0;
 
-    euid = geteuid();
-    egid = getegid();
-    setegid(0);
-    seteuid(0);
+    euid = backend_geteuid();
+    egid = backend_getegid();
+    backend_setegid(0);
+    backend_seteuid(0);
 
     if (fd != FD_NONE) {
 	res = ioctl(fd, EXT2_IOC_GETVERSION, &gen);
@@ -99,10 +99,10 @@ uint32 get_gen(struct stat obuf, U(int fd), U(const char *path))
 	}
     }
 
-    setegid(egid);
-    seteuid(euid);
+    backend_setegid(egid);
+    backend_seteuid(euid);
 
-    if (geteuid() != euid || getegid() != egid) {
+    if (backend_geteuid() != euid || backend_getegid() != egid) {
 	logmsg(LOG_EMERG, "euid/egid switching failed, aborting");
 	daemon_exit(CRISIS);
     }

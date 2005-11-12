@@ -32,6 +32,10 @@
 #define backend_fstat fstat
 #define backend_fsync fsync
 #define backend_ftruncate ftruncate
+#define backend_getegid getegid
+#define backend_geteuid geteuid
+#define backend_getgid getgid
+#define backend_getuid getuid
 #define backend_link link
 #define backend_lseek lseek
 #define backend_lstat lstat
@@ -49,6 +53,8 @@
 #define backend_remove remove
 #define backend_rename rename
 #define backend_rmdir rmdir
+#define backend_setegid setegid
+#define backend_seteuid seteuid
 #define backend_stat stat
 #define backend_statvfs statvfs
 #define backend_symlink symlink
