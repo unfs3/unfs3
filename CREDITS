@@ -5,6 +5,9 @@ The design of unfs3's filehandle code owes much to the original NFSv2
 universal user-space NFS server. Thanks to Mark Shand and Don Becker
 for coming up with those concepts.
 
+We also give credit to Gregory R. Warnes for the idea of file
+tagging as used by ClusterNFS and the unfs3 cluster extension.
+
 People who contributed ideas, suggestions, or code to UNFS3:
 
 - Bernd Schubert <bernd-schubert@web.de>
