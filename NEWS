@@ -1,11 +1,20 @@
 What's new or changed in 0.9.14
 ===============================
 
+The server now accepts SET_TO_SERVER_TIME for atime and mtime
+when creating file system objects.
+
+The old maintainer email address doesn't work anymore and has
+been replaced with a new one.
+
 
 ChangeLog
 =========
 
 Version 0.9.14
+
+  - accept SET_TO_SERVER_TIME in object creation calls
+  - update maintainer email address
 
 Version 0.9.13
 
