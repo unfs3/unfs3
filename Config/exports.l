@@ -1,7 +1,7 @@
 %{
 /*
  * UNFS3 exports lexer
- * (C) 2003, Pascal Schmidt <der.eremit@email.de>
+ * (C) 2003, Pascal Schmidt
  * see file LICENSE for license details
  */
 #include "../config.h"

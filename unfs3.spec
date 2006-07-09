@@ -5,7 +5,7 @@ Name: unfs3
 Version: %{version}
 Release: 1
 Copyright: BSD
-Packager: Pascal Schmidt <pascal.schmidt@email.de>
+Packager: Pascal Schmidt <unfs3-server@ewetel.net>
 Vendor: none
 Source: unfs3-%{version}.tar.gz
 Buildroot: /tmp/unfs3

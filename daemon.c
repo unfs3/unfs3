@@ -2,7 +2,7 @@
 /*
  * UNFS3 server framework
  * Originally generated using rpcgen
- * Portions (C) 2004, Pascal Schmidt <der.eremit@email.de>
+ * Portions (C) 2004, Pascal Schmidt
  * see file LICENSE for license details
  */
 
@@ -45,7 +45,7 @@
 #define SIG_PF void(*)(int)
 #endif
 
-#define UNFS_NAME "UNFS3 unfsd 0.9.14 (C) 2005 Pascal Schmidt <der.eremit@email.de>\n"
+#define UNFS_NAME "UNFS3 unfsd 0.9.14 (C) 2006 Pascal Schmidt <unfs3-server@ewetel.net>\n"
 
 /* write verifier */
 writeverf3 wverf;

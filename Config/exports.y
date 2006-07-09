@@ -1,7 +1,7 @@
 %{
 /*
  * UNFS3 exports parser and export controls
- * (C) 2004, Pascal Schmidt <der.eremit@email.de>
+ * (C) 2004, Pascal Schmidt
  * see file LICENSE for license details
  */
 #include "../config.h"

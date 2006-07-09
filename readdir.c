@@ -1,7 +1,7 @@
 
 /*
  * UNFS3 readdir routine
- * (C) 2004, Pascal Schmidt <der.eremit@email.de>
+ * (C) 2004, Pascal Schmidt
  * see file LICENSE for license details
  */
 

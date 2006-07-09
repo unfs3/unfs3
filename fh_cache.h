@@ -1,6 +1,6 @@
 /*
  * UNFS3 filehandle cache
- * (C) 2003, Pascal Schmidt <der.eremit@email.de>
+ * (C) 2003, Pascal Schmidt
  * see file LICENSE for license details
  */
 

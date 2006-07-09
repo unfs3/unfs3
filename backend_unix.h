@@ -1,6 +1,6 @@
 /*
  * UNFS3 low-level filesystem calls for Unix
- * (C) 2004, Pascal Schmidt <der.eremit@email.de>
+ * (C) 2004, Pascal Schmidt
  * see file LICENSE for license details
  */
 
