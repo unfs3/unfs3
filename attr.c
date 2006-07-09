@@ -449,7 +449,8 @@ nfsstat3 atomic_attr(sattr3 attr)
 	(attr.gid.set_it == TRUE &&
 	 attr.gid.set_gid3_u.gid != backend_getegid()) ||
 	(attr.size.set_it == TRUE && attr.size.set_size3_u.size != 0) ||
-	attr.atime.set_it != DONT_CHANGE || attr.mtime.set_it != DONT_CHANGE)
+	attr.atime.set_it == SET_TO_CLIENT_TIME ||
+	attr.mtime.set_it == SET_TO_CLIENT_TIME)
 	return NFS3ERR_INVAL;
     else
 	return NFS3_OK;
