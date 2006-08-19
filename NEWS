@@ -1,7 +1,7 @@
 What's new or changed in 0.9.15
 ===============================
 
-The server now rejects mount requests coming from source
+The server now only allows mount requests coming from source
 ports below 1024. This behaviour matches other NFS server
 implementations and provides some shallow security against
 mount requests from user space clients. Such a mount could
@@ -18,7 +18,7 @@ ChangeLog
 
 Version 0.9.15
 
-  - reject mount requests from source ports below 1024
+  - only allow mount requests from source ports below 1024
 
 Version 0.9.14
 
