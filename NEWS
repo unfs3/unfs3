@@ -1,20 +1,12 @@
-What's new or changed in 0.9.15
+What's new or changed in 0.9.16
 ===============================
 
-The server now only allows mount requests coming from source
-ports below 1024. This behaviour matches other NFS server
-implementations and provides some shallow security against
-mount requests from user space clients. Such a mount could
-be used to obtain a file handle for an export and then use
-it for NFS requests with arbitrary user ids, thus being
-able to access any exported files regardless of real
-ownership. It should be noted that this doesn't help against
-a client's root user or users capable of sniffing the
-network used for NFS traffic. Patch by Frank v Waveren.
 
 
 ChangeLog
 =========
+
+Version 0.9.16
 
 Version 0.9.15
 
