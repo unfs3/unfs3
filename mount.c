@@ -33,6 +33,8 @@
 # define PATH_MAX	4096
 #endif
 
+#define IS_SECURE(port) ((port) < 1024)
+
 /*
  * number of active mounts
  *
@@ -208,7 +210,9 @@ mountres3 *mountproc_mnt_3_svc(dirpath * argp, struct svc_req * rqstp)
     }
 
     if ((exports_options(buf, rqstp, &password, NULL) == -1)
-	|| (!authenticated && password[0])) {
+	|| (!authenticated && password[0])
+	|| (!IS_SECURE(ntohs(get_port(rqstp))))
+       ) {
 	/* not exported to this host or at all, or a password defined and not 
 	   authenticated */
 	result.fhs_status = MNT3ERR_ACCES;

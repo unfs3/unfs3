@@ -24,6 +24,7 @@ void logmsg(int, const char *, ...);
 
 /* remote address */
 struct in_addr get_remote(struct svc_req *);
+short get_port(struct svc_req *);
 
 /* write verifier */
 extern writeverf3 wverf;

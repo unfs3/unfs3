@@ -101,6 +101,14 @@ struct in_addr get_remote(struct svc_req *rqstp)
 }
 
 /*
+ * return remote port from svc_req structure
+ */
+short get_port(struct svc_req *rqstp)
+{
+    return (svc_getcaller(rqstp->rq_xprt))->sin_port;
+}
+
+/*
  * parse command line options
  */
 static void parse_options(int argc, char **argv)
