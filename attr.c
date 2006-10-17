@@ -445,7 +445,7 @@ mode_t create_mode(sattr3 new)
 nfsstat3 atomic_attr(sattr3 attr)
 {
     if ((attr.uid.set_it == TRUE &&
-         attr.uid.set_uid3_u.uid != backend_geteuid()) ||
+	 attr.uid.set_uid3_u.uid != backend_geteuid()) ||
 	(attr.gid.set_it == TRUE &&
 	 attr.gid.set_gid3_u.gid != backend_getegid()) ||
 	(attr.size.set_it == TRUE && attr.size.set_size3_u.size != 0) ||
