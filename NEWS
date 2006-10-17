@@ -1,12 +1,18 @@
 What's new or changed in 0.9.16
 ===============================
 
+This release adds support for the "insecure" and "secure"
+export options. These make it possible to specify in the
+exports file whether mount requests are allowed coming
+from any source port or only from ports below 1024.
 
 
 ChangeLog
 =========
 
 Version 0.9.16
+
+  - add support for "insecure" and "secure" export options
 
 Version 0.9.15
 

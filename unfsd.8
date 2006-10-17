@@ -278,6 +278,14 @@ Allow only read access on the exported directory. When this option
 is present, clients are not allowed to modify files and directories
 on the server. This option is enabled by default.
 .TP
+.B secure
+Allow only mount requests coming from a source port below 1024. Using
+these ports requires super-user privileges on many operating systems.
+This option is enabled by default.
+.TP
+.B insecure
+Allow mount requests coming from any source port.
+.TP
 .B removable
 Consider this directory to be on a removable medium. When this option
 is present,

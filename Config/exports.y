@@ -347,6 +347,10 @@ static void add_option(const char *opt)
 		cur_host.options |= OPT_REMOVABLE;
 	else if (strcmp(opt,"fixed") == 0)
 		cur_host.options &= ~OPT_REMOVABLE;
+	else if (strcmp(opt,"insecure") == 0)
+		cur_host.options |= OPT_INSECURE;
+	else if (strcmp(opt,"secure") == 0)
+		cur_host.options &= ~OPT_INSECURE;
 }
 
 static void add_option_with_value(const char *opt, const char *val)
