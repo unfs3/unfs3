@@ -457,13 +457,11 @@ static void nfs3_program_3(struct svc_req *rqstp, register SVCXPRT * transp)
     if (result != NULL &&
 	!svc_sendreply(transp, (xdrproc_t) _xdr_result, result)) {
 	svcerr_systemerr(transp);
-	logmsg(LOG_CRIT, "unable to send RPC reply, aborting");
-	daemon_exit(CRISIS);
+	logmsg(LOG_CRIT, "unable to send RPC reply");
     }
     if (!svc_freeargs
 	(transp, (xdrproc_t) _xdr_argument, (caddr_t) & argument)) {
 	logmsg(LOG_CRIT, "unable to free XDR arguments");
-	daemon_exit(CRISIS);
     }
     return;
 }
@@ -537,11 +535,11 @@ static void mountprog_3(struct svc_req *rqstp, register SVCXPRT * transp)
     if (result != NULL &&
 	!svc_sendreply(transp, (xdrproc_t) _xdr_result, result)) {
 	svcerr_systemerr(transp);
+	logmsg(LOG_CRIT, "unable to send RPC reply");
     }
     if (!svc_freeargs
 	(transp, (xdrproc_t) _xdr_argument, (caddr_t) & argument)) {
 	logmsg(LOG_CRIT, "unable to free XDR arguments");
-	daemon_exit(CRISIS);
     }
     return;
 }
