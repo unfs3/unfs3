@@ -211,8 +211,9 @@ mountres3 *mountproc_mnt_3_svc(dirpath * argp, struct svc_req * rqstp)
 
     if ((exports_options(buf, rqstp, &password, NULL) == -1)
 	|| (!authenticated && password[0])
-	|| (!(exports_opts & OPT_INSECURE) && !IS_SECURE(ntohs(get_port(rqstp))))
-       ) {
+	|| (!(exports_opts & OPT_INSECURE) &&
+	    !IS_SECURE(ntohs(get_port(rqstp))))
+	) {
 	/* not exported to this host or at all, or a password defined and not 
 	   authenticated */
 	result.fhs_status = MNT3ERR_ACCES;
