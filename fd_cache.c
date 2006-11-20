@@ -153,7 +153,6 @@ static int fd_cache_del(int idx)
 static void fd_cache_add(int fd, unfs3_fh_t * ufh, int kind)
 {
     int idx, res;
-    uint32 dev, ino;
 
     idx = fd_cache_lru();
     if (idx != -1) {
@@ -161,13 +160,11 @@ static void fd_cache_add(int fd, unfs3_fh_t * ufh, int kind)
 	    fd_cache_del(idx);
 	else {
 	    /* if expiring a WRITE fd, report errors to log */
-	    dev = fd_cache[idx].dev;
-	    ino = fd_cache[idx].ino;
 	    res = fd_cache_del(idx);
 	    if (res != 0)
 		logmsg(LOG_CRIT,
-		       "silent write failure for dev %li, inode %li", dev,
-		       ino);
+		       "silent write failure for dev %li, inode %li",
+		       fd_cache[idx].dev, fd_cache[idx].ino);
 	}
 
 	/* update statistics */
