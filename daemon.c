@@ -638,7 +638,7 @@ static SVCXPRT *create_udp_transport(unsigned int port)
 	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *) &on, sizeof(on));
 	if (bind(sock, (struct sockaddr *) &sin, sizeof(struct sockaddr))) {
 	    perror("bind");
-	    fprintf(stderr, "Couldn't bind to port %d\n", port);
+	    fprintf(stderr, "Couldn't bind to udp port %d\n", port);
 	    exit(1);
 	}
     }
@@ -670,7 +670,7 @@ static SVCXPRT *create_tcp_transport(unsigned int port)
 	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *) &on, sizeof(on));
 	if (bind(sock, (struct sockaddr *) &sin, sizeof(struct sockaddr))) {
 	    perror("bind");
-	    fprintf(stderr, "Couldn't bind to port %d\n", port);
+	    fprintf(stderr, "Couldn't bind to tcp port %d\n", port);
 	    exit(1);
 	}
     }
