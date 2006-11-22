@@ -300,7 +300,9 @@ static unsigned long make_netmask(int bits) {
 
 	for (i=0; i<bits; i++)
 		buf = (buf << 1) + 1;
-	return buf;
+	for (; i < 32; i++)
+		buf = (buf << 1);
+	return htonl(buf);
 }
 
 /*
