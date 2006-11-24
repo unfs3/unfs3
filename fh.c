@@ -39,7 +39,7 @@
 /*
  * hash function for inode numbers
  */
-#define FH_HASH(n)	((n + 3 * (n >> 8) + 5 * (n >> 16)) & 0xFF)
+#define FH_HASH(n) ((n ^ (n >> 8) ^ (n >> 16) ^ (n >> 24) ^ (n >> 32) ^ (n >> 40) ^ (n >> 48) ^ (n >> 56)) & 0xFF)
 
 /*
  * stat cache
@@ -250,7 +250,7 @@ u_int fh_length(const unfs3_fh_t * fh)
 /*
  * extend a filehandle with a given device, inode, and generation number
  */
-unfs3_fh_t *fh_extend(nfs_fh3 nfh, uint32 dev, uint32 ino, uint32 gen)
+unfs3_fh_t *fh_extend(nfs_fh3 nfh, uint32 dev, uint64 ino, uint32 gen)
 {
     static unfs3_fh_t new;
     unfs3_fh_t *fh = (void *) nfh.data.data_val;
@@ -287,7 +287,7 @@ unfs3_fh_t *fh_extend(nfs_fh3 nfh, uint32 dev, uint32 ino, uint32 gen)
 /*
  * get post_op_fh3 extended by device, inode, and generation number
  */
-post_op_fh3 fh_extend_post(nfs_fh3 fh, uint32 dev, uint32 ino, uint32 gen)
+post_op_fh3 fh_extend_post(nfs_fh3 fh, uint32 dev, uint64 ino, uint32 gen)
 {
     post_op_fh3 post;
     unfs3_fh_t *new;

@@ -44,7 +44,7 @@
 /*
  * locate file given prefix, device, and inode number
  */
-static int locate_pfx(const char *pfx, uint32 dev, uint32 ino, char *result)
+static int locate_pfx(const char *pfx, uint32 dev, uint64 ino, char *result)
 {
     char path[NFS_MAXPATHLEN];
     DIR *search;
@@ -96,7 +96,7 @@ static int locate_pfx(const char *pfx, uint32 dev, uint32 ino, char *result)
  *
  * slow fallback in case other filehandle resolution functions fail
  */
-char *locate_file(U(uint32 dev), U(uint32 ino))
+char *locate_file(U(uint32 dev), U(uint64 ino))
 {
     static char path[NFS_MAXPATHLEN];
     FILE *mtab;

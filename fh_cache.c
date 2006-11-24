@@ -32,7 +32,7 @@
 
 typedef struct {
     uint32 dev;			/* device */
-    uint32 ino;			/* inode */
+    uint64 ino;			/* inode */
     char path[NFS_MAXPATHLEN];	/* pathname */
     unsigned int use;		/* last use */
 } unfs3_cache_t;
@@ -122,7 +122,7 @@ static void fh_cache_inval(int idx)
 /*
  * find index given device and inode number
  */
-static int fh_cache_index(uint32 dev, uint32 ino)
+static int fh_cache_index(uint32 dev, uint64 ino)
 {
     int i, res = -1;
 
@@ -138,7 +138,7 @@ static int fh_cache_index(uint32 dev, uint32 ino)
 /*
  * add an entry to the filehandle cache
  */
-char *fh_cache_add(uint32 dev, uint32 ino, const char *path)
+char *fh_cache_add(uint32 dev, uint64 ino, const char *path)
 {
     int idx;
 
@@ -161,7 +161,7 @@ char *fh_cache_add(uint32 dev, uint32 ino, const char *path)
 /*
  * lookup an entry in the cache given a device, inode, and generation number
  */
-static char *fh_cache_lookup(uint32 dev, uint32 ino)
+static char *fh_cache_lookup(uint32 dev, uint64 ino)
 {
     int i, res;
     struct stat buf;

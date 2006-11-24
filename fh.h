@@ -8,15 +8,15 @@
 #define UNFS3_FH_H
 
 /* minimum length of complete filehandle */
-#define FH_MINLEN 17
+#define FH_MINLEN 21
 
 /* maximum depth of pathname described by filehandle */
-#define FH_MAXLEN 47
+#define FH_MAXLEN (64 - FH_MINLEN)
 
 #ifdef __GNUC__
 typedef struct {
 	uint32			dev;
-	uint32			ino;
+	uint64			ino;
 	uint32			gen;
         uint32                  pwhash;
 	unsigned char	len;
@@ -26,7 +26,7 @@ typedef struct {
 #pragma pack(1)
 typedef struct {
 	uint32			dev;
-	uint32			ino;
+	uint64			ino;
 	uint32			gen;
         uint32                  pwhash;
 	unsigned char	len;
@@ -51,8 +51,8 @@ int fh_valid(unfs3_fh_t fh);
 unfs3_fh_t fh_comp_raw(const char *path, struct svc_req *rqstp, int need_dir);
 u_int fh_length(const unfs3_fh_t *fh);
 
-unfs3_fh_t *fh_extend(nfs_fh3 fh, uint32 dev, uint32 ino, uint32 gen);
-post_op_fh3 fh_extend_post(nfs_fh3 fh, uint32 dev, uint32 ino, uint32 gen);
+unfs3_fh_t *fh_extend(nfs_fh3 fh, uint32 dev, uint64 ino, uint32 gen);
+post_op_fh3 fh_extend_post(nfs_fh3 fh, uint32 dev, uint64 ino, uint32 gen);
 post_op_fh3 fh_extend_type(nfs_fh3 fh, const char *path, unsigned int type);
 
 char *fh_decomp_raw(const unfs3_fh_t *fh);

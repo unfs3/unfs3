@@ -8,6 +8,6 @@
 #ifndef UNFS3_LOCATE_H
 #define UNFS3_LOCATE_H
 
-char *locate_file(uint32 dev, uint32 ino);
+char *locate_file(uint32 dev, uint64 ino);
 
 #endif

@@ -184,7 +184,7 @@ post_op_attr get_post_buf(struct stat buf, struct svc_req * req)
 /*
  * lowlevel routine for getting post-operation attributes
  */
-static post_op_attr get_post_ll(const char *path, uint32 dev, uint32 ino,
+static post_op_attr get_post_ll(const char *path, uint32 dev, uint64 ino,
 				struct svc_req *req)
 {
     struct stat buf;

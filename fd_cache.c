@@ -42,7 +42,7 @@ typedef struct {
     int kind;			/* read or write */
     time_t use;			/* last use */
     uint32 dev;			/* device */
-    uint32 ino;			/* inode */
+    uint64 ino;			/* inode */
     uint32 gen;			/* inode generation */
 } fd_cache_t;
 
