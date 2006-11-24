@@ -1,0 +1,7 @@
+
+* In some cases, unfs3 issues system calls like stat() with a path
+  beginning with double slashes. This happens to work on most UNIX
+  systems, but this is not guaranteed by POSIX. See
+  http://www.opengroup.org/onlinepubs/009695399/xrat/xbd_chap04.html
+  or section 2.2.2.102 in POSIX-1003.2-Draft-12. 
+
