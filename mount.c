@@ -161,12 +161,16 @@ mountres3 *mountproc_mnt_3_svc(dirpath * argp, struct svc_req * rqstp)
 
     /* Check for "mount commands" */
     if (strncmp(dpath, "@getnonce", sizeof("@getnonce") - 1) == 0) {
-	gen_nonce(nonce);
-	result.fhs_status = MNT3_OK;
-	result.mountres3_u.mountinfo.fhandle.fhandle3_len = 32;
-	result.mountres3_u.mountinfo.fhandle.fhandle3_val = nonce;
-	result.mountres3_u.mountinfo.auth_flavors.auth_flavors_len = 1;
-	result.mountres3_u.mountinfo.auth_flavors.auth_flavors_val = &auth;
+	if (gen_nonce(nonce) < 0) {
+	    result.fhs_status = MNT3ERR_IO;
+	} else {
+	    result.fhs_status = MNT3_OK;
+	    result.mountres3_u.mountinfo.fhandle.fhandle3_len = 32;
+	    result.mountres3_u.mountinfo.fhandle.fhandle3_val = nonce;
+	    result.mountres3_u.mountinfo.auth_flavors.auth_flavors_len = 1;
+	    result.mountres3_u.mountinfo.auth_flavors.auth_flavors_val =
+		&auth;
+	}
 	return &result;
     } else if (strncmp(dpath, "@password:", sizeof("@password:") - 1) == 0) {
 	char pw[PASSWORD_MAXLEN + 1];

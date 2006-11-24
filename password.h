@@ -4,7 +4,7 @@
  * see file LICENSE for license details
  */
 
-void gen_nonce(char *nonce);
+int gen_nonce(char *nonce);
 
 void mnt_cmd_argument(char **dpath, const char *cmd, char *arg, size_t maxlen);
 

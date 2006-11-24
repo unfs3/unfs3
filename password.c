@@ -18,7 +18,7 @@
 #include <sys/times.h>		       /* times */
 #include "md5.h"
 
-void gen_nonce(char *nonce)
+int gen_nonce(char *nonce)
 {
     struct stat st;
     struct tms tmsbuf;
@@ -31,7 +31,7 @@ void gen_nonce(char *nonce)
 	bytes_read = read(fd, nonce, 32);
 	close(fd);
 	if (bytes_read == 32)
-	    return;
+	    return 0;
     }
 
     /* No /dev/random; do it by hand */
@@ -48,6 +48,7 @@ void gen_nonce(char *nonce)
     md5_init(&state);
     md5_append(&state, (md5_byte_t *) nonce, 32);
     md5_finish(&state, (md5_byte_t *) nonce);
+    return 0;
 }
 
 static char nibble_as_hexchar(unsigned char c)
