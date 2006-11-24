@@ -169,8 +169,7 @@ post_op_attr get_post_buf(struct stat buf, struct svc_req * req)
 	(buf.st_rdev >> 8) & 0xFF;
     result.post_op_attr_u.attributes.rdev.specdata2 = buf.st_rdev & 0xFF;
     result.post_op_attr_u.attributes.fsid = buf.st_dev;
-    result.post_op_attr_u.attributes.fileid =
-	((uint64) buf.st_dev << 32) + buf.st_ino;
+    result.post_op_attr_u.attributes.fileid = buf.st_ino;
     result.post_op_attr_u.attributes.atime.seconds = buf.st_atime;
     result.post_op_attr_u.attributes.atime.nseconds = 0;
     result.post_op_attr_u.attributes.mtime.seconds = buf.st_mtime;

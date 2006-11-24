@@ -161,8 +161,7 @@ READDIR3res read_dir(const char *path, cookie3 cookie, cookieverf3 verf,
 
 	    strcpy(&obj[i * NFS_MAXPATHLEN], this->d_name);
 
-	    entry[i].fileid = ((uint64) buf.st_dev << 32)
-		+ buf.st_ino;
+	    entry[i].fileid = buf.st_ino;
 	    entry[i].name = &obj[i * NFS_MAXPATHLEN];
 	    entry[i].cookie = cookie + 1 + i;
 	    entry[i].nextentry = NULL;

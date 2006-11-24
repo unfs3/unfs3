@@ -335,6 +335,13 @@ created file. Malicious processes on the server could manipulate
 those attributes, breaking the semantics of the exclusive create
 operation. A process attempting to do so would need to be able
 to see the NFS network traffic.
+.PP
+unfsd always uses the "nohide" semantics, which means that clients
+will see all file systems mounted below the exported path. However,
+some NFS clients do not cope well with this situation as, for
+instance, it is then possible for two files in the one apparent
+filesystem to have the same inode number. To avoid this, make sure
+that the client mounts each exported file system. 
 .SH FILES
 .TP 20
 .I /etc/exports
