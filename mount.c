@@ -177,7 +177,7 @@ mountres3 *mountproc_mnt_3_svc(dirpath * argp, struct svc_req * rqstp)
 	char otp[PASSWORD_MAXLEN + 1];
 
 	/* Our calculated otp */
-	unsigned char hexdigest[32];
+	char hexdigest[32];
 
 	mnt_cmd_argument(&dpath, "@otp:", otp, PASSWORD_MAXLEN);
 	if (exports_options(dpath, rqstp, &password, NULL) != -1) {

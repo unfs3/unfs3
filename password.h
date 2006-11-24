@@ -9,5 +9,5 @@ void gen_nonce(char *nonce);
 void mnt_cmd_argument(char **dpath, const char *cmd, char *arg, size_t maxlen);
 
 void otp_digest(char nonce[32], 
-		unsigned char *password, 
-		unsigned char hexdigest[32]);
+		char *password, 
+		char hexdigest[32]);

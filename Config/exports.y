@@ -45,7 +45,7 @@ extern FILE *yyin;
 typedef struct {
 	char		orig[NFS_MAXPATHLEN];
 	int		options;
-        unsigned char   password[PASSWORD_MAXLEN+1];
+        char            password[PASSWORD_MAXLEN+1];
         uint32          password_hash;
 	struct in_addr	addr;
 	struct in_addr	mask;

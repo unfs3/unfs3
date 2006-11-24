@@ -46,11 +46,11 @@ void gen_nonce(char *nonce)
     gettimeofday((struct timeval *) &arr[6], NULL);
 
     md5_init(&state);
-    md5_append(&state, nonce, 32);
-    md5_finish(&state, nonce);
+    md5_append(&state, (md5_byte_t *) nonce, 32);
+    md5_finish(&state, (md5_byte_t *) nonce);
 }
 
-static unsigned char nibble_as_hexchar(unsigned char c)
+static char nibble_as_hexchar(unsigned char c)
 {
     if (c <= 9)
 	return c + '0';
@@ -58,7 +58,7 @@ static unsigned char nibble_as_hexchar(unsigned char c)
     return c - 10 + 'a';
 }
 
-static void hexify(unsigned char digest[16], unsigned char hexdigest[32])
+static void hexify(md5_byte_t digest[16], char hexdigest[32])
 {
     int i, j;
 
@@ -93,16 +93,15 @@ void mnt_cmd_argument(char **dpath, const char *cmd, char *arg, size_t maxlen)
     *dpath += strlen(arg);
 }
 
-void otp_digest(char nonce[32], unsigned char *password,
-		unsigned char hexdigest[32])
+void otp_digest(char nonce[32], char *password, char hexdigest[32])
 {
     md5_state_t state;
-    unsigned char digest[16];
+    md5_byte_t digest[16];
 
     /* Calculate the digest, in the same way as the client did */
     md5_init(&state);
-    md5_append(&state, nonce, 32);
-    md5_append(&state, password, strlen(password));
+    md5_append(&state, (md5_byte_t *) nonce, 32);
+    md5_append(&state, (md5_byte_t *) password, strlen(password));
     md5_finish(&state, digest);
     hexify(digest, hexdigest);
 }
