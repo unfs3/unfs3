@@ -57,18 +57,22 @@ static void add_mount(const char *path, struct svc_req *rqstp)
     char *host;
 
     new = malloc(sizeof(struct mountbody));
-    if (!new)
+    if (!new) {
+	logmsg(LOG_CRIT, "add_mount: Unable to allocate memory");
 	return;
+    }
 
     host = inet_ntoa(get_remote(rqstp));
     new->ml_hostname = malloc(strlen(host) + 1);
     if (!new->ml_hostname) {
+	logmsg(LOG_CRIT, "add_mount: Unable to allocate memory");
 	free(new);
 	return;
     }
 
     new->ml_directory = malloc(strlen(path) + 1);
     if (!new->ml_directory) {
+	logmsg(LOG_CRIT, "add_mount: Unable to allocate memory");
 	free(new->ml_hostname);
 	free(new);
 	return;
