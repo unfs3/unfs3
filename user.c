@@ -160,21 +160,16 @@ void read_executable(struct svc_req *req, struct stat buf)
 {
     int have_exec = 0;
 
-    /* bail out if read permission is there */
-    if (buf.st_mode & S_IROTH)
-	return;
-    else if ((buf.st_mode & S_IRUSR) && is_owner(buf.st_uid, req))
-	return;
-    else if ((buf.st_mode & S_IRGRP) && has_group(buf.st_gid, req))
-	return;
-
-    /* check for execute permission */
-    if (buf.st_mode & S_IXOTH)
-	have_exec = 1;
-    else if ((buf.st_mode & S_IXUSR) && is_owner(buf.st_uid, req))
-	have_exec = 1;
-    else if ((buf.st_mode & S_IXGRP) && has_group(buf.st_gid, req))
-	have_exec = 1;
+    if (is_owner(buf.st_uid, req)) {
+	if (!(buf.st_mode & S_IRUSR) && (buf.st_mode & S_IXUSR))
+	    have_exec = 1;
+    } else if (has_group(buf.st_gid, req)) {
+	if (!(buf.st_mode & S_IRGRP) && (buf.st_mode & S_IXGRP))
+	    have_exec = 1;
+    } else {
+	if (!(buf.st_mode & S_IROTH) && (buf.st_mode & S_IXOTH))
+	    have_exec = 1;
+    }
 
     if (have_exec) {
 	backend_setegid(0);
