@@ -248,24 +248,33 @@ ACCESS3res *nfsproc3_access_3_svc(ACCESS3args * argp, struct svc_req * rqstp)
 	    access |= ACCESS3_READ;
 	if (mode & S_IWUSR)
 	    access |= ACCESS3_MODIFY | ACCESS3_EXTEND;
-	if (mode & S_IXUSR)
-	    access |= ACCESS3_EXECUTE | ACCESS3_READ;
+	if (mode & S_IXUSR) {
+	    access |= ACCESS3_EXECUTE;
+	    if (opt_readable_executables)
+		access |= ACCESS3_READ;
+	}
     } else if (has_group(st_cache.st_gid, rqstp)) {
 	/* group permissions */
 	if (mode & S_IRGRP)
 	    access |= ACCESS3_READ;
 	if (mode & S_IWGRP)
 	    access |= ACCESS3_MODIFY | ACCESS3_EXTEND;
-	if (mode & S_IXGRP)
-	    access |= ACCESS3_EXECUTE | ACCESS3_READ;
+	if (mode & S_IXGRP) {
+	    access |= ACCESS3_EXECUTE;
+	    if (opt_readable_executables)
+		access |= ACCESS3_READ;
+	}
     } else {
 	/* other permissions */
 	if (mode & S_IROTH)
 	    access |= ACCESS3_READ;
 	if (mode & S_IWOTH)
 	    access |= ACCESS3_MODIFY | ACCESS3_EXTEND;
-	if (mode & S_IXOTH)
-	    access |= ACCESS3_EXECUTE | ACCESS3_READ;
+	if (mode & S_IXOTH) {
+	    access |= ACCESS3_EXECUTE;
+	    if (opt_readable_executables)
+		access |= ACCESS3_READ;
+	}
     }
 
     /* root is allowed everything */

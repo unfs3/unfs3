@@ -171,6 +171,12 @@ Debug mode. When this option is present,
 .B unfsd
 will not fork into the background at startup, and all messages that
 would normally go to the system log go to stdout instead.
+.TP
+.B \-r
+Report unreadable executables as readable. This applies both to
+returned attributes and ACCESS requests. Please note that READ
+requests for unreadable executables are always allowed, if unfsd is
+running as root, regardless of this option.
 .SH SIGNALS
 .TP
 .BR "SIGTERM " "and " SIGINT

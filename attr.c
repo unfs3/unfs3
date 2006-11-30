@@ -124,7 +124,7 @@ post_op_attr get_post_buf(struct stat buf, struct svc_req * req)
 	result.post_op_attr_u.attributes.type = NF3REG;
 
     /* adapt permissions for executable files */
-    if (S_ISREG(buf.st_mode)) {
+    if (opt_readable_executables && S_ISREG(buf.st_mode)) {
 	if (buf.st_mode & S_IXUSR)
 	    buf.st_mode |= S_IRUSR;
 	if (buf.st_mode & S_IXGRP)

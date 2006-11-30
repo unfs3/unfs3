@@ -62,6 +62,7 @@ unsigned int opt_mount_port = NFS_PORT;
 int opt_singleuser = FALSE;
 int opt_brute_force = FALSE;
 in_addr_t opt_bind_addr = INADDR_ANY;
+int opt_readable_executables = FALSE;
 
 /* Register with portmapper? */
 int opt_portmapper = TRUE;
@@ -114,7 +115,7 @@ short get_port(struct svc_req *rqstp)
 static void parse_options(int argc, char **argv)
 {
     int opt = 0;
-    char *optstring = "bcC:de:hl:m:n:pstuw";
+    char *optstring = "bcC:de:hl:m:n:prstuw";
 
     while (opt != -1) {
 	opt = getopt(argc, argv, optstring);
@@ -162,6 +163,8 @@ static void parse_options(int argc, char **argv)
 		printf("\t-b          enable brute force file searching\n");
 		printf
 		    ("\t-l <addr>   bind to interface with specified address\n");
+		printf
+		    ("\t-r          report unreadable executables as readable\n");
 		exit(0);
 		break;
 	    case 'l':
@@ -187,6 +190,9 @@ static void parse_options(int argc, char **argv)
 		break;
 	    case 'p':
 		opt_portmapper = FALSE;
+		break;
+	    case 'r':
+		opt_readable_executables = TRUE;
 		break;
 	    case 's':
 		opt_singleuser = TRUE;
