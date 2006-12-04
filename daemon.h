@@ -7,6 +7,8 @@
 #ifndef UNFS3_DAEMON_H
 #define UNFS3_DAEMON_H
 
+#include "nfs.h"
+
 /* exit status for internal errors */
 #define CRISIS	99
 
