@@ -7,6 +7,8 @@
 #ifndef UNFS3_FH_H
 #define UNFS3_FH_H
 
+#include "backend.h"
+
 /* minimum length of complete filehandle */
 #define FH_MINLEN 21
 
@@ -41,9 +43,9 @@ typedef struct {
 #define FD_NONE (-1)			/* used for get_gen */
 
 extern int st_cache_valid;		/* stat value is valid */
-extern struct stat st_cache;	/* cached stat value */
+extern backend_statstruct st_cache;	/* cached stat value */
 
-uint32 get_gen(struct stat obuf, int fd, const char *path);
+uint32 get_gen(backend_statstruct obuf, int fd, const char *path);
 
 int nfh_valid(nfs_fh3 fh);
 int fh_valid(unfs3_fh_t fh);

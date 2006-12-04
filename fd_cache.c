@@ -13,8 +13,10 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
+#ifndef WIN32
 #include <syslog.h>
 #include <unistd.h>
+#endif				       /* WIN32 */
 
 #include "nfs.h"
 #include "mount.h"
@@ -72,7 +74,7 @@ void fd_cache_init(void)
 
     for (i = 0; i < FD_ENTRIES; i++) {
 	fd_cache[i].fd = -1;
-	fd_cache[i].kind = FD_READ;
+	fd_cache[i].kind = UNFS3_FD_READ;
 	fd_cache[i].use = 0;
 	fd_cache[i].dev = 0;
 	fd_cache[i].ino = 0;
@@ -99,7 +101,7 @@ static int fd_cache_lru(void)
 	    if (opt_expire_writers) {
 		best = fd_cache[i].use;
 		idx = i;
-	    } else if (fd_cache[i].kind == FD_READ) {
+	    } else if (fd_cache[i].kind == UNFS3_FD_READ) {
 		best = fd_cache[i].use;
 		idx = i;
 	    }
@@ -122,7 +124,7 @@ static int fd_cache_del(int idx)
     fd_cache[idx].use = 0;
 
     if (fd_cache[idx].fd != -1) {
-	if (fd_cache[idx].kind == FD_WRITE) {
+	if (fd_cache[idx].kind == UNFS3_FD_WRITE) {
 	    /* sync file data if writing descriptor */
 	    fd_cache_writers--;
 	    res1 = backend_fsync(fd_cache[idx].fd);
@@ -156,7 +158,7 @@ static void fd_cache_add(int fd, unfs3_fh_t * ufh, int kind)
 
     idx = fd_cache_lru();
     if (idx != -1) {
-	if (fd_cache[idx].kind == FD_READ)
+	if (fd_cache[idx].kind == UNFS3_FD_READ)
 	    fd_cache_del(idx);
 	else {
 	    /* if expiring a WRITE fd, report errors to log */
@@ -168,7 +170,7 @@ static void fd_cache_add(int fd, unfs3_fh_t * ufh, int kind)
 	}
 
 	/* update statistics */
-	if (kind == FD_READ)
+	if (kind == UNFS3_FD_READ)
 	    fd_cache_readers++;
 	else
 	    fd_cache_writers++;
@@ -224,7 +226,7 @@ static int idx_by_fh(unfs3_fh_t * ufh, int kind)
 int fd_open(const char *path, nfs_fh3 nfh, int kind)
 {
     int idx, res, fd;
-    struct stat buf;
+    backend_statstruct buf;
     unfs3_fh_t *fh = (void *) nfh.data.data_val;
 
     idx = idx_by_fh(fh, kind);
@@ -233,7 +235,7 @@ int fd_open(const char *path, nfs_fh3 nfh, int kind)
 	return fd_cache[idx].fd;
     else {
 	/* call open to obtain new fd */
-	if (kind == FD_READ)
+	if (kind == UNFS3_FD_READ)
 	    fd = backend_open(path, O_RDONLY);
 	else
 	    fd = backend_open(path, O_WRONLY);
@@ -288,7 +290,7 @@ int fd_close(int fd, int kind, int really_close)
 	    return 0;
     } else {
 	/* not in cache, sync and close directly */
-	if (kind == FD_WRITE)
+	if (kind == UNFS3_FD_WRITE)
 	    res1 = backend_fsync(fd);
 
 	res2 = backend_close(fd);
@@ -308,7 +310,7 @@ int fd_sync(nfs_fh3 nfh)
     int idx;
     unfs3_fh_t *fh = (void *) nfh.data.data_val;
 
-    idx = idx_by_fh(fh, FD_WRITE);
+    idx = idx_by_fh(fh, UNFS3_FD_WRITE);
     if (idx != -1)
 	/* delete entry, will fsync() and close() the fd */
 	return fd_cache_del(idx);

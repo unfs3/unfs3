@@ -13,10 +13,12 @@
 #include <limits.h>
 #include <stdlib.h>
 #include <string.h>
+#ifndef WIN32
 #include <syslog.h>
 #include <unistd.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#endif				       /* WIN32 */
 #include <fcntl.h>
 
 #include "nfs.h"

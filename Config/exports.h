@@ -7,6 +7,8 @@
 #ifndef UNFS3_EXPORTS_H
 #define UNFS3_EXPORTS_H
 
+#include "../mount.h" /* exports type */
+
 #define OPT_NO_ROOT_SQUASH	1
 #define OPT_ALL_SQUASH		2
 #define OPT_RW			4

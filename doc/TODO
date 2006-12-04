@@ -5,3 +5,8 @@
   http://www.opengroup.org/onlinepubs/009695399/xrat/xbd_chap04.html
   or section 2.2.2.102 in POSIX-1003.2-Draft-12. 
 
+Windows platform:
+
+* Cluster extensions have not been tried on this platform.
+
+* Investigate possibilities for changing times on directory

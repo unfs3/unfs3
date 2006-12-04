@@ -7,6 +7,8 @@
 #ifndef UNFS3_USER_H
 #define UNFS3_USER_H
 
+#include "backend.h"
+
 int get_uid(struct svc_req *req);
 
 int is_owner(int owner, struct svc_req *req);
@@ -16,6 +18,6 @@ void get_squash_ids(void);
 
 void switch_user(struct svc_req *req);
 
-void read_executable(struct svc_req *req, struct stat buf);
+void read_executable(struct svc_req *req, backend_statstruct buf);
 
 #endif

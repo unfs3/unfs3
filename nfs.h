@@ -17,6 +17,8 @@
 #include <stdint.h>
 #endif
 
+#include <rpc/rpc.h>
+
 #define UNIX_PATH_MAX 108
 
 #define NFS_PORT 2049

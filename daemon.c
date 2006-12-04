@@ -10,11 +10,18 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <sys/socket.h>
 #include <rpc/rpc.h>
 #include <rpc/pmap_clnt.h>
+
+#ifndef WIN32
+#include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <syslog.h>
+#else				       /* WIN32 */
+#include <winsock.h>
+#endif				       /* WIN32 */
+
 #include <fcntl.h>
 #include <memory.h>
 #include <signal.h>
@@ -22,7 +29,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <syslog.h>
 #include <time.h>
 #include <unistd.h>
 
@@ -61,7 +67,7 @@ unsigned int opt_nfs_port = NFS_PORT;	/* 0 means RPC_ANYSOCK */
 unsigned int opt_mount_port = NFS_PORT;
 int opt_singleuser = FALSE;
 int opt_brute_force = FALSE;
-in_addr_t opt_bind_addr = INADDR_ANY;
+struct in_addr opt_bind_addr;
 int opt_readable_executables = FALSE;
 
 /* Register with portmapper? */
@@ -136,10 +142,14 @@ static void parse_options(int argc, char **argv)
 		opt_detach = FALSE;
 		break;
 	    case 'e':
+#ifndef WIN32
 		if (optarg[0] != '/') {
+		    /* A relative path won't work for re-reading the exports
+		       file on SIGHUP, since we are changing directory */
 		    fprintf(stderr, "Error: relative path to exports file\n");
 		    exit(1);
 		}
+#endif
 		opt_exports = optarg;
 		break;
 	    case 'h':
@@ -168,8 +178,8 @@ static void parse_options(int argc, char **argv)
 		exit(0);
 		break;
 	    case 'l':
-		opt_bind_addr = inet_addr(optarg);
-		if (opt_bind_addr == (unsigned) -1) {
+		opt_bind_addr.s_addr = inet_addr(optarg);
+		if (opt_bind_addr.s_addr == (unsigned) -1) {
 		    fprintf(stderr, "Invalid bind address\n");
 		    exit(1);
 		}
@@ -225,6 +235,7 @@ static void parse_options(int argc, char **argv)
  */
 void daemon_exit(int error)
 {
+#ifndef WIN32
     if (error == SIGHUP) {
 	get_squash_ids();
 	exports_parse();
@@ -242,6 +253,7 @@ void daemon_exit(int error)
 	       fd_cache_readers, fd_cache_writers);
 	return;
     }
+#endif				       /* WIN32 */
 
     if (opt_portmapper) {
 	svc_unregister(MOUNTPROG, MOUNTVERS1);
@@ -639,7 +651,7 @@ static SVCXPRT *create_udp_transport(unsigned int port)
     else {
 	sin.sin_family = AF_INET;
 	sin.sin_port = htons(port);
-	sin.sin_addr.s_addr = opt_bind_addr;
+	sin.sin_addr.s_addr = opt_bind_addr.s_addr;
 	sock = socket(PF_INET, SOCK_DGRAM, 0);
 	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *) &on, sizeof(on));
 	if (bind(sock, (struct sockaddr *) &sin, sizeof(struct sockaddr))) {
@@ -671,7 +683,7 @@ static SVCXPRT *create_tcp_transport(unsigned int port)
     else {
 	sin.sin_family = AF_INET;
 	sin.sin_port = htons(port);
-	sin.sin_addr.s_addr = opt_bind_addr;
+	sin.sin_addr.s_addr = opt_bind_addr.s_addr;
 	sock = socket(PF_INET, SOCK_STREAM, 0);
 	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *) &on, sizeof(on));
 	if (bind(sock, (struct sockaddr *) &sin, sizeof(struct sockaddr))) {
@@ -700,9 +712,14 @@ int main(int argc, char **argv)
 {
     register SVCXPRT *tcptransp = NULL, *udptransp = NULL;
     pid_t pid = 0;
+
+#ifndef WIN32
     struct sigaction act;
     sigset_t actset;
+#endif				       /* WIN32 */
     int res;
+
+    opt_bind_addr.s_addr = INADDR_ANY;
 
     parse_options(argc, argv);
     if (optind < argc) {
@@ -713,6 +730,12 @@ int main(int argc, char **argv)
     /* init write verifier */
     *(wverf + 0) = (uint32) getpid();
     *(wverf + 4) = (uint32) time(NULL);
+
+    res = backend_init();
+    if (res == -1) {
+	fprintf(stderr, "backend initialization failed\n");
+	daemon_exit(0);
+    }
 
     if (opt_detach) {
 	/* prepare syslog access */
@@ -739,6 +762,7 @@ int main(int argc, char **argv)
 
     register_mount_service(udptransp, tcptransp);
 
+#ifndef WIN32
     if (opt_detach) {
 	pid = fork();
 	if (pid == -1) {
@@ -746,14 +770,10 @@ int main(int argc, char **argv)
 	    daemon_exit(0);
 	}
     }
+#endif				       /* WIN32 */
 
     if (!opt_detach || pid == 0) {
-	res = backend_init();
-	if (res == -1) {
-	    fprintf(stderr, "backend initialization failed\n");
-	    daemon_exit(0);
-	}
-
+#ifndef WIN32
 	sigemptyset(&actset);
 	act.sa_handler = daemon_exit;
 	act.sa_mask = actset;
@@ -773,9 +793,6 @@ int main(int argc, char **argv)
 	/* don't make directory we started in busy */
 	chdir("/");
 
-	/* no umask to not screw up create modes */
-	umask(0);
-
 	/* detach from terminal */
 	if (opt_detach) {
 	    setsid();
@@ -783,6 +800,10 @@ int main(int argc, char **argv)
 	    fclose(stdout);
 	    fclose(stderr);
 	}
+#endif				       /* WIN32 */
+
+	/* no umask to not screw up create modes */
+	umask(0);
 
 	/* initialize internal stuff */
 	fh_cache_init();

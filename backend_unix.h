@@ -60,5 +60,10 @@
 #define backend_symlink symlink
 #define backend_truncate truncate
 #define backend_utime utime
+#define backend_statstruct struct stat
+#define backend_dirstream DIR
+#define backend_statvfsstruct struct statvfs
+#define backend_fsinfo_properties FSF3_LINK | FSF3_SYMLINK | FSF3_HOMOGENEOUS | FSF3_CANSETTIME;
+#define backend_pathconf_case_insensitive FALSE
 
 #endif

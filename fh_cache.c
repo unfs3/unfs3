@@ -164,7 +164,7 @@ char *fh_cache_add(uint32 dev, uint64 ino, const char *path)
 static char *fh_cache_lookup(uint32 dev, uint64 ino)
 {
     int i, res;
-    struct stat buf;
+    backend_statstruct buf;
 
     i = fh_cache_index(dev, ino);
 

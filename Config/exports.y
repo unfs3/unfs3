@@ -8,14 +8,19 @@
 
 #include <rpc/rpc.h>
 #include <limits.h>
+
+#ifdef WIN32
+#include "../winsupport.h"
+#else
 #include <netdb.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <syslog.h>
 #include <unistd.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#endif /* WIN32 */
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "../nfs.h"
 #include "../mount.h"
@@ -652,7 +657,11 @@ int exports_options(const char *path, struct svc_req *rqstp,
 	while (list) {
 		/* longest matching prefix wins */
 		if (strlen(list->path) > last_len    &&
+#ifndef WIN32
 		    strstr(path, list->path) == path) {
+#else
+		    !strnicmp(path, list->path, strlen(list->path))) {
+#endif
 			cur_opts = find_host(remote, list, password, &export_password_hash);
 			if (fsid != NULL)
 				*fsid = list->fsid;

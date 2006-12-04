@@ -9,14 +9,16 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
+#ifndef WIN32
 #include <sys/ioctl.h>
+#include <syslog.h>
+#endif				       /* WIN32 */
 #include <rpc/rpc.h>
 #include <dirent.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <syslog.h>
 #include <unistd.h>
 
 #if HAVE_LINUX_EXT2_FS_H == 1
@@ -45,7 +47,7 @@
  * stat cache
  */
 int st_cache_valid = FALSE;
-struct stat st_cache;
+backend_statstruct st_cache;
 
 /*
  * --------------------------------
@@ -62,7 +64,7 @@ struct stat st_cache;
  *
  * returns 0 on failure
  */
-uint32 get_gen(struct stat obuf, U(int fd), U(const char *path))
+uint32 get_gen(backend_statstruct obuf, U(int fd), U(const char *path))
 {
 #if HAVE_STRUCT_STAT_ST_GEN == 1
     return obuf.st_gen;
@@ -87,7 +89,7 @@ uint32 get_gen(struct stat obuf, U(int fd), U(const char *path))
 	if (res == -1)
 	    gen = 0;
     } else {
-	newfd = open(path, O_RDONLY);
+	newfd = backend_open(path, O_RDONLY);
 	if (newfd == -1)
 	    gen = 0;
 	else {
@@ -169,7 +171,7 @@ unfs3_fh_t fh_comp_raw(const char *path, struct svc_req *rqstp, int need_dir)
 {
     char work[NFS_MAXPATHLEN];
     unfs3_fh_t fh;
-    struct stat buf;
+    backend_statstruct buf;
     int res;
     char *last;
     int pos = 0;
@@ -310,7 +312,7 @@ post_op_fh3 fh_extend_post(nfs_fh3 fh, uint32 dev, uint64 ino, uint32 gen)
 post_op_fh3 fh_extend_type(nfs_fh3 fh, const char *path, unsigned int type)
 {
     post_op_fh3 result;
-    struct stat buf;
+    backend_statstruct buf;
     int res;
 
     res = backend_lstat(path, &buf);
@@ -358,11 +360,15 @@ post_op_fh3 fh_extend_type(nfs_fh3 fh, const char *path, unsigned int type)
 static int fh_rec(const unfs3_fh_t * fh, int pos, const char *lead,
 		  char *result)
 {
-    DIR *search;
+    backend_dirstream *search;
     struct dirent *entry;
-    struct stat buf;
+    backend_statstruct buf;
     int res, rec;
     char obj[NFS_MAXPATHLEN];
+
+    /* There's a slight risk of multiple files with the same st_ino on
+       Windows. Take extra care and make sure that there are no collisions */
+    unsigned short matches = 0;
 
     /* went in too deep? */
     if (pos == fh->len)
@@ -388,11 +394,13 @@ static int fh_rec(const unfs3_fh_t * fh, int pos, const char *lead,
 	    if (buf.st_dev == fh->dev && buf.st_ino == fh->ino) {
 		/* found the object */
 		sprintf(result, "%s/%s", lead + 1, entry->d_name);
-		backend_closedir(search);
 		/* update stat cache */
 		st_cache_valid = TRUE;
 		st_cache = buf;
-		return TRUE;
+		matches++;
+#ifndef WIN32
+		break;
+#endif
 	    }
 
 	    if (strcmp(entry->d_name, "..") != 0 &&
@@ -414,7 +422,17 @@ static int fh_rec(const unfs3_fh_t * fh, int pos, const char *lead,
     }
 
     backend_closedir(search);
-    return FALSE;
+    switch (matches) {
+	case 0:
+	    return FALSE;
+	case 1:
+	    return TRUE;
+	default:
+#ifdef WIN32
+	    logmsg(LOG_CRIT, "Hash collision detected for file %s!", result);
+#endif
+	    return FALSE;
+    }
 }
 
 /*

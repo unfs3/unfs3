@@ -7,6 +7,10 @@
 #ifndef UNFS3_BACKEND_H
 #define UNFS3_BACKEND_H
 
+#ifdef WIN32
+#include "backend_win32.h"
+#else
 #include "backend_unix.h"
+#endif /* WIN32 */
 
 #endif

@@ -7,13 +7,15 @@
 
 #include "config.h"
 
+#ifndef WIN32
 #include <pwd.h>
+#include <syslog.h>
+#include <unistd.h>
+#endif				       /* WIN32 */
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <rpc/rpc.h>
 #include <stdlib.h>
-#include <syslog.h>
-#include <unistd.h>
 
 #include "nfs.h"
 #include "mount.h"
@@ -34,6 +36,7 @@ static int can_switch = TRUE;
  */
 void get_squash_ids(void)
 {
+#ifndef WIN32
     struct passwd *passwd;
 
     if (can_switch) {
@@ -46,6 +49,7 @@ void get_squash_ids(void)
 	    squash_gid = 65534;
 	}
     }
+#endif				       /* WIN32 */
 }
 
 /*
@@ -156,8 +160,9 @@ void switch_user(struct svc_req *req)
 /*
  * re-switch to root for reading executable files
  */
-void read_executable(struct svc_req *req, struct stat buf)
+void read_executable(struct svc_req *req, backend_statstruct buf)
 {
+#ifndef WIN32
     int have_exec = 0;
 
     if (is_owner(buf.st_uid, req)) {
@@ -175,4 +180,5 @@ void read_executable(struct svc_req *req, struct stat buf)
 	backend_setegid(0);
 	backend_seteuid(0);
     }
+#endif				       /* WIN32 */
 }

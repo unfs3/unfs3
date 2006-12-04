@@ -12,17 +12,20 @@
 #include <rpc/rpc.h>
 #include <fcntl.h>
 #include <time.h>
+#ifndef WIN32
 #include <unistd.h>
+#endif
 #include <utime.h>
 #include <errno.h>
 
+#include "backend.h"
 #include "nfs.h"
 #include "attr.h"
 #include "error.h"
 #include "fh.h"
 #include "fh_cache.h"
 #include "daemon.h"
-#include "backend.h"
+#include <stdio.h>		       // XXX
 
 /*
  * check whether stat_cache is for a regular file
@@ -102,7 +105,7 @@ pre_op_attr get_pre_cached(void)
 /*
  * compute post-operation attributes given a stat buffer
  */
-post_op_attr get_post_buf(struct stat buf, struct svc_req * req)
+post_op_attr get_post_buf(backend_statstruct buf, struct svc_req * req)
 {
     post_op_attr result;
 
@@ -114,10 +117,14 @@ post_op_attr get_post_buf(struct stat buf, struct svc_req * req)
 	result.post_op_attr_u.attributes.type = NF3BLK;
     else if (S_ISCHR(buf.st_mode))
 	result.post_op_attr_u.attributes.type = NF3CHR;
+#ifdef S_ISLNK
     else if (S_ISLNK(buf.st_mode))
 	result.post_op_attr_u.attributes.type = NF3LNK;
+#endif				       /* S_ISLNK */
+#ifdef S_ISSOCK
     else if (S_ISSOCK(buf.st_mode))
 	result.post_op_attr_u.attributes.type = NF3SOCK;
+#endif				       /* S_ISSOCK */
     else if (S_ISFIFO(buf.st_mode))
 	result.post_op_attr_u.attributes.type = NF3FIFO;
     else
@@ -186,7 +193,7 @@ post_op_attr get_post_buf(struct stat buf, struct svc_req * req)
 static post_op_attr get_post_ll(const char *path, uint32 dev, uint64 ino,
 				struct svc_req *req)
 {
-    struct stat buf;
+    backend_statstruct buf;
     int res;
 
     if (!path)
@@ -240,7 +247,7 @@ post_op_attr get_post_cached(struct svc_req * req)
  *
  * there is no futimes() function in POSIX or Linux
  */
-static nfsstat3 set_time(const char *path, struct stat buf, sattr3 new)
+static nfsstat3 set_time(const char *path, backend_statstruct buf, sattr3 new)
 {
     time_t new_atime, new_mtime;
     struct utimbuf utim;
@@ -284,7 +291,7 @@ static nfsstat3 set_attr_unsafe(const char *path, nfs_fh3 nfh, sattr3 new)
     unfs3_fh_t *fh = (void *) nfh.data.data_val;
     uid_t new_uid;
     gid_t new_gid;
-    struct stat buf;
+    backend_statstruct buf;
     int res;
 
     res = backend_stat(path, &buf);
@@ -340,7 +347,7 @@ nfsstat3 set_attr(const char *path, nfs_fh3 nfh, sattr3 new)
     int res, fd;
     uid_t new_uid;
     gid_t new_gid;
-    struct stat buf;
+    backend_statstruct buf;
 
     res = backend_lstat(path, &buf);
     if (res != 0)

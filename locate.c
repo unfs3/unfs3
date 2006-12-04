@@ -47,7 +47,7 @@
 static int locate_pfx(const char *pfx, uint32 dev, uint64 ino, char *result)
 {
     char path[NFS_MAXPATHLEN];
-    DIR *search;
+    backend_dirstream *search;
     struct dirent *ent;
     struct stat buf;
     int res;
@@ -98,10 +98,12 @@ static int locate_pfx(const char *pfx, uint32 dev, uint64 ino, char *result)
  */
 char *locate_file(U(uint32 dev), U(uint64 ino))
 {
+#if HAVE_MNTENT_H == 1 || HAVE_SYS_MNTTAB_H == 1
     static char path[NFS_MAXPATHLEN];
     FILE *mtab;
     struct stat buf;
     int res;
+#endif
 
 #if HAVE_MNTENT_H == 1
     struct mntent *ent;

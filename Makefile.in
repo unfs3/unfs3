@@ -6,12 +6,13 @@ RM = rm -f
 MAKE = make
 
 SOURCES = attr.c daemon.c error.c fd_cache.c fh.c fh_cache.c locate.c \
-          md5.c mount.c nfs.c password.c readdir.c user.c xdr.c
+          md5.c mount.c nfs.c password.c readdir.c user.c xdr.c winsupport.c
 OBJS = attr.o daemon.o error.o fd_cache.o fh.o fh_cache.o locate.o \
-       md5.o mount.o nfs.o password.o readdir.o user.o xdr.o
+       md5.o mount.o nfs.o password.o readdir.o user.o xdr.o winsupport.o
 CONFOBJ = Config/lib.a
 EXTRAOBJ = @EXTRAOBJ@
-LDFLAGS = @LDFLAGS@ @LIBS@@LEXLIB@
+LDFLAGS = @LDFLAGS@ @LIBS@ @LEXLIB@
+EXEEXT = @EXEEXT@
 
 prefix = @prefix@
 exec_prefix = @exec_prefix@
@@ -22,34 +23,34 @@ SUBDIRS = Config @SUBDIRS@
 
 DESTDIR =
 
-all: subdirs unfsd
+all: subdirs unfsd$(EXEEXT)
 
-unfsd: $(OBJS) $(CONFOBJ) $(EXTRAOBJ)
+unfsd$(EXEEXT): $(OBJS) $(CONFOBJ) $(EXTRAOBJ)
 	$(CC) -o $@ $(OBJS) $(CONFOBJ) $(EXTRAOBJ) $(LDFLAGS)
 
 subdirs:
 	for i in $(SUBDIRS); do cd $$i; $(MAKE) all; cd ..; done
 
-install: unfsd
+install: unfsd$(EXEEXT)
 	$(INSTALL) -d $(DESTDIR)$(sbindir)
 	$(INSTALL) -d $(DESTDIR)$(mandir)/man7
 	$(INSTALL) -d $(DESTDIR)$(mandir)/man8
-	$(INSTALL) unfsd         $(DESTDIR)$(sbindir)/unfsd
+	$(INSTALL) unfsd$(EXEEXT) $(DESTDIR)$(sbindir)/unfsd$(EXEEXT)
 	$(INSTALL_DATA) Extras/tags.7 $(DESTDIR)$(mandir)/man7/tags.7
 	$(INSTALL_DATA) unfsd.8       $(DESTDIR)$(mandir)/man8/unfsd.8
 
 install-strip: install
-	strip $(DESTDIR)$(sbindir)/unfsd
+	strip $(DESTDIR)$(sbindir)/unfsd$(EXEEXT)
 
 uninstall:
-	$(RM) $(DESTDIR)$(sbindir)/unfsd
+	$(RM) $(DESTDIR)$(sbindir)/unfsd$(EXEEXT)
 	$(RM) $(DESTDIR)$(mandir)/man7/tags.7
 	$(RM) $(DESTDIR)$(mandir)/man8/unfsd.8
 
 clean:
 	for i in $(SUBDIRS); do cd $$i; $(MAKE) clean; cd ..; done
 	$(RM) $(OBJS)
-	$(RM) unfsd
+	$(RM) unfsd$(EXEEXT)
 
 distclean: clean
 	for i in $(SUBDIRS); do cd $$i; $(MAKE) distclean; cd ..; done

@@ -7,8 +7,9 @@
 #ifndef UNFS3_FD_CACHE_H
 #define UNFS3_FD_CACHE_H
 
-#define FD_READ  0			/* fd for READ */
-#define FD_WRITE 1			/* fd for WRITE */
+/* FD_READ and FD_WRITE are already defined on Win32 */
+#define UNFS3_FD_READ  0			/* fd for READ */
+#define UNFS3_FD_WRITE 1			/* fd for WRITE */
 
 #define FD_CLOSE_VIRT 0		/* virtually close the fd */
 #define FD_CLOSE_REAL 1		/* really close the fd */
