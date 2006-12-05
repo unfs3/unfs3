@@ -519,7 +519,7 @@ CREATE3res *nfsproc3_create_3_svc(CREATE3args * argp, struct svc_req * rqstp)
 	    result.status = NFS3ERR_IO;
 	}
 
-    } else {
+    } else if (result.status == NFS3_OK) {
 	/* open() failed */
 	if (argp->how.mode == EXCLUSIVE && errno == EEXIST) {
 	    /* Check if verifier matches */
