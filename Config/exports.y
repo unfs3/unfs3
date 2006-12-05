@@ -350,9 +350,14 @@ static void add_option(const char *opt)
 		cur_host.options |= OPT_RW;
 	else if (strcmp(opt,"ro") == 0)
 		cur_host.options &= ~OPT_RW;
-	else if (strcmp(opt,"removable") == 0)
+	else if (strcmp(opt,"removable") == 0) {
+#ifndef WIN32
 		cur_host.options |= OPT_REMOVABLE;
-	else if (strcmp(opt,"fixed") == 0)
+#else
+		logmsg(LOG_CRIT, "removable option is not supported on Windows");
+		e_error = TRUE;
+#endif /* WIN32 */
+	} else if (strcmp(opt,"fixed") == 0)
 		cur_host.options &= ~OPT_REMOVABLE;
 	else if (strcmp(opt,"insecure") == 0)
 		cur_host.options |= OPT_INSECURE;
