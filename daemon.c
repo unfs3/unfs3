@@ -206,12 +206,14 @@ static void parse_options(int argc, char **argv)
 		break;
 	    case 's':
 		opt_singleuser = TRUE;
+#ifndef WIN32
 		if (backend_getuid() == 0) {
 		    logmsg(LOG_WARNING,
 			   "Warning: running as root with -s is dangerous");
 		    logmsg(LOG_WARNING,
 			   "All clients will have root access to all exported files!");
 		}
+#endif
 		break;
 	    case 't':
 		opt_tcponly = TRUE;
