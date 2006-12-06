@@ -172,6 +172,38 @@ static void add_host(void)
 	clear_host();
 }
 
+/* 
+   Normalize path, eliminating double slashes, etc. To be used instead
+   of realpath, when realpath is not possible. Normalizing export
+   points is important. Otherwise, mount requests might fail, since
+   /x/y is not a prefix of ///x///y/ etc.
+*/
+char *normpath(const char *path, char *normpath)
+{
+	char *n;
+	const char *p;
+
+	/* Copy path to normpath, and replace blocks of slashes with
+	   single slash */
+	p = path;
+	n = normpath;
+	while (*p) {
+		/* Skip over multiple slashes */
+		if (*p == '/' && *(p+1) == '/') {
+			p++;
+			continue;
+		}
+		*n++ = *p++;
+	}
+	*n = '\0';
+
+	/* Remove trailing slash, if any. */
+	if ((n - normpath) > 1 && *(n-1) == '/')
+		*(n-1) = '\0';
+
+	return normpath;
+}
+
 /*
  * add current item to current export list
  */
@@ -205,7 +237,7 @@ static void add_item(const char *path)
 	if (removable_for_all) {
 		/* If marked as removable for all hosts, don't try
 		   realpath. */
-		strncpy(buf, path, PATH_MAX);
+		normpath(path, buf);
 	} else if (!backend_realpath(path, buf)) {
 		logmsg(LOG_CRIT, "realpath for %s failed", path);
 		e_error = TRUE;

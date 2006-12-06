@@ -482,7 +482,7 @@ void openlog(U(const char *ident), U(int option), U(int facility))
 
 char *win_realpath(const char *path, char *resolved_path)
 {
-    return strncpy(resolved_path, path, PATH_MAX);
+    return normpath(path, resolved_path);
 }
 
 int win_readlink(U(const char *path), U(char *buf), U(size_t bufsiz))
