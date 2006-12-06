@@ -1,10 +1,51 @@
 
-Building unfs3 for the Windows platform using MinGW
-===================================================
+Building unfs3 for Windows
+==========================
 
+Building unfs3 using MinGW
+--------------------------
 1. Build and install the oncrpc-ms library (http://oncrpc-ms.sourceforge.net/)
 
 2. Configure unfs3 with:
 
 LIBS="/myprefix/oncrpc-ms/lib/liboncrpc.a -lwsock32" CFLAGS="-I/myprefix/oncrpc-ms/include" ./configure --host=`gcc -dumpmachine`
 
+
+Using unfs3 on Windows
+======================
+
+Limitations
+-----------
+* Single-user mode is required. Internally, unfs3 assumes that it is
+  running with uid 0. 
+
+* Foreground mode is required. 
+
+* Inode numbers are emulated by hashing file paths. This means that
+  there's a small risk that two files ends up with the same inode
+  number.
+
+
+Path syntax
+-----------
+unfs3 implements a virtual file system. The root "/" directory
+contains the drive letters of the drives present on the system. Below
+each drive letter, the actual drive contents is found. unfs3 uses
+forward slashes instead of backslashes. This applies both to mount
+requests and the exports-file. 
+
+
+Example exports file
+--------------------
+/a (ro)
+/c/windows/temp (rw)
+
+
+Example invocation
+------------------
+unfsd.exe -s -d -p -n 4711 -m 4711 -e exports
+
+
+Example mount command from a Linux host
+---------------------------------------
+mount -o port=4711,mountport=4711,mountvers=3,nfsvers=3,nolock,tcp mywindowshost:/c/windows/temp /mnt
