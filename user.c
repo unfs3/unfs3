@@ -162,7 +162,6 @@ void switch_user(struct svc_req *req)
  */
 void read_executable(struct svc_req *req, backend_statstruct buf)
 {
-#ifndef WIN32
     int have_exec = 0;
 
     if (is_owner(buf.st_uid, req)) {
@@ -180,5 +179,4 @@ void read_executable(struct svc_req *req, backend_statstruct buf)
 	backend_setegid(0);
 	backend_seteuid(0);
     }
-#endif				       /* WIN32 */
 }
