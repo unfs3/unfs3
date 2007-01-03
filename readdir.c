@@ -54,16 +54,6 @@
  */
 #define NAME_SIZE(x) (((strlen((x))+3)/4)*4)
 
-/*
- * check if directory cookie is still valid
- */
-#ifndef WIN32
-static int cookie_check(time_t time, cookieverf3 verf)
-{
-    return (int) (time == *(time_t *) verf);
-}
-#endif
-
 uint32 directory_hash(const char *path)
 {
     backend_dirstream *search;
@@ -109,18 +99,8 @@ READDIR3res read_dir(const char *path, cookie3 cookie, cookieverf3 verf,
     /* account for size of information heading resok structure */
     real_count = RESOK_SIZE;
 
-#ifndef WIN32
-    /* check verifier against directory's modification time */
-    if (cookie != 0 && !cookie_check(st_cache.st_mtime, verf)) {
-	result.status = NFS3ERR_BAD_COOKIE;
-	return result;
-    }
-#endif
-
-    /* compute new cookie verifier */
-    memset(verf, 0, NFS3_COOKIEVERFSIZE);
-    /* On Windows, we are always returning zero as a cookie verifier. One
-       reason for this is that stat() seems to return cached st_mtime values, 
+    /* We are always returning zero as a cookie verifier. One reason for this 
+       is that stat() on Windows seems to return cached st_mtime values,
        which gives spurious NFS3ERR_BAD_COOKIEs. Btw, here's what Peter
        Staubach has to say about cookie verifiers:
 
@@ -128,9 +108,7 @@ READDIR3res read_dir(const char *path, cookie3 cookie, cookieverf3 verf,
        Version 3.  The semantics were never well understood nor supported by
        many local file systems.  The Solaris NFS server always returns zeros
        in the cookieverifier field." */
-#ifndef WIN32
-    *(time_t *) verf = st_cache.st_mtime;
-#endif
+    memset(verf, 0, NFS3_COOKIEVERFSIZE);
 
     search = backend_opendir(path);
     if (!search) {
