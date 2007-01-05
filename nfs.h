@@ -22,7 +22,9 @@
 #define UNIX_PATH_MAX 108
 
 #define NFS_PORT 2049
-#define NFS_MAXDATA 8192
+#define NFS_MAXDATA_TCP 524288
+#define NFS_MAXDATA_UDP 32768
+#define NFS_MAX_UDP_PACKET (NFS_MAXDATA_UDP + 4096) /* The extra 4096 bytes are for the RPC header */
 #define NFS_MAXPATHLEN 1024
 #define NFS_MAXNAMLEN 255
 #define NFS_FIFO_DEV -1

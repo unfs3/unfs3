@@ -55,8 +55,7 @@
  */
 #define PREP(p,f) do {						\
                       unfs3_fh_t *fh = (void *)f.data.data_val; \
-                      backend_setegid(0);                       \
-                      backend_seteuid(0);                       \
+                      switch_to_root();				\
                       p = fh_decomp(f);				\
                       if (exports_options(p, rqstp, NULL, NULL) == -1) { \
                           memset(&result, 0, sizeof(result));	\
@@ -332,7 +331,13 @@ READ3res *nfsproc3_read_3_svc(READ3args * argp, struct svc_req * rqstp)
     static READ3res result;
     char *path;
     int fd, res;
-    static char buf[NFS_MAXDATA + 1];
+    static char buf[NFS_MAXDATA_TCP + 1];
+    unsigned int maxdata;
+
+    if (get_socket_type(rqstp) == SOCK_STREAM)
+	maxdata = NFS_MAXDATA_TCP;
+    else
+	maxdata = NFS_MAXDATA_UDP;
 
     PREP(path, argp->file);
     result.status = is_reg();
@@ -341,8 +346,8 @@ READ3res *nfsproc3_read_3_svc(READ3args * argp, struct svc_req * rqstp)
     read_executable(rqstp, st_cache);
 
     /* if bigger than rtmax, truncate length */
-    if (argp->count > NFS_MAXDATA)
-	argp->count = NFS_MAXDATA;
+    if (argp->count > maxdata)
+	argp->count = maxdata;
 
     if (result.status == NFS3_OK) {
 	fd = fd_open(path, argp->file, UNFS3_FD_READ);
@@ -389,7 +394,7 @@ WRITE3res *nfsproc3_write_3_svc(WRITE3args * argp, struct svc_req * rqstp)
 {
     static WRITE3res result;
     char *path;
-    int fd, res;
+    int fd, res, res_close;
 
     PREP(path, argp->file);
     result.status = join(is_reg(), exports_rw());
@@ -403,21 +408,21 @@ WRITE3res *nfsproc3_write_3_svc(WRITE3args * argp, struct svc_req * rqstp)
 
 	    /* close for real if not UNSTABLE write */
 	    if (argp->stable == UNSTABLE)
-		fd_close(fd, UNFS3_FD_WRITE, FD_CLOSE_VIRT);
+		res_close = fd_close(fd, UNFS3_FD_WRITE, FD_CLOSE_VIRT);
 	    else
-		fd_close(fd, UNFS3_FD_WRITE, FD_CLOSE_REAL);
+		res_close = fd_close(fd, UNFS3_FD_WRITE, FD_CLOSE_REAL);
 
 	    /* we always do fsync(), never fdatasync() */
 	    if (argp->stable == DATA_SYNC)
 		argp->stable = FILE_SYNC;
 
-	    if (res != -1) {
+	    if (res != -1 && res_close != -1) {
 		result.WRITE3res_u.resok.count = res;
 		result.WRITE3res_u.resok.committed = argp->stable;
 		memcpy(result.WRITE3res_u.resok.verf, wverf,
 		       NFS3_WRITEVERFSIZE);
 	    } else {
-		/* error during write */
+		/* error during write or close */
 		result.status = write_write_err();
 	    }
 	} else
@@ -979,17 +984,23 @@ FSINFO3res *nfsproc3_fsinfo_3_svc(FSINFO3args * argp, struct svc_req * rqstp)
 {
     static FSINFO3res result;
     char *path;
+    unsigned int maxdata;
+
+    if (get_socket_type(rqstp) == SOCK_STREAM)
+	maxdata = NFS_MAXDATA_TCP;
+    else
+	maxdata = NFS_MAXDATA_UDP;
 
     PREP(path, argp->fsroot);
 
     result.FSINFO3res_u.resok.obj_attributes = get_post_cached(rqstp);
 
     result.status = NFS3_OK;
-    result.FSINFO3res_u.resok.rtmax = NFS_MAXDATA;
-    result.FSINFO3res_u.resok.rtpref = NFS_MAXDATA;
+    result.FSINFO3res_u.resok.rtmax = maxdata;
+    result.FSINFO3res_u.resok.rtpref = maxdata;
     result.FSINFO3res_u.resok.rtmult = 4096;
-    result.FSINFO3res_u.resok.wtmax = NFS_MAXDATA;
-    result.FSINFO3res_u.resok.wtpref = NFS_MAXDATA;
+    result.FSINFO3res_u.resok.wtmax = maxdata;
+    result.FSINFO3res_u.resok.wtpref = maxdata;
     result.FSINFO3res_u.resok.wtmult = 4096;
     result.FSINFO3res_u.resok.dtpref = 4096;
     result.FSINFO3res_u.resok.maxfilesize = ~0ULL;
@@ -1033,7 +1044,7 @@ COMMIT3res *nfsproc3_commit_3_svc(COMMIT3args * argp, struct svc_req * rqstp)
 
     if (result.status == NFS3_OK) {
 	res = fd_sync(argp->file);
-	if (res != 1)
+	if (res != -1)
 	    memcpy(result.COMMIT3res_u.resok.verf, wverf, NFS3_WRITEVERFSIZE);
 	else
 	    /* error during fsync() or close() */

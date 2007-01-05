@@ -27,9 +27,11 @@ void logmsg(int, const char *, ...);
 /* remote address */
 struct in_addr get_remote(struct svc_req *);
 short get_port(struct svc_req *);
+int get_socket_type(struct svc_req *rqstp);
 
 /* write verifier */
 extern writeverf3 wverf;
+void regenerate_write_verifier(void);
 
 /* options */
 extern int	opt_expire_writers;

@@ -128,6 +128,8 @@ READDIR3res read_dir(const char *path, cookie3 cookie, cookieverf3 verf,
     }
 
     this = backend_readdir(search);
+    /* We cannot use telldir()/seekdir(), since the value from telldir() is
+       not valid after closedir(). */
     for (i = 0; i < cookie; i++)
 	if (this)
 	    this = backend_readdir(search);

@@ -135,9 +135,10 @@ static int fd_cache_del(int idx)
 	res2 = backend_close(fd_cache[idx].fd);
 
 	/* return -1 if something went wrong during sync or close */
-	if (res1 == -1 || res2 == -1)
+	if (res1 == -1 || res2 == -1) {
+	    regenerate_write_verifier();
 	    res1 = -1;
-	else
+	} else
 	    res1 = 0;
     } else
 	res1 = 0;
@@ -294,6 +295,9 @@ int fd_close(int fd, int kind, int really_close)
 	    res1 = backend_fsync(fd);
 
 	res2 = backend_close(fd);
+
+	if (res1 != 0 || res2 != 0)
+	    regenerate_write_verifier();
 
 	if (res1 != 0)
 	    return res1;

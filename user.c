@@ -71,11 +71,15 @@ static int mangle(int id, int squash)
 int get_uid(struct svc_req *req)
 {
     struct authunix_parms *auth = (void *) req->rq_clntcred;
+    int squash = squash_uid;
+
+    if (exports_anonuid() != ANON_NOTSPECIAL)
+	squash = exports_anonuid();
 
     if (req->rq_cred.oa_flavor == AUTH_UNIX)
-	return mangle(auth->aup_uid, squash_uid);
+	return mangle(auth->aup_uid, squash);
     else
-	return squash_uid;	       /* fallback if no uid given */
+	return squash;		       /* fallback if no uid given */
 }
 
 /*
@@ -84,11 +88,15 @@ int get_uid(struct svc_req *req)
 static int get_gid(struct svc_req *req)
 {
     struct authunix_parms *auth = (void *) req->rq_clntcred;
+    int squash = squash_gid;
+
+    if (exports_anongid() != ANON_NOTSPECIAL)
+	squash = exports_anongid();
 
     if (req->rq_cred.oa_flavor == AUTH_UNIX)
-	return mangle(auth->aup_gid, squash_gid);
+	return mangle(auth->aup_gid, squash);
     else
-	return squash_gid;	       /* fallback if no gid given */
+	return squash;		       /* fallback if no gid given */
 }
 
 /*
@@ -118,6 +126,18 @@ int has_group(int group, struct svc_req *req)
     }
 
     return FALSE;
+}
+
+/*
+ * switch to root
+ */
+void switch_to_root()
+{
+    if (!can_switch)
+	return;
+
+    backend_setegid(0);
+    backend_seteuid(0);
 }
 
 /*

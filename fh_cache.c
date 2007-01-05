@@ -242,8 +242,8 @@ char *fh_decomp(nfs_fh3 fh)
 		    st_cache.st_nlink = 1;
 		if (st_cache.st_size == 0)
 		    st_cache.st_size = 4096;
-		if (st_cache.st_blksize == 512)
-		    st_cache.st_blksize = 4096;
+		if (st_cache.st_blksize == 0)
+		    st_cache.st_blksize = 512;
 		if (st_cache.st_blocks == 0)
 		    st_cache.st_blocks = 8;
 	    }

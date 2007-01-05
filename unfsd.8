@@ -43,7 +43,11 @@ This behavior can be modified by use of the
 .B no_root_squash
 and
 .B all_squash
-options in the exports file.
+options in the exports file as well as the
+.B anonuid
+and
+.B anongid
+options on a per-share basis.
 .P
 If
 .B unfsd
@@ -221,6 +225,7 @@ from NFS clients. An example:
 "/with spaces"   weirdo
 /usr             1.2.3.4(rw) 192.168.2.0/24(ro,all_squash)
 /home/foo        bar(rw) 10.0.0.0/255.0.0.0(root_squash)
+/home/joe        joes_pc(anonuid=1100,anongid=1100,rw,all_squash)
 .fi
 
 Comments start with a # character and cause the rest of the line to be
@@ -283,6 +288,11 @@ the server.
 Allow only read access on the exported directory. When this option
 is present, clients are not allowed to modify files and directories
 on the server. This option is enabled by default.
+.TP
+.B anonuid/anongid
+Sets the uid and gid for anonymous mounts for this share - by default the
+uid for nobody will be used, but using these options you can change this
+on a per-share basis.
 .TP
 .B secure
 Allow only mount requests coming from a source port below 1024. Using
