@@ -66,5 +66,6 @@
 #define backend_fsinfo_properties FSF3_HOMOGENEOUS | FSF3_CANSETTIME;
 #define backend_pathconf_case_insensitive TRUE
 #define backend_getpwnam(name) NULL
+#define backend_gen_nonce win_gen_nonce
 
 #endif

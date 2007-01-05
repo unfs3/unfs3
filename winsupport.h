@@ -121,6 +121,7 @@ int win_chmod(const char *path, mode_t mode);
 int win_utime(const char *path, const struct utimbuf *times);
 int win_rmdir(const char *path);
 int win_rename(const char *oldpath, const char *newpath);
+int win_gen_nonce(char *nonce);
 
 #endif /* UNFS3_WINSUPPORT_H */
 #endif /* WIN32 */

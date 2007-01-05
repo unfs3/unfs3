@@ -15,6 +15,7 @@
 #include "daemon.h"
 #include <assert.h>
 #include <windows.h>
+#include <wincrypt.h>
 #include <ctype.h>
 #include <fcntl.h>
 #include <limits.h>
@@ -690,6 +691,32 @@ int win_rename(const char *oldpath, const char *newpath)
     free(oldwinpath);
     free(newwinpath);
     return ret;
+}
+
+int win_gen_nonce(char *nonce)
+{
+    HCRYPTPROV hCryptProv;
+
+    if (!CryptAcquireContext
+	(&hCryptProv, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT)) {
+	logmsg(LOG_ERR, "CryptAcquireContext failed with error 0x%lx",
+	       GetLastError());
+	return -1;
+    }
+
+    if (!CryptGenRandom(hCryptProv, 32, nonce)) {
+	logmsg(LOG_ERR, "CryptGenRandom failed with error 0x%lx",
+	       GetLastError());
+	return -1;
+    }
+
+    if (!CryptReleaseContext(hCryptProv, 0)) {
+	logmsg(LOG_ERR, "CryptReleaseContext failed with error 0x%lx",
+	       GetLastError());
+	return -1;
+    }
+
+    return 0;
 }
 
 #endif				       /* WIN32 */

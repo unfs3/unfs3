@@ -67,5 +67,6 @@
 #define backend_pathconf_case_insensitive FALSE
 #define backend_passwdstruct struct passwd
 #define backend_getpwnam getpwnam
+#define backend_gen_nonce gen_nonce
 
 #endif

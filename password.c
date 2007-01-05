@@ -15,8 +15,6 @@
 #include <syslog.h>
 #include <unistd.h>
 #include <sys/times.h>		       /* times */
-#else				       /* WIN32 */
-#include <wincrypt.h>
 #endif				       /* WIN32 */
 #include <fcntl.h>
 #include <sys/time.h>		       /* gettimeofday */
@@ -24,9 +22,9 @@
 #include "backend.h"
 #include "daemon.h"		       /* logmsg */
 
+#ifndef WIN32
 int gen_nonce(char *nonce)
 {
-#ifndef WIN32
     struct stat st;
     struct tms tmsbuf;
     md5_state_t state;
@@ -55,32 +53,9 @@ int gen_nonce(char *nonce)
     md5_init(&state);
     md5_append(&state, (md5_byte_t *) nonce, 32);
     md5_finish(&state, (md5_byte_t *) nonce);
-
-#else				       /* WIN32 */
-    HCRYPTPROV hCryptProv;
-
-    if (!CryptAcquireContext
-	(&hCryptProv, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT)) {
-	logmsg(LOG_ERR, "CryptAcquireContext failed with error 0x%lx",
-	       GetLastError());
-	return -1;
-    }
-
-    if (!CryptGenRandom(hCryptProv, 32, nonce)) {
-	logmsg(LOG_ERR, "CryptGenRandom failed with error 0x%lx",
-	       GetLastError());
-	return -1;
-    }
-
-    if (!CryptReleaseContext(hCryptProv, 0)) {
-	logmsg(LOG_ERR, "CryptReleaseContext failed with error 0x%lx",
-	       GetLastError());
-	return -1;
-    }
-#endif				       /* WIN32 */
-
     return 0;
 }
+#endif				       /* WIN32 */
 
 static char nibble_as_hexchar(unsigned char c)
 {

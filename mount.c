@@ -163,7 +163,7 @@ mountres3 *mountproc_mnt_3_svc(dirpath * argp, struct svc_req * rqstp)
 
     /* Check for "mount commands" */
     if (strncmp(dpath, "@getnonce", sizeof("@getnonce") - 1) == 0) {
-	if (gen_nonce(nonce) < 0) {
+	if (backend_gen_nonce(nonce) < 0) {
 	    result.fhs_status = MNT3ERR_IO;
 	} else {
 	    result.fhs_status = MNT3_OK;
@@ -197,7 +197,7 @@ mountres3 *mountproc_mnt_3_svc(dirpath * argp, struct svc_req * rqstp)
 	    authenticated = !strncmp(hexdigest, otp, 32);
 
 	    /* Change nonce */
-	    gen_nonce(nonce);
+	    backend_gen_nonce(nonce);
 	}
 	/* else leave authenticated unchanged */
     }
