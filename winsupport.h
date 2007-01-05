@@ -63,6 +63,12 @@ typedef struct _backend_statstruct
         time_t  st_ctime;
 } backend_statstruct;
 
+typedef struct _backend_passwdstruct
+{
+    uid_t   pw_uid;
+    gid_t   pw_gid;
+} backend_passwdstruct;
+
 /* Only includes fields actually used by unfs3 */
 typedef struct _backend_statvfsstruct
 {

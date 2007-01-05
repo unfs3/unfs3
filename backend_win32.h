@@ -65,5 +65,6 @@
 #define backend_dirstream UNFS3_WIN_DIR
 #define backend_fsinfo_properties FSF3_HOMOGENEOUS | FSF3_CANSETTIME;
 #define backend_pathconf_case_insensitive TRUE
+#define backend_getpwnam(name) NULL
 
 #endif

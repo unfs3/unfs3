@@ -36,11 +36,10 @@ static int can_switch = TRUE;
  */
 void get_squash_ids(void)
 {
-#ifndef WIN32
-    struct passwd *passwd;
+    backend_passwdstruct *passwd;
 
     if (can_switch) {
-	passwd = getpwnam("nobody");
+	passwd = backend_getpwnam("nobody");
 	if (passwd) {
 	    squash_uid = passwd->pw_uid;
 	    squash_gid = passwd->pw_gid;
@@ -49,7 +48,6 @@ void get_squash_ids(void)
 	    squash_gid = 65534;
 	}
     }
-#endif				       /* WIN32 */
 }
 
 /*

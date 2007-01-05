@@ -65,5 +65,7 @@
 #define backend_statvfsstruct struct statvfs
 #define backend_fsinfo_properties FSF3_LINK | FSF3_SYMLINK | FSF3_HOMOGENEOUS | FSF3_CANSETTIME;
 #define backend_pathconf_case_insensitive FALSE
+#define backend_passwdstruct struct passwd
+#define backend_getpwnam getpwnam
 
 #endif
