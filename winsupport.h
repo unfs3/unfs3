@@ -43,6 +43,7 @@
 #define S_IFLNK 0
 #define S_IFSOCK 0
 
+typedef int socklen_t;
 typedef uint32 uid_t;
 typedef uint32 gid_t;
 

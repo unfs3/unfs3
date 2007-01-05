@@ -39,8 +39,10 @@ nfsstat3 symlink_err(void)
 	return NFS3ERR_EXIST;
     else if (errno == ENOSPC)
 	return NFS3ERR_NOSPC;
+#ifdef EDQUOT
     else if (errno == EDQUOT)
 	return NFS3ERR_DQUOT;
+#endif
     else if (errno == ENOSYS)
 	return NFS3ERR_NOTSUPP;
     else
@@ -63,8 +65,10 @@ nfsstat3 link_err(void)
 	return NFS3ERR_XDEV;
     else if (errno == EMLINK)
 	return NFS3ERR_MLINK;
+#ifdef EDQUOT
     else if (errno == EDQUOT)
 	return NFS3ERR_DQUOT;
+#endif
     else
 	return symlink_err();
 }
@@ -133,8 +137,10 @@ nfsstat3 write_write_err(void)
 	return NFS3ERR_FBIG;
     else if (errno == ENOSPC)
 	return NFS3ERR_NOSPC;
+#ifdef EDQUOT
     else if (errno == EDQUOT)
 	return NFS3ERR_DQUOT;
+#endif
     else
 	return NFS3ERR_IO;
 }
@@ -151,8 +157,10 @@ nfsstat3 create_err(void)
 	return NFS3ERR_NOSPC;
     else if (errno == EEXIST)
 	return NFS3ERR_EXIST;
+#ifdef EDQUOT
     else if (errno == EDQUOT)
 	return NFS3ERR_DQUOT;
+#endif
     else
 	return NFS3ERR_IO;
 }
@@ -181,8 +189,10 @@ nfsstat3 rename_err(void)
 	return NFS3ERR_ROFS;
     else if (errno == ENOSPC)
 	return NFS3ERR_NOSPC;
+#ifdef EDQUOT
     else if (errno == EDQUOT)
 	return NFS3ERR_DQUOT;
+#endif
     else
 	return NFS3ERR_IO;
 }
@@ -219,8 +229,10 @@ nfsstat3 setattr_err(void)
 	return NFS3ERR_STALE;
     else if (errno == EACCES)
 	return NFS3ERR_ACCES;
+#ifdef EDQUOT
     else if (errno == EDQUOT)
 	return NFS3ERR_DQUOT;
+#endif
     else if (errno == EINVAL)
 	return NFS3ERR_INVAL;
     else
