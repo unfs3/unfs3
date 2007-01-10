@@ -25,7 +25,6 @@
 #include "fh.h"
 #include "fh_cache.h"
 #include "daemon.h"
-#include <stdio.h>		       // XXX
 
 /*
  * check whether stat_cache is for a regular file
