@@ -189,7 +189,21 @@ unfs3_fh_t fh_comp_raw(const char *path, struct svc_req *rqstp, int need_dir)
 	    return invalid_fh;
 	}
 	if (exports_opts & OPT_REMOVABLE) {
+	    /* FIXME: It would be even better to return the hashed fsid for
+	       all file objects below the export point. */
 	    fh.dev = fsid;
+	    /* There's a small risk that the file system contains other file
+	       objects with st_ino = 1. This should be fairly uncommon,
+	       though. The FreeBSD fs(5) man page says:
+
+	       "The root inode is the root of the file system.  Inode 0
+	       cannot be used for normal purposes and historically bad blocks 
+	       were linked to inode 1, thus the root inode is 2 (inode 1 is
+	       no longer used for this purpose, however numerous dump tapes
+	       make this assumption, so we are stuck with it)."
+
+	       In Windows, there's also a small risk that the hash ends up
+	       being exactly 1. */
 	    fh.ino = 0x1;
 	    fh.gen = 0;
 	    return fh;
