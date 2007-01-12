@@ -35,6 +35,9 @@ nfsstat3	exports_rw(void);
 uint32		exports_anonuid(void);
 uint32		exports_anongid(void);
 uint32          fnv1a_32(const char *str, uint32 hval);
+#ifdef WIN32
+uint32          wfnv1a_32(const wchar_t *str, uint32 hval);
+#endif /* WIN32 */
 char            *normpath(const char *path, char *normpath);
 
 #endif

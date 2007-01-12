@@ -83,7 +83,7 @@ typedef struct _backend_statvfsstruct
 
 typedef struct _UNFS3_WIN_DIR
 {
-    DIR *stream; /* Windows DIR stream. NULL means root emulation */
+    _WDIR *stream; /* Windows DIR stream. NULL means root emulation */
     uint32 currentdrive; /* Next drive to check/return */
     struct dirent de;
     DWORD logdrives;
@@ -123,6 +123,7 @@ int win_utime(const char *path, const struct utimbuf *times);
 int win_rmdir(const char *path);
 int win_rename(const char *oldpath, const char *newpath);
 int win_gen_nonce(char *nonce);
+int win_utf8ncasecmp(const char *s1, const char *s2, size_t n);
 
 #endif /* UNFS3_WINSUPPORT_H */
 #endif /* WIN32 */

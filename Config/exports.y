@@ -101,6 +101,19 @@ uint32 fnv1a_32(const char *str, uint32 hval)
     return hval;
 }
 
+#ifdef WIN32
+uint32 wfnv1a_32(const wchar_t *str, uint32 hval)
+{
+    static const uint32 fnv_32_prime = 0x01000193;
+    
+    while (*str) {
+	hval ^= *str++;
+	hval *= fnv_32_prime;
+    }
+    return hval;
+}
+#endif
+
 /*
  * get static fsid, for use with removable media export points
  */
@@ -713,7 +726,7 @@ int exports_options(const char *path, struct svc_req *rqstp,
 #ifndef WIN32
 		    strstr(path, list->path) == path) {
 #else
-		    !strnicmp(path, list->path, strlen(list->path))) {
+		    !win_utf8ncasecmp(path, list->path, strlen(list->path))) {
 #endif
 		    e_host* cur_host = find_host(remote, list, password, &export_password_hash);
 
