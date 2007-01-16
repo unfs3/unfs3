@@ -25,6 +25,7 @@
 #include "fh.h"
 #include "fh_cache.h"
 #include "daemon.h"
+#include "Config/exports.h"
 
 /*
  * check whether stat_cache is for a regular file
@@ -175,6 +176,22 @@ post_op_attr get_post_buf(backend_statstruct buf, struct svc_req * req)
 	(buf.st_rdev >> 8) & 0xFF;
     result.post_op_attr_u.attributes.rdev.specdata2 = buf.st_rdev & 0xFF;
     result.post_op_attr_u.attributes.fsid = buf.st_dev;
+
+    /* If this is a removable export point, we should return the preset fsid
+       for all objects which resides in the same file system as the exported
+       directory */
+    if (exports_opts & OPT_REMOVABLE) {
+	backend_statstruct epbuf;
+	int res;
+
+	res = backend_lstat(export_path, &epbuf);
+	if (res == -1)
+	    return error_attr;
+	if (buf.st_dev == epbuf.st_dev) {
+	    result.post_op_attr_u.attributes.fsid = export_fsid;
+	}
+    }
+
     result.post_op_attr_u.attributes.fileid = buf.st_ino;
     result.post_op_attr_u.attributes.atime.seconds = buf.st_atime;
     result.post_op_attr_u.attributes.atime.nseconds = 0;

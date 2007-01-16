@@ -189,8 +189,6 @@ unfs3_fh_t fh_comp_raw(const char *path, struct svc_req *rqstp, int need_dir)
 	    return invalid_fh;
 	}
 	if (exports_opts & OPT_REMOVABLE) {
-	    /* FIXME: It would be even better to return the hashed fsid for
-	       all file objects below the export point. */
 	    fh.dev = fsid;
 	    /* There's a small risk that the file system contains other file
 	       objects with st_ino = 1. This should be fairly uncommon,

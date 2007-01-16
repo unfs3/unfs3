@@ -689,6 +689,8 @@ static e_host* find_host(struct in_addr remote, e_item *item,
 
 /* options cache */
 int exports_opts = -1;
+const char *export_path = NULL; 
+uint32 export_fsid = 0;
 uint32 export_password_hash = 0;
 
 /*
@@ -702,6 +704,8 @@ int exports_options(const char *path, struct svc_req *rqstp,
 	unsigned int last_len = 0;
 	
 	exports_opts = -1;
+	export_path = NULL;
+	export_fsid = 0;
 	last_anonuid = ANON_NOTSPECIAL;
 	last_anongid = ANON_NOTSPECIAL;
 
@@ -729,6 +733,8 @@ int exports_options(const char *path, struct svc_req *rqstp,
 				*fsid = list->fsid;
 			if (cur_host) {
 				exports_opts = cur_host->options;
+				export_path = list->path;
+				export_fsid = list->fsid;
 				last_len = strlen(list->path);
 				last_anonuid = cur_host->anonuid;
 				last_anongid = cur_host->anongid;

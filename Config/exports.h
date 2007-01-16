@@ -22,6 +22,8 @@
 extern exports	exports_nfslist;
 /* Options cache */
 extern int	exports_opts;
+const char      *export_path; 
+extern uint32 	export_fsid;
 extern uint32   export_password_hash;
 
 extern unsigned char password[PASSWORD_MAXLEN+1];
