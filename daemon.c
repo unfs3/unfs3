@@ -31,6 +31,7 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#include <errno.h>
 
 #if HAVE_RPC_SVC_SOC_H == 1
 # include <rpc/svc_soc.h>
@@ -57,7 +58,6 @@
 writeverf3 wverf;
 
 /* options and default values */
-int opt_expire_writers = FALSE;
 int opt_detach = TRUE;
 char *opt_exports = "/etc/exports";
 int opt_cluster = FALSE;
@@ -174,7 +174,6 @@ static void parse_options(int argc, char **argv)
 		printf(UNFS_NAME);
 		printf("Usage: %s [options]\n", argv[0]);
 		printf("\t-h          display this short option summary\n");
-		printf("\t-w          expire writers from fd cache\n");
 		printf("\t-u          use unprivileged port for services\n");
 		printf("\t-d          do not detach from terminal\n");
 		printf("\t-e <file>   file to use instead of /etc/exports\n");
@@ -239,9 +238,6 @@ static void parse_options(int argc, char **argv)
 	    case 'u':
 		opt_nfs_port = 0;
 		opt_mount_port = 0;
-		break;
-	    case 'w':
-		opt_expire_writers = TRUE;
 		break;
 	    case '?':
 		exit(1);
@@ -723,6 +719,39 @@ static SVCXPRT *create_tcp_transport(unsigned int port)
     return transp;
 }
 
+/* Run RPC service. This is our own implementation of svc_run(), which
+   allows us to handle other events as well. */
+static void unfs3_svc_run()
+{
+    fd_set readfds;
+    struct timeval tv;
+
+    for (;;) {
+	fd_cache_close_inactive();
+	readfds = svc_fdset;
+	tv.tv_sec = 1;
+	tv.tv_usec = 0;
+	/* Note: On Windows, it's not possible to call select with all sets
+	   empty; to use it as a sleep function. In our case, however,
+	   readfds should never be empty, since we always have our listen
+	   socket. Well, at least hope that our Windows RPC library works
+	   like that. oncrpc-ms does. */
+	switch (select(FD_SETSIZE, &readfds, NULL, NULL, &tv)) {
+	    case -1:
+		if (errno == EINTR) {
+		    continue;
+		}
+		perror("unfs3_svc_run: select failed");
+		return;
+	    case 0:
+		/* timeout */
+		continue;
+	    default:
+		svc_getreqset(&readfds);
+	}
+    }
+}
+
 /*
  * Generate write verifier based on PID and current time
  */
@@ -840,7 +869,7 @@ int main(int argc, char **argv)
 	get_squash_ids();
 	exports_parse();
 
-	svc_run();
+	unfs3_svc_run();
 	exit(1);
 	/* NOTREACHED */
     }

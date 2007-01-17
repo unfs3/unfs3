@@ -20,9 +20,10 @@ extern int fd_cache_writers;
 
 void fd_cache_init(void);
 
-int fd_open(const char *path, nfs_fh3 fh, int kind);
+int fd_open(const char *path, nfs_fh3 fh, int kind, int allow_caching);
 int fd_close(int fd, int kind, int really_close);
 int fd_sync(nfs_fh3 nfh);
 void fd_cache_purge(void);
+void fd_cache_close_inactive(void);
 
 #endif

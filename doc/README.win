@@ -8,7 +8,7 @@ Building unfs3 using MinGW
 
 2. Configure unfs3 with:
 
-LIBS="/myprefix/oncrpc-ms/lib/liboncrpc.a -lwsock32" CFLAGS="-I/myprefix/oncrpc-ms/include" ./configure --host=`gcc -dumpmachine`
+LIBS="/myprefix/oncrpc-ms/lib/liboncrpc.a -lwsock32" CFLAGS="-I/myprefix/oncrpc-ms/include -DONCRPCDLL" ./configure --host=`gcc -dumpmachine`
 
 
 Using unfs3 on Windows

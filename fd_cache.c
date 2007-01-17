@@ -13,6 +13,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <limits.h>
+#include <time.h>
 #ifndef WIN32
 #include <syslog.h>
 #include <unistd.h>
@@ -30,14 +31,40 @@
  * intention of the file descriptor cache
  *
  * for READ operations, the intent is to open() the file on the first
- * access and to close() it when we hit EOF
+ * access and to close() it when we hit EOF or after two seconds of
+ * inactivity.
  *
  * for WRITE operations, the intent is to open() the file on the first
- * UNSTABLE access and to close() it when COMMIT is called
+ * UNSTABLE access and to close() it when COMMIT is called or after
+ * two seconds of inactivity. 
+ * 
+ * There are three states of an entry:
+ * 1) Unused. use == 0. 
+ * 2) Open fd. use != 0, fd != -1. 
+ * 3) Pending fsync/close error, to be reported in next COMMIT or WRITE. use != 0, fd == -1. 
+ *
+ * Handling fsync/close errors 100% correctly is very difficult for a
+ * user space server. Although rare, fsync/close might fail, for
+ * example when out of quota or closing a file on a NFS file
+ * system. The most correct way of handling these errors would be to
+ * keep track of "dirty" and failed ranges. However, this would
+ * require runtime memory allocation, with no known upper bound, which
+ * in turn can lead to DOS attacks etc. Our solution returns a
+ * fsync/close error in the first WRITE or COMMIT
+ * response. Additionally, the write verifier is changed. Subsequent
+ * COMMITs may succeed even though data has been lost, but since the
+ * verifier is changed, clients will notice this and re-send their
+ * data. Eventually, with some luck, all clients will get an IO error.
  */
 
 /* number of entries in fd cache */
 #define FD_ENTRIES	256
+
+/* The number of seconds to wait before closing inactive fd */
+#define INACTIVE_TIMEOUT 2
+
+/* The number of seconds to keep pending errors */
+#define PENDING_ERROR_TIMEOUT 7200     /* 2 hours */
 
 typedef struct {
     int fd;			/* open file descriptor */
@@ -53,17 +80,6 @@ static fd_cache_t fd_cache[FD_ENTRIES];
 /* statistics */
 int fd_cache_readers = 0;
 int fd_cache_writers = 0;
-
-/* counter for LRU */
-static int fd_cache_time = 0;
-
-/*
- * return next pseudo-time value for LRU counter
- */
-static int fd_cache_next(void)
-{
-    return ++fd_cache_time;
-}
 
 /*
  * initialize the fd cache
@@ -84,44 +100,42 @@ void fd_cache_init(void)
 
 /*
  * find cache index to use for new entry
- * returns an empty slot if found, else return the least recently used slot
- *
- * only returns a used WRITE slot if opt_expire_writers is set
+ * returns an empty slot if found, else return error
  */
-static int fd_cache_lru(void)
+static int fd_cache_unused(void)
 {
-    int best = INT_MAX;
     int i;
-    int idx = -1;
+    static time_t last_warning = 0;
 
     for (i = 0; i < FD_ENTRIES; i++) {
 	if (fd_cache[i].use == 0)
 	    return i;
-	if (fd_cache[i].use < best) {
-	    if (opt_expire_writers) {
-		best = fd_cache[i].use;
-		idx = i;
-	    } else if (fd_cache[i].kind == UNFS3_FD_READ) {
-		best = fd_cache[i].use;
-		idx = i;
-	    }
-	}
     }
 
-    if (idx == -1)
-	logmsg(LOG_WARNING, "fd cache full due to UNSTABLE writers");
+    /* Do not print warning more than once per 10 second */
+    if (time(NULL) > last_warning + 10) {
+	last_warning = time(NULL);
+	logmsg(LOG_INFO,
+	       "fd cache full due to more than %d active files or pending IO errors",
+	       FD_ENTRIES);
+    }
 
-    return idx;
+    return -1;
 }
 
 /*
- * remove an entry from the cache
+
+ * remove an entry from the cache. The keep_on_error variable
+ * indicates if the entry should be kept in the cache upon
+ * fsync/close failures. It should be set to TRUE when fd_cache_del is
+ * called from a code path which cannot report an IO error back to the
+ * client through WRITE or COMMIT. 
  */
-static int fd_cache_del(int idx)
+static int fd_cache_del(int idx, int keep_on_error)
 {
     int res1, res2;
 
-    fd_cache[idx].use = 0;
+    res1 = -1;
 
     if (fd_cache[idx].fd != -1) {
 	if (fd_cache[idx].kind == UNFS3_FD_WRITE) {
@@ -133,20 +147,30 @@ static int fd_cache_del(int idx)
 	    res1 = 0;
 	}
 	res2 = backend_close(fd_cache[idx].fd);
+	fd_cache[idx].fd = -1;
 
 	/* return -1 if something went wrong during sync or close */
 	if (res1 == -1 || res2 == -1) {
-	    regenerate_write_verifier();
 	    res1 = -1;
-	} else
-	    res1 = 0;
+	}
     } else
-	res1 = 0;
+	/* pending error */
+	errno = EIO;
 
-    fd_cache[idx].fd = -1;
-    fd_cache[idx].dev = 0;
-    fd_cache[idx].ino = 0;
-    fd_cache[idx].gen = 0;
+    if (res1 == -1 && !keep_on_error) {
+	/* The verifier should not be changed until we actually report &
+	   remove the error */
+	regenerate_write_verifier();
+    }
+
+    if (res1 != -1 || !keep_on_error) {
+	fd_cache[idx].fd = -1;
+	fd_cache[idx].use = 0;
+	fd_cache[idx].dev = 0;
+	fd_cache[idx].ino = 0;
+	fd_cache[idx].gen = 0;
+    }
+
     return res1;
 }
 
@@ -155,21 +179,10 @@ static int fd_cache_del(int idx)
  */
 static void fd_cache_add(int fd, unfs3_fh_t * ufh, int kind)
 {
-    int idx, res;
+    int idx;
 
-    idx = fd_cache_lru();
+    idx = fd_cache_unused();
     if (idx != -1) {
-	if (fd_cache[idx].kind == UNFS3_FD_READ)
-	    fd_cache_del(idx);
-	else {
-	    /* if expiring a WRITE fd, report errors to log */
-	    res = fd_cache_del(idx);
-	    if (res != 0)
-		logmsg(LOG_CRIT,
-		       "silent write failure for dev %li, inode %li",
-		       fd_cache[idx].dev, fd_cache[idx].ino);
-	}
-
 	/* update statistics */
 	if (kind == UNFS3_FD_READ)
 	    fd_cache_readers++;
@@ -178,7 +191,7 @@ static void fd_cache_add(int fd, unfs3_fh_t * ufh, int kind)
 
 	fd_cache[idx].fd = fd;
 	fd_cache[idx].kind = kind;
-	fd_cache[idx].use = fd_cache_next();
+	fd_cache[idx].use = time(NULL);
 	fd_cache[idx].dev = ufh->dev;
 	fd_cache[idx].ino = ufh->ino;
 	fd_cache[idx].gen = ufh->gen;
@@ -224,7 +237,7 @@ static int idx_by_fh(unfs3_fh_t * ufh, int kind)
  * open a file descriptor
  * uses fd from cache if possible
  */
-int fd_open(const char *path, nfs_fh3 nfh, int kind)
+int fd_open(const char *path, nfs_fh3 nfh, int kind, int allow_caching)
 {
     int idx, res, fd;
     backend_statstruct buf;
@@ -232,9 +245,14 @@ int fd_open(const char *path, nfs_fh3 nfh, int kind)
 
     idx = idx_by_fh(fh, kind);
 
-    if (idx != -1)
+    if (idx != -1) {
+	if (fd_cache[idx].fd == -1) {
+	    /* pending error, report to client and remove from cache */
+	    fd_cache_del(idx, FALSE);
+	    return -1;
+	}
 	return fd_cache[idx].fd;
-    else {
+    } else {
 	/* call open to obtain new fd */
 	if (kind == UNFS3_FD_READ)
 	    fd = backend_open(path, O_RDONLY);
@@ -262,10 +280,9 @@ int fd_open(const char *path, nfs_fh3 nfh, int kind)
 	}
 
 	/* 
-	 * success, add to cache for later use if not marked
-	 * as removable medium
+	 * success, add to cache for later use
 	 */
-	if (!(exports_opts & OPT_REMOVABLE))
+	if (allow_caching)
 	    fd_cache_add(fd, fh, kind);
 	return fd;
     }
@@ -282,11 +299,11 @@ int fd_close(int fd, int kind, int really_close)
     idx = idx_by_fd(fd, kind);
     if (idx != -1) {
 	/* update usage time of cache entry */
-	fd_cache[idx].use = fd_cache_next();
+	fd_cache[idx].use = time(NULL);
 
 	if (really_close == FD_CLOSE_REAL)
 	    /* delete entry on real close, will close() fd */
-	    return fd_cache_del(idx);
+	    return fd_cache_del(idx, FALSE);
 	else
 	    return 0;
     } else {
@@ -295,9 +312,6 @@ int fd_close(int fd, int kind, int really_close)
 	    res1 = backend_fsync(fd);
 
 	res2 = backend_close(fd);
-
-	if (res1 != 0 || res2 != 0)
-	    regenerate_write_verifier();
 
 	if (res1 != 0)
 	    return res1;
@@ -317,7 +331,7 @@ int fd_sync(nfs_fh3 nfh)
     idx = idx_by_fh(fh, UNFS3_FD_WRITE);
     if (idx != -1)
 	/* delete entry, will fsync() and close() the fd */
-	return fd_cache_del(idx);
+	return fd_cache_del(idx, FALSE);
     else
 	return 0;
 }
@@ -331,7 +345,54 @@ void fd_cache_purge(void)
 
     /* close any open file descriptors we still have */
     for (i = 0; i < FD_ENTRIES; i++) {
-	if (fd_cache[i].fd != -1)
-	    fd_cache_del(i);
+	if (fd_cache[i].use != 0) {
+	    if (fd_cache_del(i, TRUE) == -1)
+		logmsg(LOG_CRIT,
+		       "Error during shutdown fsync/close for dev %lu, inode %lu",
+		       fd_cache[i].dev, fd_cache[i].ino);
+
+	}
+    }
+}
+
+/*
+ * close inactive fds
+ */
+void fd_cache_close_inactive(void)
+{
+    time_t now;
+    int i;
+    int found_error = 0;
+    int active_error = 0;
+
+    now = time(NULL);
+    for (i = 0; i < FD_ENTRIES; i++) {
+	/* Check for inactive open fds */
+	if (fd_cache[i].use && fd_cache[i].fd != -1 &&
+	    fd_cache[i].use + INACTIVE_TIMEOUT < now) {
+	    fd_cache_del(i, TRUE);
+	}
+
+	/* Check for inactive pending errors */
+	if (fd_cache[i].use && fd_cache[i].fd == -1) {
+	    found_error = 1;
+	    if (fd_cache[i].use + PENDING_ERROR_TIMEOUT > now)
+		active_error = 1;
+	}
+    }
+
+    if (found_error && !active_error) {
+	/* All pending errors are old. Delete them all from the table and
+	   generate new verifier. This is done to prevent the table from
+	   filling up with old pending errors, perhaps for files that never
+	   will be written again. In this case, we throw away the errors, and 
+	   change the server verifier. If clients has pending COMMITs, they
+	   will notify the changed verifier and re-send. */
+	for (i = 0; i < FD_ENTRIES; i++) {
+	    if (fd_cache[i].use && fd_cache[i].fd == -1) {
+		fd_cache_del(i, FALSE);
+	    }
+	}
+	regenerate_write_verifier();
     }
 }

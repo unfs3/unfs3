@@ -34,7 +34,6 @@ extern writeverf3 wverf;
 void regenerate_write_verifier(void);
 
 /* options */
-extern int	opt_expire_writers;
 extern int	opt_detach;
 extern char	*opt_exports;
 extern int	opt_cluster;

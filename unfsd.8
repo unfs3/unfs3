@@ -113,19 +113,6 @@ use the
 .BR mountport " and " port
 mount options).
 .TP
-.B \-w
-Allow the built-in file descriptor cache to expire writers. For
-performance reasons,
-.B unfsd
-keeps file descriptors open across multiple READ or WRITE requests.
-Normally, only READ file descriptors will be expired from the cache
-when it fills up. Setting this option allows file descriptors
-from WRITE operations to be expired, too. When this happens, pending
-data will be written to the server filesystem. However, if an
-error occurs while doing this, there is no way to notify the NFS
-client of the error. A message indicating the problem will be sent
-to the system log on the server.
-.TP
 .B \-c
 Enable cluster extensions. This feature is only available when
 .B unfsd

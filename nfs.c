@@ -350,7 +350,7 @@ READ3res *nfsproc3_read_3_svc(READ3args * argp, struct svc_req * rqstp)
 	argp->count = maxdata;
 
     if (result.status == NFS3_OK) {
-	fd = fd_open(path, argp->file, UNFS3_FD_READ);
+	fd = fd_open(path, argp->file, UNFS3_FD_READ, TRUE);
 	if (fd != -1) {
 	    /* read one more to check for eof */
 	    res = backend_pread(fd, buf, argp->count + 1, argp->offset);
@@ -400,7 +400,14 @@ WRITE3res *nfsproc3_write_3_svc(WRITE3args * argp, struct svc_req * rqstp)
     result.status = join(is_reg(), exports_rw());
 
     if (result.status == NFS3_OK) {
-	fd = fd_open(path, argp->file, UNFS3_FD_WRITE);
+	/* We allow caching of the fd only for unstable writes. This is to
+	   prevent generating a new write verifier for failed stable writes,
+	   when the fd was not in the cache. Besides, for stable writes, the
+	   fd will be removed from the cache by fd_close() below, so adding
+	   it to and removing it from the cache is just a waste of CPU cycles 
+	 */
+	fd = fd_open(path, argp->file, UNFS3_FD_WRITE,
+		     (argp->stable == UNSTABLE));
 	if (fd != -1) {
 	    res =
 		backend_pwrite(fd, argp->data.data_val, argp->data.data_len,
