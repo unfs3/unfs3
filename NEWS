@@ -1,55 +1,12 @@
-What's new or changed in 0.9.17
+What's new or changed in 0.9.18
 ===============================
 
-The server now uses 64 bit inode numbers and takes care to
-make the fileid reported by the NFS protocol match the inode
-number on the underlying server file system. This should
-help for some corner cases like unfs3 re-exporting a file 
-system from another unfs3 server which could easily overflow
-the old 32 bit inode number.
-
-The ACCESS procedure was incorrectly computing permissions
-based on an additive model of Unix permissions, which is plain
-wrong. This was fixed for all places in unfs3 that manually
-compute permissions instead of relying on the operating system
-to handle them.
-
-Executables that do not have the read permission bit 
-set (execute-only binaries) are no longer reported as readable
-by the server as they were previously. Be aware that READ
-procedure calls for such files will still succeed as long as
-execute permission is present. To revert to the old behaviour
-of reporting read permission when READ calls will succeed, you
-can start the server with the new -r command line flag.
-
-The maximum size of READ and WRITE requests was increased
-to enhance performance for client that can work with larger
-request sizes (at the cost of latency, however). The new
-maximum sizes are 32 KB for UDP connections and 512 KB for
-TCP connections.
-
-Error reporting for WRITE requests was improved so that
-errors are more likely to reported in a meaningful way for
-cached writes where the client WRITE request can be finished
-long before the actual I/O error occurs on the server. As a
-related change, the file descriptor cache now uses a time-based
-expiry scheme that ensures that files are not kept open by the
-server for extensive amounts of time.
-
-The server can now run on Windows, please see the file
-doc/README.win for details.
-
-All of the above changes were kindly provided by Peter Astrand.
-
-The server now understands the anonuid and anongid export
-options that allow to specify which uid and gid to use for
-squashing user and group ids. This is useful if you don't want
-to use the default of "nobody". Thanks to Matthew Bloch for
-providing this patch.
 
 
 ChangeLog
 =========
+
+Version 0.9.18
 
 Version 0.9.17
 
