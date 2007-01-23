@@ -182,12 +182,9 @@ post_op_attr get_post_buf(backend_statstruct buf, struct svc_req * req)
        directory */
     if (exports_opts & OPT_REMOVABLE) {
 	backend_statstruct epbuf;
-	int res;
 
-	res = backend_lstat(export_path, &epbuf);
-	if (res == -1)
-	    return error_attr;
-	if (buf.st_dev == epbuf.st_dev) {
+	if (backend_lstat(export_path, &epbuf) != -1 &&
+	    buf.st_dev == epbuf.st_dev) {
 	    result.post_op_attr_u.attributes.fsid = export_fsid;
 	}
     }
