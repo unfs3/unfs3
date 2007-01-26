@@ -68,5 +68,7 @@
 #define backend_passwdstruct struct passwd
 #define backend_getpwnam getpwnam
 #define backend_gen_nonce gen_nonce
+#define backend_flock flock
+#define backend_getpid getpid
 
 #endif

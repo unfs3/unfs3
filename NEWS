@@ -1,12 +1,19 @@
 What's new or changed in 0.9.18
 ===============================
 
+The daemon can now be instructed to write its pid (process id) to
+a file by use of the new -i command line option. The feature was
+originally written as an ALT Linux patch to unfs3 created by
+Anton Farygin and then ported to unfs3 0.9.17 by Michael Shigorin.
+The official implementation of the feature is based on their work.
 
 
 ChangeLog
 =========
 
 Version 0.9.18
+
+  - add support for writing a pid file with the -i option
 
 Version 0.9.17
 

@@ -8,6 +8,7 @@
 
 #include "config.h"
 
+#include <sys/file.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <rpc/rpc.h>
@@ -69,6 +70,7 @@ int opt_singleuser = FALSE;
 int opt_brute_force = FALSE;
 struct in_addr opt_bind_addr;
 int opt_readable_executables = FALSE;
+char *opt_pid_file = NULL;
 
 /* Register with portmapper? */
 int opt_portmapper = TRUE;
@@ -134,12 +136,60 @@ int get_socket_type(struct svc_req *rqstp)
 }
 
 /*
+ * write current pid to a file
+ */
+static void create_pid_file(void)
+{
+    char buf[16];
+    int fd, res, len;
+    
+    if (!opt_pid_file) return;
+    
+    fd = backend_open_create(opt_pid_file, O_RDWR | O_CREAT | O_TRUNC, 0644);
+    if (fd == -1) {
+        logmsg(LOG_WARNING, "failed to create pid file `%s'", opt_pid_file);
+        return;
+    }
+    
+    res = backend_flock(fd, LOCK_EX | LOCK_NB);
+    if (res == -1) {
+        logmsg(LOG_WARNING, "failed to lock pid file `%s'", opt_pid_file);
+        backend_close(fd);
+        return;
+    }
+    
+    sprintf(buf, "%i\n", backend_getpid());
+    len = strlen(buf);
+
+    res = backend_pwrite(fd, buf, len, 0);
+    backend_close(fd);
+    if (res != len) {
+        logmsg(LOG_WARNING, "failed to write pid file `%s'", opt_pid_file);
+    }
+}
+
+/*
+ * remove pid file
+ */
+static void remove_pid_file(void)
+{
+    int res;
+
+    if (!opt_pid_file) return;
+  
+    res = backend_remove(opt_pid_file);
+    if (res == -1 && errno != ENOENT) {
+        logmsg(LOG_WARNING, "failed to remove pid file `%s'", opt_pid_file);
+    }
+}
+
+/*
  * parse command line options
  */
 static void parse_options(int argc, char **argv)
 {
     int opt = 0;
-    char *optstring = "bcC:de:hl:m:n:prstuw";
+    char *optstring = "bcC:de:hl:m:n:prstuwi:";
 
     while (opt != -1) {
 	opt = getopt(argc, argv, optstring);
@@ -177,6 +227,7 @@ static void parse_options(int argc, char **argv)
 		printf("\t-u          use unprivileged port for services\n");
 		printf("\t-d          do not detach from terminal\n");
 		printf("\t-e <file>   file to use instead of /etc/exports\n");
+		printf("\t-i <file>   write daemon pid to given file\n");
 #ifdef WANT_CLUSTER
 		printf("\t-c          enable cluster extensions\n");
 		printf("\t-C <path>   set path for cluster extensions\n");
@@ -239,6 +290,9 @@ static void parse_options(int argc, char **argv)
 		opt_nfs_port = 0;
 		opt_mount_port = 0;
 		break;
+            case 'i':
+                opt_pid_file = optarg;
+                break;
 	    case '?':
 		exit(1);
 		break;
@@ -288,6 +342,7 @@ void daemon_exit(int error)
     if (opt_detach)
 	closelog();
 
+    remove_pid_file();
     backend_shutdown();
 
     exit(1);
@@ -862,6 +917,9 @@ int main(int argc, char **argv)
 
 	/* no umask to not screw up create modes */
 	umask(0);
+	
+	/* create pid file if wanted */
+	create_pid_file();
 
 	/* initialize internal stuff */
 	fh_cache_init();

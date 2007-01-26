@@ -80,6 +80,12 @@ Use the given file as the exports file, instead of using
 .IR /etc/exports .
 Note that the file needs to be specified using an absolute path.
 .TP
+.BI "\-i " "\<file\>"
+Use the given file as pid file. When the daemon starts up, it will
+write its pid (process id) to the given file. Upon exit, the daemon
+will remove the file. Failure to create or remove the pid file is
+not considered fatal and only reported to syslog.
+.TP
 .B \-u
 Use an unprivileged port for NFS and MOUNT service. Normally,
 .B unfsd
