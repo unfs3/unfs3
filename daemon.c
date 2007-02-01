@@ -150,14 +150,16 @@ static void create_pid_file(void)
         logmsg(LOG_WARNING, "failed to create pid file `%s'", opt_pid_file);
         return;
     }
-    
+
+#ifndef WIN32    
     res = backend_flock(fd, LOCK_EX | LOCK_NB);
     if (res == -1) {
         logmsg(LOG_WARNING, "failed to lock pid file `%s'", opt_pid_file);
         backend_close(fd);
         return;
     }
-    
+#endif
+
     sprintf(buf, "%i\n", backend_getpid());
     len = strlen(buf);
 
