@@ -113,7 +113,7 @@ static wchar_t *intpath2winpath(const char *intpath)
 
     if (!MultiByteToWideChar
 	(CP_UTF8, 0, lastrootslash, -1, winpath, winpath_len)) {
-	logmsg(LOG_CRIT, "intpath2winpath: MultiByteToWideChar failed\n");
+	logmsg(LOG_CRIT, "intpath2winpath: MultiByteToWideChar failed");
 	return NULL;
     }
 
@@ -486,7 +486,7 @@ struct dirent *win_readdir(UNFS3_WIN_DIR * dir)
 	if (!WideCharToMultiByte
 	    (CP_UTF8, 0, de->d_name, -1, dir->de.d_name,
 	     sizeof(dir->de.d_name), NULL, NULL)) {
-	    logmsg(LOG_CRIT, "win_readdir: WideCharToMultiByte failed\n");
+	    logmsg(LOG_CRIT, "win_readdir: WideCharToMultiByte failed");
 	    return NULL;
 	}
 	return &dir->de;
