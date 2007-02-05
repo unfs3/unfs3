@@ -84,6 +84,141 @@ static void remove_fdname(int fd)
     }
 }
 
+/* 
+ * The following UTF-8 validation is borrowed from
+ * ftp://ftp.unicode.org/Public/PROGRAMS/CVTUTF/ConvertUTF.c.
+ */
+
+/*
+ * Copyright 2001-2004 Unicode, Inc.
+ * 
+ * Disclaimer
+ * 
+ * This source code is provided as is by Unicode, Inc. No claims are
+ * made as to fitness for any particular purpose. No warranties of any
+ * kind are expressed or implied. The recipient agrees to determine
+ * applicability of information provided. If this file has been
+ * purchased on magnetic or optical media from Unicode, Inc., the
+ * sole remedy for any claim will be exchange of defective media
+ * within 90 days of receipt.
+ * 
+ * Limitations on Rights to Redistribute This Code
+ * 
+ * Unicode, Inc. hereby grants the right to freely use the information
+ * supplied in this file in the creation of products supporting the
+ * Unicode Standard, and to make copies of this file in any form
+ * for internal or external distribution as long as this notice
+ * remains attached.
+ */
+
+/*
+ * Index into the table below with the first byte of a UTF-8 sequence to
+ * get the number of trailing bytes that are supposed to follow it.
+ * Note that *legal* UTF-8 values can't have 4 or 5-bytes. The table is
+ * left as-is for anyone who may want to do such conversion, which was
+ * allowed in earlier algorithms.
+ */
+static const char trailingBytesForUTF8[256] = {
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+    2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
+    3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5
+};
+
+/*
+ * Utility routine to tell whether a sequence of bytes is legal UTF-8.
+ * This must be called with the length pre-determined by the first byte.
+ * If not calling this from ConvertUTF8to*, then the length can be set by:
+ *  length = trailingBytesForUTF8[*source]+1;
+ * and the sequence is illegal right away if there aren't that many bytes
+ * available.
+ * If presented with a length > 4, this returns 0.  The Unicode
+ * definition of UTF-8 goes up to 4-byte sequences.
+ */
+
+static int isLegalUTF8(const unsigned char *source, int length)
+{
+    unsigned char a;
+    const unsigned char *srcptr = source + length;
+
+    switch (length) {
+	default:
+	    return 0;
+	    /* Everything else falls through when "1"... */
+	case 4:
+	    if ((a = (*--srcptr)) < 0x80 || a > 0xBF)
+		return 0;
+	case 3:
+	    if ((a = (*--srcptr)) < 0x80 || a > 0xBF)
+		return 0;
+	case 2:
+	    if ((a = (*--srcptr)) > 0xBF)
+		return 0;
+
+	    switch (*source) {
+		    /* no fall-through in this inner switch */
+		case 0xE0:
+		    if (a < 0xA0)
+			return 0;
+		    break;
+		case 0xED:
+		    if (a > 0x9F)
+			return 0;
+		    break;
+		case 0xF0:
+		    if (a < 0x90)
+			return 0;
+		    break;
+		case 0xF4:
+		    if (a > 0x8F)
+			return 0;
+		    break;
+		default:
+		    if (a < 0x80)
+			return 0;
+	    }
+
+	case 1:
+	    if (*source >= 0x80 && *source < 0xC2)
+		return 0;
+    }
+    if (*source > 0xF4)
+	return 0;
+    return 1;
+}
+
+/* End of code borrowed from ConvertUTF.c */
+
+int isLegalUTF8String(const unsigned char *source)
+{
+    const unsigned char *seq, *sourceend;
+    int seqlen;
+
+    sourceend = source + strlen(source);
+    seq = source;
+
+    while (seq < sourceend) {
+	seqlen = trailingBytesForUTF8[*seq] + 1;
+	if (!isLegalUTF8(seq, seqlen))
+	    return 0;
+	seq += seqlen;
+    }
+
+    return 1;
+}
+
 /* Translate an internal representation of a path (like /c/home) to
    a Windows path (like c:\home) */
 static wchar_t *intpath2winpath(const char *intpath)
@@ -94,6 +229,14 @@ static wchar_t *intpath2winpath(const char *intpath)
     const char *lastrootslash;
     wchar_t *lastslash;
     size_t intlen;
+
+    /* Verify that input is valid UTF-8. We cannot use MB_ERR_INVALID_CHARS
+       to MultiByteToWideChar, since it's only available in late versions of
+       Windows. */
+    if (!isLegalUTF8String(intpath)) {
+	logmsg(LOG_CRIT, "intpath2winpath: Illegal UTF-8 string:%s", intpath);
+	return NULL;
+    }
 
     /* Skip over multiple root slashes for paths like ///home/john */
     lastrootslash = intpath;
@@ -194,6 +337,11 @@ int win_fchmod(int fildes, mode_t mode)
     int ret;
 
     winpath = intpath2winpath(get_fdname(fildes));
+    if (!winpath) {
+	errno = EINVAL;
+	return -1;
+    }
+
     ret = _wchmod(winpath, mode);
     free(winpath);
     return ret;
@@ -328,6 +476,10 @@ int win_stat(const char *file_name, backend_statstruct * buf)
     }
 
     winpath = intpath2winpath(file_name);
+    if (!winpath) {
+	errno = EINVAL;
+	return -1;
+    }
 
     ret = _wstat(winpath, &win_statbuf);
     if (ret < 0) {
@@ -404,6 +556,11 @@ int win_open(const char *pathname, int flags, ...)
     va_end(args);
 
     winpath = intpath2winpath(pathname);
+    if (!winpath) {
+	errno = EINVAL;
+	return -1;
+    }
+
     fd = _wopen(winpath, flags | O_BINARY, mode);
     free(winpath);
     if (fd < 0) {
@@ -447,6 +604,12 @@ UNFS3_WIN_DIR *win_opendir(const char *name)
 	ret->logdrives = GetLogicalDrives();
     } else {
 	winpath = intpath2winpath(name);
+	if (!winpath) {
+	    free(ret);
+	    errno = EINVAL;
+	    return NULL;
+	}
+
 	ret->stream = _wopendir(winpath);
 	free(winpath);
 	if (ret->stream == NULL) {
@@ -531,6 +694,11 @@ int win_mkdir(const char *pathname, U(mode_t mode))
     }
 
     winpath = intpath2winpath(pathname);
+    if (!winpath) {
+	errno = EINVAL;
+	return -1;
+    }
+
     /* FIXME: Use mode */
     ret = _wmkdir(winpath);
     free(winpath);
@@ -584,6 +752,11 @@ int win_statvfs(const char *path, backend_statvfsstruct * buf)
     }
 
     winpath = intpath2winpath(path);
+    if (!winpath) {
+	errno = EINVAL;
+	return -1;
+    }
+
     winpath[3] = '\0';		       /* Cut off after x:\ */
 
     if (!GetDiskFreeSpaceW
@@ -622,6 +795,11 @@ int win_remove(const char *pathname)
     }
 
     winpath = intpath2winpath(pathname);
+    if (!winpath) {
+	errno = EINVAL;
+	return -1;
+    }
+
     ret = _wremove(winpath);
     free(winpath);
     return ret;
@@ -639,6 +817,11 @@ int win_chmod(const char *path, mode_t mode)
     }
 
     winpath = intpath2winpath(path);
+    if (!winpath) {
+	errno = EINVAL;
+	return -1;
+    }
+
     ret = _wchmod(winpath, mode);
     free(winpath);
     return ret;
@@ -659,6 +842,10 @@ int win_utime(const char *path, const struct utimbuf *times)
     }
 
     winpath = intpath2winpath(path);
+    if (!winpath) {
+	errno = EINVAL;
+	return -1;
+    }
 
     /* Unfortunately, we cannot use utime(), since it doesn't support
        directories. */
@@ -695,6 +882,11 @@ int win_rmdir(const char *path)
     }
 
     winpath = intpath2winpath(path);
+    if (!winpath) {
+	errno = EINVAL;
+	return -1;
+    }
+
     ret = _wrmdir(winpath);
     free(winpath);
     return ret;
@@ -712,7 +904,16 @@ int win_rename(const char *oldpath, const char *newpath)
     }
 
     oldwinpath = intpath2winpath(oldpath);
+    if (!oldwinpath) {
+	errno = EINVAL;
+	return -1;
+    }
     newwinpath = intpath2winpath(newpath);
+    if (!newwinpath) {
+	free(oldwinpath);
+	errno = EINVAL;
+	return -1;
+    }
 
     ret = _wrename(oldwinpath, newwinpath);
     free(oldwinpath);
@@ -752,16 +953,26 @@ int win_utf8ncasecmp(const char *s1, const char *s2, size_t n)
     wchar_t ws1[4096], ws2[4096];
     int converted;
 
+    /* Make sure input is valid UTF-8 */
+    if (!isLegalUTF8String(s1)) {
+	logmsg(LOG_CRIT, "win_utf8ncasecmp: Illegal UTF-8 string:%s", s1);
+	return -1;
+    }
+    if (!isLegalUTF8String(s2)) {
+	logmsg(LOG_CRIT, "win_utf8ncasecmp: Illegal UTF-8 string:%s", s2);
+	return -1;
+    }
+
     /* Convert both strings to wide chars */
     converted = MultiByteToWideChar(CP_UTF8, 0, s1, n, ws1, wsizeof(ws1));
     if (!converted) {
-	logmsg(LOG_CRIT, "win_utf8ncasecmp: MultiByteToWideChar failed\n");
+	logmsg(LOG_CRIT, "win_utf8ncasecmp: MultiByteToWideChar failed");
 	return -1;
     }
     ws1[converted] = '\0';
     converted = MultiByteToWideChar(CP_UTF8, 0, s2, n, ws2, wsizeof(ws2));
     if (!converted) {
-	logmsg(LOG_CRIT, "win_utf8ncasecmp: MultiByteToWideChar failed\n");
+	logmsg(LOG_CRIT, "win_utf8ncasecmp: MultiByteToWideChar failed");
 	return 1;
     }
     ws2[converted] = '\0';

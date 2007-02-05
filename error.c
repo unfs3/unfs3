@@ -45,6 +45,8 @@ nfsstat3 symlink_err(void)
 #endif
     else if (errno == ENOSYS)
 	return NFS3ERR_NOTSUPP;
+    else if (errno == EINVAL)
+	return NFS3ERR_INVAL;
     else
 	return NFS3ERR_IO;
 }
@@ -85,6 +87,8 @@ nfsstat3 lookup_err(void)
 	return NFS3ERR_ACCES;
     else if (errno == ENOTDIR || errno == ELOOP || errno == ENAMETOOLONG)
 	return NFS3ERR_STALE;
+    else if (errno == EINVAL)
+	return NFS3ERR_INVAL;
     else
 	return NFS3ERR_IO;
 }
@@ -123,6 +127,8 @@ nfsstat3 write_open_err(void)
 	return NFS3ERR_ACCES;
     else if (is_stale())
 	return NFS3ERR_STALE;
+    else if (errno == EINVAL)
+	return NFS3ERR_INVAL;
     else if (errno == EROFS)
 	return NFS3ERR_ROFS;
     else
@@ -205,6 +211,8 @@ nfsstat3 remove_err(void)
 	return ENOENT;
     else if (errno == ENOTDIR || errno == ELOOP || errno == ENAMETOOLONG)
 	return NFS3ERR_STALE;
+    else if (errno == EINVAL)
+	return NFS3ERR_INVAL;
     else if (errno == EROFS)
 	return NFS3ERR_ROFS;
     else
@@ -249,6 +257,8 @@ nfsstat3 readdir_err(void)
 	return NFS3ERR_NOTDIR;
     else if (is_stale())
 	return NFS3ERR_STALE;
+    else if (errno == EINVAL)
+	return NFS3ERR_INVAL;
     else
 	return NFS3ERR_IO;
 }
