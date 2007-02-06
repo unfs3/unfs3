@@ -151,7 +151,7 @@ static void create_pid_file(void)
 	logmsg(LOG_WARNING, "failed to create pid file `%s'", opt_pid_file);
 	return;
     }
-#ifndef WIN32
+#if defined(LOCK_EX) && defined(LOCK_NB)
     res = backend_flock(fd, LOCK_EX | LOCK_NB);
     if (res == -1) {
 	logmsg(LOG_WARNING, "failed to lock pid file `%s'", opt_pid_file);
