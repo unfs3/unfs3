@@ -1,7 +1,7 @@
 
 /*
  * UNFS3 mount password support routines
- * (C) 2004, Peter Astrand <peter@cendio.se>
+ * (C) 2004, Peter Astrand <astrand@cendio.se>
  * see file LICENSE for license details
  */
 
