@@ -66,6 +66,32 @@ static int mangle(int id, int squash)
 }
 
 /*
+ * Mangle a given user id according to current settings
+ */
+int mangle_uid(int id)
+{
+    int squash = squash_uid;
+  
+    if (exports_anonuid() != ANON_NOTSPECIAL)
+        squash = exports_anonuid();
+        
+    return mangle(id, squash);
+}
+
+/*
+ * Mangle a given group id according to current settings
+ */
+int mangle_gid(int id)
+{
+    int squash = squash_gid;
+  
+    if (exports_anongid() != ANON_NOTSPECIAL)
+        squash = exports_anongid();
+        
+    return mangle(id, squash);
+}
+
+/*
  * return user id of a request
  */
 int get_uid(struct svc_req *req)

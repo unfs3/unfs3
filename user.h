@@ -11,6 +11,9 @@
 
 int get_uid(struct svc_req *req);
 
+int mangle_uid(int id);
+int mangle_gid(int id);
+
 int is_owner(int owner, struct svc_req *req);
 int has_group(int group, struct svc_req *req);
 

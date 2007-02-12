@@ -25,6 +25,7 @@
 #include "fh.h"
 #include "fh_cache.h"
 #include "daemon.h"
+#include "user.h"
 #include "Config/exports.h"
 
 /*
@@ -463,10 +464,11 @@ mode_t create_mode(sattr3 new)
  */
 nfsstat3 atomic_attr(sattr3 attr)
 {
-    if ((attr.uid.set_it == TRUE &&
-	 attr.uid.set_uid3_u.uid != backend_geteuid()) ||
-	(attr.gid.set_it == TRUE &&
-	 attr.gid.set_gid3_u.gid != backend_getegid()) ||
+    uid_t used_uid = mangle_uid(attr.uid.set_uid3_u.uid);
+    gid_t used_gid = mangle_gid(attr.gid.set_gid3_u.gid);
+
+    if ((attr.uid.set_it  == TRUE && used_uid != backend_geteuid()) ||
+	(attr.gid.set_it  == TRUE && used_gid != backend_getegid()) ||
 	(attr.size.set_it == TRUE && attr.size.set_size3_u.size != 0) ||
 	attr.atime.set_it == SET_TO_CLIENT_TIME ||
 	attr.mtime.set_it == SET_TO_CLIENT_TIME)
