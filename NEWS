@@ -7,6 +7,11 @@ originally written as an ALT Linux patch to unfs3 created by
 Nick S. Grechukh and then ported to unfs3 0.9.17 by Michael Shigorin.
 The official implementation of the feature is based on their work.
 
+Tim Weippert reported a problem with Solaris 10 clients that
+turned out to be a problem with the way that user and group id
+squashing is handled for checking the attributes of file creation
+operations. A fix is in place now.
+
 
 ChangeLog
 =========
@@ -14,6 +19,7 @@ ChangeLog
 Version 0.9.18
 
   - add support for writing a pid file with the -i option
+  - fix atomic_attr() to respect uid/gid squashing
 
 Version 0.9.17
 
