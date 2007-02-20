@@ -467,8 +467,8 @@ nfsstat3 atomic_attr(sattr3 attr)
     uid_t used_uid = mangle_uid(attr.uid.set_uid3_u.uid);
     gid_t used_gid = mangle_gid(attr.gid.set_gid3_u.gid);
 
-    if ((attr.uid.set_it  == TRUE && used_uid != backend_geteuid()) ||
-	(attr.gid.set_it  == TRUE && used_gid != backend_getegid()) ||
+    if ((attr.uid.set_it == TRUE && used_uid != backend_geteuid()) ||
+	(attr.gid.set_it == TRUE && used_gid != backend_getegid()) ||
 	(attr.size.set_it == TRUE && attr.size.set_size3_u.size != 0) ||
 	attr.atime.set_it == SET_TO_CLIENT_TIME ||
 	attr.mtime.set_it == SET_TO_CLIENT_TIME)
