@@ -444,6 +444,8 @@ WRITE3res *nfsproc3_write_3_svc(WRITE3args * argp, struct svc_req * rqstp)
     return &result;
 }
 
+#ifndef WIN32
+
 /*
  * store verifier in atime and mtime 
  */
@@ -467,6 +469,7 @@ static int check_create_verifier(backend_statstruct * buf, createverf3 verf)
 	    && (buf->st_mtime ==
 		(verf[4] | verf[5] << 8 | verf[6] << 16 | verf[7] << 24)));
 }
+#endif				       /* WIN32 */
 
 CREATE3res *nfsproc3_create_3_svc(CREATE3args * argp, struct svc_req * rqstp)
 {
@@ -509,7 +512,10 @@ CREATE3res *nfsproc3_create_3_svc(CREATE3args * argp, struct svc_req * rqstp)
 	    /* Successful stat */
 	    if (argp->how.mode == EXCLUSIVE) {
 		/* Save verifier in atime and mtime */
-		res = store_create_verifier(obj, argp->how.createhow3_u.verf);
+		res =
+		    backend_store_create_verifier(obj,
+						  argp->how.createhow3_u.
+						  verf);
 	    }
 	}
 
@@ -526,7 +532,7 @@ CREATE3res *nfsproc3_create_3_svc(CREATE3args * argp, struct svc_req * rqstp)
 	}
 
 	if (res == -1) {
-	    /* backend_fstat() or store_create_verifier() failed */
+	    /* backend_fstat() or backend_store_create_verifier() failed */
 	    backend_close(fd);
 	    result.status = NFS3ERR_IO;
 	}
@@ -541,7 +547,8 @@ CREATE3res *nfsproc3_create_3_svc(CREATE3args * argp, struct svc_req * rqstp)
 	    }
 
 	    if (res != -1) {
-		if (check_create_verifier(&buf, argp->how.createhow3_u.verf)) {
+		if (backend_check_create_verifier
+		    (&buf, argp->how.createhow3_u.verf)) {
 		    /* The verifier matched. Return success */
 		    gen = backend_get_gen(buf, fd, obj);
 		    fh_cache_add(buf.st_dev, buf.st_ino, obj);
@@ -1011,7 +1018,7 @@ FSINFO3res *nfsproc3_fsinfo_3_svc(FSINFO3args * argp, struct svc_req * rqstp)
     result.FSINFO3res_u.resok.wtmult = 4096;
     result.FSINFO3res_u.resok.dtpref = 4096;
     result.FSINFO3res_u.resok.maxfilesize = ~0ULL;
-    result.FSINFO3res_u.resok.time_delta.seconds = 1;
+    result.FSINFO3res_u.resok.time_delta.seconds = backend_time_delta_seconds;
     result.FSINFO3res_u.resok.time_delta.nseconds = 0;
     result.FSINFO3res_u.resok.properties = backend_fsinfo_properties;
 

@@ -64,10 +64,18 @@
 #define backend_init win_init
 #define backend_dirstream UNFS3_WIN_DIR
 #define backend_fsinfo_properties FSF3_HOMOGENEOUS | FSF3_CANSETTIME;
+/*
+  Note: FAT has different granularities for different times: 1 day for
+  atime, 2 seconds for mtime and 10ms för CreationTime. time_delta
+  only applies to atime/mtime. We are choosing 2 seconds.
+*/
+#define backend_time_delta_seconds 2
 #define backend_pathconf_case_insensitive TRUE
 #define backend_getpwnam(name) NULL
 #define backend_gen_nonce win_gen_nonce
 #define backend_flock flock(fd, op) (-1)
 #define backend_getpid getpid
+#define backend_store_create_verifier win_store_create_verifier
+#define backend_check_create_verifier win_check_create_verifier
 
 #endif

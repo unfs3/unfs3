@@ -24,8 +24,11 @@
 #include <locale.h>
 
 #define MAX_NUM_DRIVES 26
-#define FT70SEC 11644473600LL	       /* seconds between 1/1/1601 and
-				          1/1/1970 */
+#define FT70SEC 11644473600LL	       /* seconds between 1601-01-01 and
+				          1970-01-01 */
+#define FT80SEC 315529200	       /* seconds between 1970-01-01 and
+				          1980-01-01 */
+
 #define wsizeof(x) (sizeof(x)/sizeof(wchar_t))
 
 typedef struct _fdname {
@@ -373,10 +376,33 @@ ssize_t pwrite(int fd, const void *buf, size_t count, off_t offset)
 {
     ssize_t size;
     off_t ret;
+    HANDLE h;
+    FILETIME ft;
+    SYSTEMTIME st;
+    ULARGE_INTEGER fti;
 
     if ((ret = lseek(fd, offset, SEEK_SET)) < 0)
 	return -1;
     size = write(fd, buf, count);
+
+    /* Since we are using the CreationTime attribute as "ctime", we need to
+       update it. From RFC1813: "Writing to the file changes the ctime in
+       addition to the mtime." */
+    h = (HANDLE) _get_osfhandle(fd);
+    GetSystemTime(&st);
+    SystemTimeToFileTime(&st, &ft);
+    /* Ceil up to nearest even second */
+    fti.LowPart = ft.dwLowDateTime;
+    fti.HighPart = ft.dwHighDateTime;
+    fti.QuadPart = ((fti.QuadPart + 20000000 - 1) / 20000000) * 20000000;
+    ft.dwLowDateTime = fti.LowPart;
+    ft.dwHighDateTime = fti.HighPart;
+    if (!SetFileTime(h, &ft, NULL, NULL)) {
+	fprintf(stderr,
+		"warning: pwrite: SetFileTime failed with error %ld\n",
+		GetLastError());
+    }
+
     return size;
 }
 
@@ -827,13 +853,19 @@ int win_chmod(const char *path, mode_t mode)
     return ret;
 }
 
-int win_utime(const char *path, const struct utimbuf *times)
+/* 
+   If creation is false, the LastAccessTime will be set according to
+   times->actime. Otherwise, CreationTime will be set. LastWriteTime
+   is always set according to times->modtime.
+*/
+static int win_utime_creation(const char *path, const struct utimbuf *times,
+			      int creation)
 {
     wchar_t *winpath;
     int ret = 0;
     HANDLE h;
     ULARGE_INTEGER fti;
-    FILETIME atime, mtime;
+    FILETIME xtime, mtime;
 
     if (!strcmp("/", path)) {
 	/* Emulate root */
@@ -850,8 +882,8 @@ int win_utime(const char *path, const struct utimbuf *times)
     /* Unfortunately, we cannot use utime(), since it doesn't support
        directories. */
     fti.QuadPart = UInt32x32To64(times->actime + FT70SEC, 10000000);
-    atime.dwHighDateTime = fti.HighPart;
-    atime.dwLowDateTime = fti.LowPart;
+    xtime.dwHighDateTime = fti.HighPart;
+    xtime.dwLowDateTime = fti.LowPart;
     fti.QuadPart = UInt32x32To64(times->modtime + FT70SEC, 10000000);
     mtime.dwHighDateTime = fti.HighPart;
     mtime.dwLowDateTime = fti.LowPart;
@@ -860,7 +892,8 @@ int win_utime(const char *path, const struct utimbuf *times)
 		    FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
 		    FILE_ATTRIBUTE_NORMAL | FILE_FLAG_BACKUP_SEMANTICS, NULL);
 
-    if (!SetFileTime(h, NULL, &atime, &mtime)) {
+    if (!SetFileTime
+	(h, creation ? &xtime : NULL, creation ? NULL : &xtime, &mtime)) {
 	errno = EACCES;
 	ret = -1;
     }
@@ -868,6 +901,11 @@ int win_utime(const char *path, const struct utimbuf *times)
     CloseHandle(h);
     free(winpath);
     return ret;
+}
+
+int win_utime(const char *path, const struct utimbuf *times)
+{
+    return win_utime_creation(path, times, FALSE);
 }
 
 int win_rmdir(const char *path)
@@ -979,6 +1017,41 @@ int win_utf8ncasecmp(const char *s1, const char *s2, size_t n)
 
     /* compare */
     return _wcsicmp(ws1, ws2);
+}
+
+static void win_verf_to_ubuf(struct utimbuf *ubuf, createverf3 verf)
+{
+    ubuf->actime = verf[0] | verf[1] << 8 | verf[2] << 16 | verf[3] << 24;
+    ubuf->modtime = verf[4] | verf[5] << 8 | verf[6] << 16 | verf[7] << 24;
+
+    /* FAT can only store dates in the interval 1980-01-01 to 2107-12-31.
+       However, since the utime interface uses Epoch time, we are further
+       limited to 1980-01-01 to 2038-01-19, assuming 32 bit signed time_t.
+       math.log(2**31-1 - FT80SEC, 2) = 30.7, which means that we can only
+       use 30 bits. */
+    ubuf->actime &= 0x3fffffff;
+    ubuf->actime += FT80SEC;
+    ubuf->modtime &= 0x3fffffff;
+    ubuf->modtime += FT80SEC;
+    /* While FAT CreationTime has a resolution of 10 ms, WriteTime only has a 
+       resolution of 2 seconds. */
+    ubuf->modtime &= ~1;
+}
+
+int win_store_create_verifier(char *obj, createverf3 verf)
+{
+    struct utimbuf ubuf;
+
+    win_verf_to_ubuf(&ubuf, verf);
+    return win_utime_creation(obj, &ubuf, TRUE);
+}
+
+int win_check_create_verifier(backend_statstruct * buf, createverf3 verf)
+{
+    struct utimbuf ubuf;
+
+    win_verf_to_ubuf(&ubuf, verf);
+    return (buf->st_ctime == ubuf.actime && buf->st_mtime == ubuf.modtime);
 }
 
 #endif				       /* WIN32 */

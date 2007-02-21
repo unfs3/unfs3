@@ -64,11 +64,14 @@
 #define backend_dirstream DIR
 #define backend_statvfsstruct struct statvfs
 #define backend_fsinfo_properties FSF3_LINK | FSF3_SYMLINK | FSF3_HOMOGENEOUS | FSF3_CANSETTIME;
+#define backend_time_delta_seconds 1
 #define backend_pathconf_case_insensitive FALSE
 #define backend_passwdstruct struct passwd
 #define backend_getpwnam getpwnam
 #define backend_gen_nonce gen_nonce
 #define backend_flock flock
 #define backend_getpid getpid
+#define backend_store_create_verifier store_create_verifier
+#define backend_check_create_verifier check_create_verifier
 
 #endif

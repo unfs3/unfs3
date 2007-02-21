@@ -124,6 +124,8 @@ int win_rmdir(const char *path);
 int win_rename(const char *oldpath, const char *newpath);
 int win_gen_nonce(char *nonce);
 int win_utf8ncasecmp(const char *s1, const char *s2, size_t n);
+int win_store_create_verifier(char *obj, createverf3 verf);
+int win_check_create_verifier(backend_statstruct * buf, createverf3 verf);
 
 #endif /* UNFS3_WINSUPPORT_H */
 #endif /* WIN32 */
