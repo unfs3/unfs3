@@ -24,6 +24,44 @@ FRAG_MAX_SIZE = 2**31 - 1
 FRAG_SIZE = FRAG_MAX_SIZE # Size of newly created fragments
 
 
+class ProxyEngine:
+    def __init__(self):
+        self.connections = [] # Client or server connections
+        self.proxies = [] # Proxy objects
+
+
+    def add_proxy(self, bind_address, port, host, hostport):
+        """Add a new proxy"""
+        proxy = Proxy(self, bind_address, port, host, hostport)
+        self.proxies.append(proxy)
+        self.connections.append(proxy.srv)
+
+    def add_connection(self, conn):
+        """Add a new connection"""
+        self.connections.append(conn)
+
+
+class Proxy:
+    def __init__(self, pe, bind_address, port, host, hostport):
+        self.pe = pe
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.sock.bind((bind_address, port)) 
+        self.sock.listen(1)
+        self.srv = ServerConnection(host, hostport)
+
+
+    def fileno(self):
+        """Return the sockets fileno"""
+        return self.sock.fileno()
+
+
+    def handle_read(self):
+        """Accept a new connection. Return a new ClientConnection"""
+        sock, addr = self.sock.accept()
+        self.pe.add_connection(ClientConnection(sock, addr, self.srv))
+
+
 class ServerCall:
     def __init__(self, data, callback):
         self.data = data
@@ -275,46 +313,46 @@ class ClientConnection(RPCConnection):
 
 
 def usage():
-    sys.exit("Usage: %s [bind_address:]port:host:hostport" % sys.argv[0])
+    sys.exit("Usage: %s [bind_address:]port:host:hostport ..." % sys.argv[0])
+
+
+def parse_arg(arg):
+    """Parse a command argument, specifying hosts and ports.
+    Returns tuple (bind_address, port, host, hostport)"""
+    fields = arg.split(":")
+    if len(fields) == 3:
+        fields.insert(0, "127.0.0.1")
+
+    if len(fields) != 4:
+        usage()
+
+    bind_address, port, host, hostport = fields
+    port = int(port)
+    hostport = int(hostport)
+    return bind_address, port, host, hostport
 
 
 def main():
-    if len(sys.argv) != 2:
+    if len(sys.argv) < 2:
         usage()
+
+    pe = ProxyEngine()
 
     #
     # Determine hosts and ports
     #
-    fields = sys.argv[1].split(":")
-    if len(fields) == 3:
-        bind_address = "127.0.0.1"
-        port, host, hostport = fields
-    elif len(fields) == 4:
-        bind_address, port, host, hostport = fields
-    else:
-        usage()
-    port = int(port)
-    hostport = int(hostport)
-        
-    srv = ServerConnection(host, hostport) 
-
-    #
-    # Listen
-    # 
-    prox = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    prox.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    prox.bind((bind_address, port)) 
-    prox.listen(1)
+    for arg in sys.argv[1:]:
+        pe.add_proxy(*parse_arg(arg))
 
     #
     # Select loop
     #
-    connections = [srv]
     while 1:
         # Set up sets
-        read_set = [prox]
+        read_set = []
+        read_set.extend(pe.proxies)
         write_set = []
-        for conn in connections:
+        for conn in pe.connections:
             if conn.readable():
                 read_set.append(conn)
             if conn.writable():
@@ -322,25 +360,15 @@ def main():
 
         rlist, wlist, xlist = select.select(read_set, write_set, [])
 
-        # New connections
-        if prox in rlist:
-            sock, addr = prox.accept()
-            connections.append(ClientConnection(sock, addr, srv))
+        for obj in rlist:
+            obj.handle_read()
 
-        # Connections
-        elif rlist:
-            for conn in rlist:
-                conn.handle_read()
-        elif wlist:
-            for conn in wlist:
-                conn.handle_write()
-        else:
-            assert 0
+        for obj in wlist:
+            obj.handle_write()
 
-        # Check for EOF
-        for conn in connections:
+        for conn in pe.connections:
             if conn.eof():
-                connections.remove(conn)
+                pe.connections.remove(conn)
 
 
 if __name__ == "__main__":
