@@ -168,8 +168,10 @@ class RPCConnection:
 
 
 class ServerConnection(RPCConnection):
-    def __init__(self):
+    def __init__(self, host, port):
         RPCConnection.__init__(self)
+        self.host = host
+        self.port = port
         self.calls = [] # A list of ServerCalls
         self.state = STATE_WAITING
         self.current_cb = None
@@ -198,13 +200,11 @@ class ServerConnection(RPCConnection):
             srv_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             while 1:
                 try:
-                    hostname = "127.0.0.1" # FIXME
-                    port = 111 # FIXME
-                    srv_sock.connect((hostname, port))
-                    print >>sys.stderr, "Connected to %s:%d" % (hostname, port)
+                    srv_sock.connect((self.host, self.port))
+                    print >>sys.stderr, "Connected to %s:%d" % (self.host, self.port)
                     break
                 except socket.error, e:
-                    print >>sys.stderr, "Connection to %s:%d failed: %s" % (hostname, port, e[1])
+                    print >>sys.stderr, "Connection to %s:%d failed: %s" % (self.host, self.port, e[1])
                     time.sleep(5)
             self.set_sock(srv_sock)
 
@@ -274,15 +274,36 @@ class ClientConnection(RPCConnection):
         self.record = self.rm_stream(data)
 
 
+def usage():
+    sys.exit("Usage: %s [bind_address:]port:host:hostport" % sys.argv[0])
+
+
 def main():
-    srv = ServerConnection() 
+    if len(sys.argv) != 2:
+        usage()
+
+    #
+    # Determine hosts and ports
+    #
+    fields = sys.argv[1].split(":")
+    if len(fields) == 3:
+        bind_address = "127.0.0.1"
+        port, host, hostport = fields
+    elif len(fields) == 4:
+        bind_address, port, host, hostport = fields
+    else:
+        usage()
+    port = int(port)
+    hostport = int(hostport)
+        
+    srv = ServerConnection(host, hostport) 
 
     #
     # Listen
     # 
     prox = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     prox.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    prox.bind(("127.0.0.1", 4711)) # FIXME: Configurable
+    prox.bind((bind_address, port)) 
     prox.listen(1)
 
     #
