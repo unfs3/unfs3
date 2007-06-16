@@ -21,7 +21,7 @@ pidfile="/var/run/unfsd.pid"
 case "$1" in
     'start')
         echo "Starting" ${description}
-        /usr/sbin/unfsd
+        /usr/sbin/unfsd -i ${pidfile}
         RETVAL=$?
         if [ "${RETVAL}" = "0" ]; then
             touch ${lockfile} >/dev/null 2>&1
