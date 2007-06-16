@@ -52,6 +52,7 @@ clean:
 	for i in $(SUBDIRS); do cd $$i; $(MAKE) clean; cd ..; done
 	$(RM) $(OBJS)
 	$(RM) unfsd$(EXEEXT)
+	$(RM) unfs3-$(VERSION).tar.gz
 
 distclean: clean
 	for i in $(SUBDIRS); do cd $$i; $(MAKE) distclean; cd ..; done
@@ -71,7 +72,8 @@ dep: $(SOURCES)
 dist: unfs3-$(VERSION).tar.gz
 
 unfs3-$(VERSION).tar.gz:
-	mkdir -p /tmp/unfs3-make-dist-dir
+	rm -rf /tmp/unfs3-make-dist-dir
+	mkdir /tmp/unfs3-make-dist-dir
 	ln -sf `pwd` /tmp/unfs3-make-dist-dir/unfs3-$(VERSION)
 	(cd /tmp/unfs3-make-dist-dir; \
 	 tar zcf unfs3-$(VERSION)/unfs3-$(VERSION).tar.gz \
