@@ -19,7 +19,7 @@ make
 
 %install
 [ -n "$RPM_BUILD_ROOT" ] && rm -rf "$RPM_BUILD_ROOT"
-make DESTDIR="$RPM_BUILD_ROOT" install
+make DESTDIR="$RPM_BUILD_ROOT" install install-init
 
 %clean
 [ -n "$RPM_BUILD_ROOT" ] && rm -rf "$RPM_BUILD_ROOT"
@@ -32,6 +32,7 @@ the MOUNT and NFS protocol.
 %files
 %attr (  -, root, root) %doc CREDITS README README.nfsroot LICENSE NEWS contrib doc
 %attr (755, root, root) /usr/sbin/unfsd
+%attr (755, root, root) /etc/init.d/unfsd
 %attr (644, root, root) %doc /usr/share/man/man7/tags.7.gz
 %attr (644, root, root) %doc /usr/share/man/man8/unfsd.8.gz
 

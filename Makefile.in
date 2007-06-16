@@ -40,6 +40,11 @@ install: unfsd$(EXEEXT)
 	$(INSTALL_DATA) Extras/tags.7 $(DESTDIR)$(mandir)/man7/tags.7
 	$(INSTALL_DATA) unfsd.8       $(DESTDIR)$(mandir)/man8/unfsd.8
 
+# Not installed by default, since it installs files outside prefix
+install-init: unfsd.init
+	$(INSTALL) -d $(DESTDIR)/etc/init.d
+	$(INSTALL) unfsd.init $(DESTDIR)/etc/init.d/unfsd
+
 install-strip: install
 	strip $(DESTDIR)$(sbindir)/unfsd$(EXEEXT)
 
