@@ -4,7 +4,7 @@ Group: Applications/System
 Name: unfs3
 Version: %{version}
 Release: 1
-Copyright: BSD
+License: BSD
 Packager: Pascal Schmidt <unfs3-server@ewetel.net>
 Vendor: none
 Source: unfs3-%{version}.tar.gz
