@@ -432,6 +432,7 @@ int win_init()
 	exit(1);
     }
 
+    /* init winsock */
     winsock_ver = MAKEWORD(1, 1);
     if (WSAStartup(winsock_ver, &wsadata)) {
 	fprintf(stderr, "Unable to initialise WinSock\n");
@@ -442,6 +443,10 @@ int win_init()
 	WSACleanup();
 	exit(1);
     }
+
+    /* disable error popups, for example from drives not ready */
+    SetErrorMode(SEM_FAILCRITICALERRORS);
+
     return 0;
 }
 
