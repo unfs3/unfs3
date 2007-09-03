@@ -412,6 +412,9 @@ static void add_option(const char *opt)
 		cur_host.options |= OPT_INSECURE;
 	else if (strcmp(opt,"secure") == 0)
 		cur_host.options &= ~OPT_INSECURE;
+	else
+		logmsg(LOG_WARNING, "Warning: unknown exports option `%s' ignored",
+			opt);
 }
 
 static void add_option_with_value(const char *opt, const char *val)
@@ -425,12 +428,13 @@ static void add_option_with_value(const char *opt, const char *val)
 	cur_host.password[PASSWORD_MAXLEN] = '\0';
 	/* Calculate hash */
 	cur_host.password_hash = fnv1a_32(cur_host.password, 0);
-    }
-    else if (strcmp(opt,"anonuid") == 0) {
+    } else if (strcmp(opt,"anonuid") == 0) {
     	cur_host.anonuid = atoi(val);
-    }
-    else if (strcmp(opt,"anongid") == 0) {
+    } else if (strcmp(opt,"anongid") == 0) {
     	cur_host.anongid = atoi(val);
+    } else {
+        logmsg(LOG_WARNING, "Warning: unknown exports option `%s' ignored",
+            opt);
     }
 }
 
