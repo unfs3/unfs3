@@ -746,7 +746,7 @@ MKNOD3res *nfsproc3_mknod_3_svc(MKNOD3args * argp, struct svc_req * rqstp)
     post_op_attr post;
     char obj[NFS_MAXPATHLEN];
     int res;
-    mode_t new_mode;
+    mode_t new_mode = 0;
     dev_t dev = 0;
 
     PREP(path, argp->where.dir);

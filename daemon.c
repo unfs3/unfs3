@@ -68,6 +68,7 @@ unsigned int opt_nfs_port = NFS_PORT;	/* 0 means RPC_ANYSOCK */
 unsigned int opt_mount_port = NFS_PORT;
 int opt_singleuser = FALSE;
 int opt_brute_force = FALSE;
+int opt_testconfig = FALSE;
 struct in_addr opt_bind_addr;
 int opt_readable_executables = FALSE;
 char *opt_pid_file = NULL;
@@ -192,7 +193,7 @@ static void remove_pid_file(void)
 static void parse_options(int argc, char **argv)
 {
     int opt = 0;
-    char *optstring = "bcC:de:hl:m:n:prstuwi:";
+    char *optstring = "bcC:de:hl:m:n:prstTuwi:";
 
     while (opt != -1) {
 	opt = getopt(argc, argv, optstring);
@@ -246,6 +247,7 @@ static void parse_options(int argc, char **argv)
 		    ("\t-l <addr>   bind to interface with specified address\n");
 		printf
 		    ("\t-r          report unreadable executables as readable\n");
+                printf("\t-T          test exports file and exit\n");
 		exit(0);
 		break;
 	    case 'l':
@@ -289,6 +291,9 @@ static void parse_options(int argc, char **argv)
 	    case 't':
 		opt_tcponly = TRUE;
 		break;
+            case 'T':
+                opt_testconfig = TRUE;
+                break;
 	    case 'u':
 		opt_nfs_port = 0;
 		opt_mount_port = 0;
@@ -851,6 +856,17 @@ int main(int argc, char **argv)
     if (res == -1) {
 	fprintf(stderr, "backend initialization failed\n");
 	daemon_exit(0);
+    }
+
+    /* config test mode */
+    if (opt_testconfig) {
+        res = exports_parse();
+        if (res) {
+          exit(0);
+        } else {
+          fprintf(stderr, "Parse error in `%s'\n", opt_exports);
+          exit(1);
+        }
     }
 
     if (opt_detach) {

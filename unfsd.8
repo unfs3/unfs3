@@ -1,7 +1,7 @@
 .\"
 .\" (C) 2004, Pascal Schmidt
 .\"
-.TH unfsd 8 "04 Jan 2004"
+.TH unfsd 8 "03 Sep 2007"
 .SH NAME
 unfsd \- NFS server process
 .SH SYNOPSIS
@@ -172,8 +172,18 @@ would normally go to the system log go to stdout instead.
 .B \-r
 Report unreadable executables as readable. This applies both to
 returned attributes and ACCESS requests. Please note that READ
-requests for unreadable executables are always allowed, if unfsd is
-running as root, regardless of this option.
+requests for unreadable executables are always allowed, if 
+.B unfsd 
+is running as root, regardless of this option.
+.TP
+.B \-T
+Test exports file and exit. When this option is given,
+.B unfsd
+will try to parse the exports file and exit with status 0 if this
+is successful. If there is a syntax error in the exports file,
+a message is printed on standard error and
+.B unfsd
+exits with status 1.
 .SH SIGNALS
 .TP
 .BR "SIGTERM " "and " SIGINT
