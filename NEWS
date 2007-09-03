@@ -12,6 +12,11 @@ turned out to be a problem with the way that user and group id
 squashing is handled for checking the attributes of file creation
 operations. A fix is in place now.
 
+Michael Shigorin suggested adding an option for doing a test parse
+of the exports file. This is now available as -T which will run
+a parse of the exports file and exit from unfsd with an exit status
+of either 0 or 1 depending on the success of the parse.
+
 
 ChangeLog
 =========
@@ -20,6 +25,7 @@ Version 0.9.18
 
   - add support for writing a pid file with the -i option
   - fix atomic_attr() to respect uid/gid squashing
+  - add -T option for doing test parse of the exports file
 
 Version 0.9.17
 
