@@ -616,7 +616,7 @@ static void clear_cur(void)
 /*
  * parse an exports file
  */
-void exports_parse(void)
+int exports_parse(void)
 {
 	FILE *efile;
 
@@ -626,7 +626,7 @@ void exports_parse(void)
 	 */
 	if (exports_access) {
 		logmsg(LOG_CRIT, "export list is being traversed, no reload\n");
-		return;
+		return FALSE;
 	}
 
 	efile = fopen(opt_exports, "r");
@@ -637,7 +637,7 @@ void exports_parse(void)
 		free_nfslist(exports_nfslist);
 		export_list = NULL;
 		exports_nfslist = NULL;
-		return;
+		return FALSE;
 	}
 
 	yyin = efile;
@@ -652,7 +652,7 @@ void exports_parse(void)
 		free_nfslist(exports_nfslist);
 		export_list = NULL;
 		exports_nfslist = NULL;
-		return;
+		return FALSE;
 	}
 	
 	/* print out new list for debugging */
@@ -663,6 +663,7 @@ void exports_parse(void)
 	free_nfslist(exports_nfslist);
 	export_list = e_list;
 	exports_nfslist = ne_list;
+	return TRUE;
 }
 
 /*
