@@ -1,25 +1,13 @@
-What's new or changed in 0.9.18
+What's new or changed in 0.9.19
 ===============================
 
-The daemon can now be instructed to write its pid (process id) to
-a file by use of the new -i command line option. The feature was
-originally written as an ALT Linux patch to unfs3 created by
-Nick S. Grechukh and then ported to unfs3 0.9.17 by Michael Shigorin.
-The official implementation of the feature is based on their work.
-
-Tim Weippert reported a problem with Solaris 10 clients that
-turned out to be a problem with the way that user and group id
-squashing is handled for checking the attributes of file creation
-operations. A fix is in place now.
-
-Michael Shigorin suggested adding an option for doing a test parse
-of the exports file. This is now available as -T which will run
-a parse of the exports file and exit from unfsd with an exit status
-of either 0 or 1 depending on the success of the parse.
 
 
 ChangeLog
 =========
+
+Version 0.9.19
+
 
 Version 0.9.18
 
