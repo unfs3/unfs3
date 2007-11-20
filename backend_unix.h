@@ -74,4 +74,10 @@
 #define backend_store_create_verifier store_create_verifier
 #define backend_check_create_verifier check_create_verifier
 
+#if HAVE_LCHOWN == 1
+#define backend_lchown lchown
+#else
+#define backend_lchown chown
+#endif
+
 #endif
