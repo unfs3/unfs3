@@ -1,6 +1,11 @@
 What's new or changed in 0.9.19
 ===============================
 
+This release fixes SETATTR operations that try to change
+the owner and/or group of a symbolic link. Previously this
+would fail with a stale filehandle error. Thanks to
+hanpen <hanpen@lopox.com> for reporting the bug and
+providing a possible fix.
 
 
 ChangeLog
@@ -8,6 +13,7 @@ ChangeLog
 
 Version 0.9.19
 
+  - fix chown operation on symbolic links
 
 Version 0.9.18
 
