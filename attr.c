@@ -308,7 +308,7 @@ static nfsstat3 set_attr_unsafe(const char *path, nfs_fh3 nfh, sattr3 new)
     backend_statstruct buf;
     int res;
 
-    res = backend_stat(path, &buf);
+    res = backend_lstat(path, &buf);
     if (res != 0)
 	return NFS3ERR_STALE;
 
@@ -337,7 +337,7 @@ static nfsstat3 set_attr_unsafe(const char *path, nfs_fh3 nfh, sattr3 new)
 	else
 	    new_gid = -1;
 
-	res = backend_chown(path, new_uid, new_gid);
+	res = backend_lchown(path, new_uid, new_gid);
 	if (res == -1)
 	    return setattr_err();
     }
@@ -373,6 +373,15 @@ nfsstat3 set_attr(const char *path, nfs_fh3 nfh, sattr3 new)
      */
     if (S_ISBLK(buf.st_mode) || S_ISCHR(buf.st_mode))
 	return set_attr_unsafe(path, nfh, new);
+
+#ifdef S_ISLNK
+    /*
+     * opening a symlink would open the underlying file,
+     * don't try to do that
+     */
+    if (S_ISLNK(buf.st_mode))
+        return set_attr_unsafe(path, nfh, new);
+#endif
 
     /* 
      * open object for atomic setting of attributes
