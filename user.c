@@ -15,6 +15,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <rpc/rpc.h>
+#include <grp.h>
 #include <stdlib.h>
 
 #include "nfs.h"
@@ -167,11 +168,28 @@ void switch_to_root()
 }
 
 /*
+ * switch auxiliary group ids
+ */
+static int switch_groups(struct svc_req *req)
+{
+    struct authunix_parms *auth = (void *) req->rq_clntcred;
+    unsigned int i, max;
+  
+    max = (auth->aup_len <= 32) ? auth->aup_len : 32;
+  
+    for (i = 0; i < max; ++i) {
+      auth->aup_gids[i] = mangle(auth->aup_gids[i], squash_gid);
+    }
+    
+    return backend_setgroups(max, auth->aup_gids);
+}
+
+/*
  * switch user and group id to values listed in request
  */
 void switch_user(struct svc_req *req)
 {
-    int uid, gid;
+    int uid, gid, aid;
 
     if (!can_switch)
 	return;
@@ -193,9 +211,10 @@ void switch_user(struct svc_req *req)
     backend_setegid(0);
     backend_seteuid(0);
     gid = backend_setegid(get_gid(req));
+    aid = switch_groups(req);
     uid = backend_seteuid(get_uid(req));
 
-    if (uid == -1 || gid == -1) {
+    if (uid == -1 || gid == -1 || aid == -1) {
 	logmsg(LOG_EMERG, "euid/egid switching failed, aborting");
 	daemon_exit(CRISIS);
     }
