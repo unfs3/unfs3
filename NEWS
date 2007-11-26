@@ -7,6 +7,10 @@ would fail with a stale filehandle error. Thanks to
 hanpen <hanpen@lopox.com> for reporting the bug and
 providing a possible fix.
 
+Hanpen also made me aware of the setgroups(2) syscall
+which now enables unfs3 to correctly handle the auxiliary
+group ids sent in an NFS request.
+
 
 ChangeLog
 =========
@@ -14,6 +18,7 @@ ChangeLog
 Version 0.9.19
 
   - fix chown operation on symbolic links
+  - fix auxiliary group support
 
 Version 0.9.18
 
