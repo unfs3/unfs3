@@ -55,6 +55,7 @@
 #define backend_rmdir rmdir
 #define backend_setegid setegid
 #define backend_seteuid seteuid
+#define backend_setgroups setgroups
 #define backend_stat stat
 #define backend_statvfs statvfs
 #define backend_symlink symlink
