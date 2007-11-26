@@ -37,6 +37,7 @@
 #define backend_geteuid() 0
 #define backend_getgid() 0
 #define backend_getuid() 0
+#define backend_lchown win_chown
 #define backend_link win_link
 #define backend_lseek lseek
 #define backend_lstat win_stat
@@ -56,6 +57,7 @@
 #define backend_rmdir win_rmdir
 #define backend_setegid win_setegid
 #define backend_seteuid win_seteuid
+#define backend_setgroups(size, groups) 0
 #define backend_stat win_stat
 #define backend_statvfs win_statvfs
 #define backend_symlink win_symlink
