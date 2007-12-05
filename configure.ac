@@ -1,4 +1,4 @@
-AC_INIT(unfs3, 0.9.19) 
+AC_INIT(unfs3, 0.9.20) 
 AC_CONFIG_HEADER(config.h)
 AC_PROG_INSTALL
 AC_PROG_CC([gcc egcs kgcc cc])
