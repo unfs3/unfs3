@@ -375,12 +375,12 @@ nfsstat3 set_attr(const char *path, nfs_fh3 nfh, sattr3 new)
 	return set_attr_unsafe(path, nfh, new);
 
 #ifdef S_ISLNK
-    /*
+    /* 
      * opening a symlink would open the underlying file,
      * don't try to do that
      */
     if (S_ISLNK(buf.st_mode))
-        return set_attr_unsafe(path, nfh, new);
+	return set_attr_unsafe(path, nfh, new);
 #endif
 
     /* 

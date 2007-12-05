@@ -344,7 +344,7 @@ READ3res *nfsproc3_read_3_svc(READ3args * argp, struct svc_req * rqstp)
 
     /* handle reading of executables */
     read_executable(rqstp, st_cache);
-    
+
     /* handle read of owned files */
     read_by_owner(rqstp, st_cache);
 

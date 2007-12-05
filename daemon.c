@@ -247,7 +247,7 @@ static void parse_options(int argc, char **argv)
 		    ("\t-l <addr>   bind to interface with specified address\n");
 		printf
 		    ("\t-r          report unreadable executables as readable\n");
-                printf("\t-T          test exports file and exit\n");
+		printf("\t-T          test exports file and exit\n");
 		exit(0);
 		break;
 	    case 'l':
@@ -291,9 +291,9 @@ static void parse_options(int argc, char **argv)
 	    case 't':
 		opt_tcponly = TRUE;
 		break;
-            case 'T':
-                opt_testconfig = TRUE;
-                break;
+	    case 'T':
+		opt_testconfig = TRUE;
+		break;
 	    case 'u':
 		opt_nfs_port = 0;
 		opt_mount_port = 0;
@@ -860,13 +860,13 @@ int main(int argc, char **argv)
 
     /* config test mode */
     if (opt_testconfig) {
-        res = exports_parse();
-        if (res) {
-          exit(0);
-        } else {
-          fprintf(stderr, "Parse error in `%s'\n", opt_exports);
-          exit(1);
-        }
+	res = exports_parse();
+	if (res) {
+	    exit(0);
+	} else {
+	    fprintf(stderr, "Parse error in `%s'\n", opt_exports);
+	    exit(1);
+	}
     }
 
     if (opt_detach) {

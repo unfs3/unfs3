@@ -174,13 +174,13 @@ static int switch_groups(struct svc_req *req)
 {
     struct authunix_parms *auth = (void *) req->rq_clntcred;
     unsigned int i, max;
-  
+
     max = (auth->aup_len <= 32) ? auth->aup_len : 32;
-  
+
     for (i = 0; i < max; ++i) {
-      auth->aup_gids[i] = mangle(auth->aup_gids[i], squash_gid);
+	auth->aup_gids[i] = mangle(auth->aup_gids[i], squash_gid);
     }
-    
+
     return backend_setgroups(max, auth->aup_gids);
 }
 
@@ -251,17 +251,17 @@ void read_by_owner(struct svc_req *req, backend_statstruct buf)
 {
     int have_owner = 0;
     int have_read = 0;
-    
+
     have_owner = is_owner(buf.st_uid, req);
-    
+
     if (have_owner && (buf.st_mode & S_IRUSR)) {
-        have_read = 1;
+	have_read = 1;
     } else if (has_group(buf.st_gid, req) && (buf.st_mode & S_IRGRP)) {
-        have_read = 1;
+	have_read = 1;
     } else if (buf.st_mode & S_IROTH) {
-        have_read = 1;
+	have_read = 1;
     }
-    
+
     if (have_owner && !have_read) {
 	backend_setegid(0);
 	backend_seteuid(0);
@@ -275,17 +275,17 @@ void write_by_owner(struct svc_req *req, backend_statstruct buf)
 {
     int have_owner = 0;
     int have_write = 0;
-    
+
     have_owner = is_owner(buf.st_uid, req);
-    
+
     if (have_owner && (buf.st_mode & S_IWUSR)) {
-        have_write = 1;
+	have_write = 1;
     } else if (has_group(buf.st_gid, req) && (buf.st_mode & S_IWGRP)) {
-        have_write = 1;
+	have_write = 1;
     } else if (buf.st_mode & S_IWOTH) {
-        have_write = 1;
+	have_write = 1;
     }
-    
+
     if (have_owner && !have_write) {
 	backend_setegid(0);
 	backend_seteuid(0);
