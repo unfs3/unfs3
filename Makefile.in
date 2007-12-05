@@ -19,6 +19,7 @@ prefix = @prefix@
 exec_prefix = @exec_prefix@
 sbindir = @sbindir@
 mandir = @mandir@
+datarootdir = @datarootdir@
 
 SUBDIRS = Config @SUBDIRS@
 
