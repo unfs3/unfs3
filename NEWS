@@ -1,19 +1,31 @@
-What's new or changed in 0.9.19
+What's new or changed in 0.9.20
 ===============================
 
-This release fixes SETATTR operations that try to change
-the owner and/or group of a symbolic link. Previously this
-would fail with a stale filehandle error. Thanks to
-hanpen <hanpen@lopox.com> for reporting the bug and
-providing a possible fix.
+Thanks to Michael Shigorin and Sergey Bolshakov for making
+me aware of a bug in permission reporting for directories
+that are only executable but not readable by a user. In
+this release, the server will correctly report LOOKUP
+permission for such a directory. Previously LOOKUP permission
+was only reported when the user also had read permission for
+the directory.
 
-Hanpen also made me aware of the setgroups(2) syscall
-which now enables unfs3 to correctly handle the auxiliary
-group ids sent in an NFS request.
+Hanpen-san pointed me to a section in the NFSv3 RPC that
+suggests to always allow read and write operations for the
+owner of a file. This allows a client to open a file, chmod
+it to "no permission for anyone", and keep using the file
+through the open file handle. This doesn't directly map to
+NFS operations, but magically works when always allowing
+the owner of a file to read and/or write the file.
 
 
 ChangeLog
 =========
+
+Version 0.9.20
+
+  - fix LOOKUP permission reporting on execute-bit-only directories
+  - fix writing of files opened for writing with intervening chmod -w
+  - fix reading of files opened for reading with intervening chmod -r
 
 Version 0.9.19
 
