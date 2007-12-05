@@ -284,7 +284,7 @@ ACCESS3res *nfsproc3_access_3_svc(ACCESS3args * argp, struct svc_req * rqstp)
 
     /* adjust if directory */
     if (post.post_op_attr_u.attributes.type == NF3DIR) {
-	if (access & ACCESS3_READ)
+	if (access & (ACCESS3_READ | ACCESS3_EXECUTE))
 	    access |= ACCESS3_LOOKUP;
 	if (access & ACCESS3_MODIFY)
 	    access |= ACCESS3_DELETE;
@@ -344,6 +344,9 @@ READ3res *nfsproc3_read_3_svc(READ3args * argp, struct svc_req * rqstp)
 
     /* handle reading of executables */
     read_executable(rqstp, st_cache);
+    
+    /* handle read of owned files */
+    read_by_owner(rqstp, st_cache);
 
     /* if bigger than rtmax, truncate length */
     if (argp->count > maxdata)
@@ -398,6 +401,9 @@ WRITE3res *nfsproc3_write_3_svc(WRITE3args * argp, struct svc_req * rqstp)
 
     PREP(path, argp->file);
     result.status = join(is_reg(), exports_rw());
+
+    /* handle write of owned files */
+    write_by_owner(rqstp, st_cache);
 
     if (result.status == NFS3_OK) {
 	/* We allow caching of the fd only for unstable writes. This is to
