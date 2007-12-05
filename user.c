@@ -243,3 +243,51 @@ void read_executable(struct svc_req *req, backend_statstruct buf)
 	backend_seteuid(0);
     }
 }
+
+/*
+ * re-switch to root for reading owned file
+ */
+void read_by_owner(struct svc_req *req, backend_statstruct buf)
+{
+    int have_owner = 0;
+    int have_read = 0;
+    
+    have_owner = is_owner(buf.st_uid, req);
+    
+    if (have_owner && (buf.st_mode & S_IRUSR)) {
+        have_read = 1;
+    } else if (has_group(buf.st_gid, req) && (buf.st_mode & S_IRGRP)) {
+        have_read = 1;
+    } else if (buf.st_mode & S_IROTH) {
+        have_read = 1;
+    }
+    
+    if (have_owner && !have_read) {
+	backend_setegid(0);
+	backend_seteuid(0);
+    }
+}
+
+/*
+ * re-switch to root for writing owned file
+ */
+void write_by_owner(struct svc_req *req, backend_statstruct buf)
+{
+    int have_owner = 0;
+    int have_write = 0;
+    
+    have_owner = is_owner(buf.st_uid, req);
+    
+    if (have_owner && (buf.st_mode & S_IWUSR)) {
+        have_write = 1;
+    } else if (has_group(buf.st_gid, req) && (buf.st_mode & S_IWGRP)) {
+        have_write = 1;
+    } else if (buf.st_mode & S_IWOTH) {
+        have_write = 1;
+    }
+    
+    if (have_owner && !have_write) {
+	backend_setegid(0);
+	backend_seteuid(0);
+    }
+}

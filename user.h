@@ -23,5 +23,7 @@ void switch_to_root();
 void switch_user(struct svc_req *req);
 
 void read_executable(struct svc_req *req, backend_statstruct buf);
+void read_by_owner(struct svc_req *req, backend_statstruct buf);
+void write_by_owner(struct svc_req *req, backend_statstruct buf);
 
 #endif
