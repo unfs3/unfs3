@@ -15,7 +15,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <rpc/rpc.h>
-#include <grp.h>
 #include <stdlib.h>
 
 #include "nfs.h"
