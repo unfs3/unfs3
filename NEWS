@@ -21,6 +21,10 @@ the owner of a file to read and/or write the file.
 ChangeLog
 =========
 
+Version 0.9.21
+  - avoid returning large fileids on Windows, for better compatibility
+    with clients such as Linux 2.6.24
+
 Version 0.9.20
 
   - fix LOOKUP permission reporting on execute-bit-only directories
