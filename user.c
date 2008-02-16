@@ -9,6 +9,7 @@
 
 #ifndef WIN32
 #include <pwd.h>
+#include <grp.h>
 #include <syslog.h>
 #include <unistd.h>
 #endif				       /* WIN32 */
