@@ -42,7 +42,7 @@ bool_t xdr_mountres3_ok(XDR * xdrs, mountres3_ok * objp)
     if (!xdr_fhandle3(xdrs, &objp->fhandle))
 	return FALSE;
     if (!xdr_array
-	(xdrs, (char **) &objp->auth_flavors.auth_flavors_val,
+	(xdrs, (char **) (void *) &objp->auth_flavors.auth_flavors_val,
 	 (u_int *) & objp->auth_flavors.auth_flavors_len, ~0, sizeof(int),
 	 (xdrproc_t) xdr_int))
 	return FALSE;
@@ -1318,7 +1318,7 @@ bool_t xdr_entry3(XDR * xdrs, entry3 * objp)
     if (!xdr_cookie3(xdrs, &objp->cookie))
 	return FALSE;
     if (!xdr_pointer
-	(xdrs, (char **) &objp->nextentry, sizeof(entry3),
+	(xdrs, (char **) (void *) &objp->nextentry, sizeof(entry3),
 	 (xdrproc_t) xdr_entry3))
 	return FALSE;
     return TRUE;
@@ -1327,7 +1327,7 @@ bool_t xdr_entry3(XDR * xdrs, entry3 * objp)
 bool_t xdr_dirlist3(XDR * xdrs, dirlist3 * objp)
 {
     if (!xdr_pointer
-	(xdrs, (char **) &objp->entries, sizeof(entry3),
+	(xdrs, (char **) (void *) &objp->entries, sizeof(entry3),
 	 (xdrproc_t) xdr_entry3))
 	return FALSE;
     if (!xdr_bool(xdrs, &objp->eof))
@@ -1398,7 +1398,7 @@ bool_t xdr_entryplus3(XDR * xdrs, entryplus3 * objp)
     if (!xdr_post_op_fh3(xdrs, &objp->name_handle))
 	return FALSE;
     if (!xdr_pointer
-	(xdrs, (char **) &objp->nextentry, sizeof(entryplus3),
+	(xdrs, (char **) (void *) &objp->nextentry, sizeof(entryplus3),
 	 (xdrproc_t) xdr_entryplus3))
 	return FALSE;
     return TRUE;
@@ -1407,7 +1407,7 @@ bool_t xdr_entryplus3(XDR * xdrs, entryplus3 * objp)
 bool_t xdr_dirlistplus3(XDR * xdrs, dirlistplus3 * objp)
 {
     if (!xdr_pointer
-	(xdrs, (char **) &objp->entries, sizeof(entryplus3),
+	(xdrs, (char **) (void *) &objp->entries, sizeof(entryplus3),
 	 (xdrproc_t) xdr_entryplus3))
 	return FALSE;
     if (!xdr_bool(xdrs, &objp->eof))
