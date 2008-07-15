@@ -58,6 +58,9 @@
 /* write verifier */
 writeverf3 wverf;
 
+/* readdir cookie */
+cookie3 rcookie = 0;
+
 /* options and default values */
 int opt_detach = TRUE;
 char *opt_exports = "/etc/exports";
@@ -823,6 +826,16 @@ void regenerate_write_verifier(void)
     *(wverf + 0) = (uint32) getpid();
     *(wverf + 0) ^= rand();
     *(wverf + 4) = (uint32) time(NULL);
+}
+
+/*
+ * Change readdir cookie value
+ */
+void change_readdir_cookie(void)
+{
+    rcookie = rcookie >> 32;
+    ++rcookie;
+    rcookie = rcookie << 32;
 }
 
 /*

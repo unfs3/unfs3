@@ -804,6 +804,7 @@ REMOVE3res *nfsproc3_remove_3_svc(REMOVE3args * argp, struct svc_req * rqstp)
     cluster_lookup(obj, rqstp, &result.status);
 
     if (result.status == NFS3_OK) {
+        change_readdir_cookie();
 	res = backend_remove(obj);
 	if (res == -1)
 	    result.status = remove_err();
@@ -830,6 +831,7 @@ RMDIR3res *nfsproc3_rmdir_3_svc(RMDIR3args * argp, struct svc_req * rqstp)
     cluster_lookup(obj, rqstp, &result.status);
 
     if (result.status == NFS3_OK) {
+        change_readdir_cookie();
 	res = backend_rmdir(obj);
 	if (res == -1)
 	    result.status = rmdir_err();
@@ -870,6 +872,7 @@ RENAME3res *nfsproc3_rename_3_svc(RENAME3args * argp, struct svc_req * rqstp)
 	cluster_create(to_obj, rqstp, &result.status);
 
 	if (result.status == NFS3_OK) {
+	    change_readdir_cookie();
 	    res = backend_rename(from_obj, to_obj);
 	    if (res == -1)
 		result.status = rename_err();

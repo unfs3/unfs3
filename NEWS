@@ -1,29 +1,32 @@
-What's new or changed in 0.9.20
+What's new or changed in 0.9.21
 ===============================
 
-Thanks to Michael Shigorin and Sergey Bolshakov for making
-me aware of a bug in permission reporting for directories
-that are only executable but not readable by a user. In
-this release, the server will correctly report LOOKUP
-permission for such a directory. Previously LOOKUP permission
-was only reported when the user also had read permission for
-the directory.
-
-Hanpen-san pointed me to a section in the NFSv3 RPC that
-suggests to always allow read and write operations for the
-owner of a file. This allows a client to open a file, chmod
-it to "no permission for anyone", and keep using the file
-through the open file handle. This doesn't directly map to
-NFS operations, but magically works when always allowing
-the owner of a file to read and/or write the file.
+Brent A Nelson reported a problem where a Solaris client
+could not do an "rm -r" operation on a directory. The client
+was running READDIR concurrent with REMOVE operations on
+the same directory, which was causing unfs3's READDIR
+implementation to skip some files in the directory, which
+results in an error later because the client tries to RMDIR
+a directory that is not really empty on the server. unfs3
+now tries to notice such behaviour and will then re-read
+the directory from start in READDIR. This does the right
+thing for the Solaris client rm problem, but may cause
+directory entries to be reported more than once if unfs3
+misjudges the situation and thinks there are concurrent
+file removals when there aren't any. For most clients this
+will probably not be a problem because they use READDIR
+sizes large enough to read most directories in a single
+READDIR operation.
 
 
 ChangeLog
 =========
 
 Version 0.9.21
+
   - avoid returning large fileids on Windows, for better compatibility
     with clients such as Linux 2.6.24
+  - try to prevent races between READDIR and removal of files
 
 Version 0.9.20
 

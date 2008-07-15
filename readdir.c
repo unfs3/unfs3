@@ -23,6 +23,7 @@
 #include "readdir.h"
 #include "backend.h"
 #include "Config/exports.h"
+#include "daemon.h"
 #include "error.h"
 
 /*
@@ -83,6 +84,7 @@ READDIR3res read_dir(const char *path, cookie3 cookie, cookieverf3 verf,
 {
     READDIR3res result;
     READDIR3resok resok;
+    cookie3 upper;
     static entry3 entry[MAX_ENTRIES];
     backend_statstruct buf;
     int res;
@@ -91,6 +93,14 @@ READDIR3res read_dir(const char *path, cookie3 cookie, cookieverf3 verf,
     count3 i, real_count;
     static char obj[NFS_MAXPATHLEN * MAX_ENTRIES];
     char scratch[NFS_MAXPATHLEN];
+
+    /* check upper part of cookie */
+    upper = cookie & 0xFFFFFFFF00000000ULL;
+    if (cookie != 0 && upper != rcookie) {
+      /* ignore cookie if unexpected so we restart from the beginning */
+      cookie = 0;
+    }
+    cookie &= 0xFFFFFFFFULL;
 
     /* we refuse to return more than 4k from READDIR */
     if (count > 4096)
@@ -163,7 +173,7 @@ READDIR3res read_dir(const char *path, cookie3 cookie, cookieverf3 verf,
 	    entry[i].fileid = buf.st_ino;
 #endif
 	    entry[i].name = &obj[i * NFS_MAXPATHLEN];
-	    entry[i].cookie = cookie + 1 + i;
+	    entry[i].cookie = (cookie + 1 + i) | rcookie;
 	    entry[i].nextentry = NULL;
 
 	    /* account for entry size */
