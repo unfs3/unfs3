@@ -398,7 +398,7 @@ static void add_option(const char *opt)
 		cur_host.options &= ~OPT_NO_ROOT_SQUASH;
 	else if (strcmp(opt,"all_squash") == 0)
 		cur_host.options |= OPT_ALL_SQUASH;
-	else if (strcmp(opt,"no_all_sqash") == 0)
+	else if (strcmp(opt,"no_all_squash") == 0)
 		cur_host.options &= ~OPT_ALL_SQUASH;
 	else if (strcmp(opt,"rw") == 0)
 		cur_host.options |= OPT_RW;
