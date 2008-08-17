@@ -1,26 +1,17 @@
-What's new or changed in 0.9.21
+What's new or changed in 0.9.22
 ===============================
 
-Brent A Nelson reported a problem where a Solaris client
-could not do an "rm -r" operation on a directory. The client
-was running READDIR concurrent with REMOVE operations on
-the same directory, which was causing unfs3's READDIR
-implementation to skip some files in the directory, which
-results in an error later because the client tries to RMDIR
-a directory that is not really empty on the server. unfs3
-now tries to notice such behaviour and will then re-read
-the directory from start in READDIR. This does the right
-thing for the Solaris client rm problem, but may cause
-directory entries to be reported more than once if unfs3
-misjudges the situation and thinks there are concurrent
-file removals when there aren't any. For most clients this
-will probably not be a problem because they use READDIR
-sizes large enough to read most directories in a single
-READDIR operation.
+Garrett Cooper reported that Andy Levine found a bug
+where the "no_all_squash" option is unusable due to a
+spelling mistake in the options parser. This is fixed now.
 
 
 ChangeLog
 =========
+
+Version 0.9.22
+
+  - fix spelling mistake in "no_all_squash" export option parsing
 
 Version 0.9.21
 
