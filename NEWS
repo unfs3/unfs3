@@ -5,6 +5,9 @@ Garrett Cooper reported that Andy Levine found a bug
 where the "no_all_squash" option is unusable due to a
 spelling mistake in the options parser. This is fixed now.
 
+Wesley Shields reported build problems on more recent
+FreeBSD systems which are fixed now.
+
 
 ChangeLog
 =========
@@ -12,6 +15,7 @@ ChangeLog
 Version 0.9.22
 
   - fix spelling mistake in "no_all_squash" export option parsing
+  - fix build on more recent FreeBSD systems
 
 Version 0.9.21
 
