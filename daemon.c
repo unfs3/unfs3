@@ -126,12 +126,18 @@ short get_port(struct svc_req *rqstp)
  */
 int get_socket_type(struct svc_req *rqstp)
 {
-    int v;
+    int v, res;
     socklen_t l;
 
     l = sizeof(v);
 
-    if (getsockopt(rqstp->rq_xprt->xp_sock, SOL_SOCKET, SO_TYPE, &v, &l) < 0) {
+#if HAVE_STRUCT___RPC_SVCXPRT_XP_FD == 1
+    res = getsockopt(rqstp->rq_xprt->xp_fd, SOL_SOCKET, SO_TYPE, &v, &l);
+#else
+    res = getsockopt(rqstp->rq_xprt->xp_sock, SOL_SOCKET, SO_TYPE, &v, &l);
+#endif
+
+    if (res < 0) {
 	logmsg(LOG_CRIT, "unable to determine socket type");
 	return -1;
     }

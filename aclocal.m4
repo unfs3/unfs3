@@ -6,7 +6,7 @@ AC_DEFUN([UNFS3_SOLARIS_RPC],[
     LDFLAGS="-L/usr/ucblib -R/usr/ucblib $LDFLAGS"
     AC_CHECK_LIB(rpcsoc, svctcp_create, 
         [ LIBS="-lrpcsoc $LIBS" ],
-        [ AC_MSG_ERROR([*** Cannot find librpcsoc. Install package SUNWscpu. ***]) ]
+        [ AC_MSG_WARN([*** Cannot find librpcsoc. On Solaris, install package SUNWscpu. ***]) ]
     )
   ])
 ])
