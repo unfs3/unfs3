@@ -990,10 +990,11 @@ FSSTAT3res *nfsproc3_fsstat_3_svc(FSSTAT3args * argp, struct svc_req * rqstp)
     } else {
 	result.status = NFS3_OK;
 	result.FSSTAT3res_u.resok.tbytes =
-	    (uint64) buf.f_blocks * buf.f_bsize;
-	result.FSSTAT3res_u.resok.fbytes = (uint64) buf.f_bfree * buf.f_bsize;
+	    (uint64) buf.f_blocks * buf.f_frsize;
+	result.FSSTAT3res_u.resok.fbytes = 
+	    (uint64) buf.f_bfree * buf.f_frsize;
 	result.FSSTAT3res_u.resok.abytes =
-	    (uint64) buf.f_bavail * buf.f_bsize;
+	    (uint64) buf.f_bavail * buf.f_frsize;
 	result.FSSTAT3res_u.resok.tfiles = buf.f_files;
 	result.FSSTAT3res_u.resok.ffiles = buf.f_ffree;
 	result.FSSTAT3res_u.resok.afiles = buf.f_ffree;
