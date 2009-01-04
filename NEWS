@@ -8,6 +8,9 @@ spelling mistake in the options parser. This is fixed now.
 Wesley Shields reported build problems on more recent
 FreeBSD systems which are fixed now.
 
+Bernhard Duebi reported problems with filesystem size
+reporting when using a Solaris Zone. This is fixed now.
+
 
 ChangeLog
 =========
@@ -16,6 +19,7 @@ Version 0.9.22
 
   - fix spelling mistake in "no_all_squash" export option parsing
   - fix build on more recent FreeBSD systems
+  - fix filesystem size reporting for Solaris Zones and others
 
 Version 0.9.21
 
