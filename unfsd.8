@@ -1,7 +1,7 @@
 .\"
-.\" (C) 2004, Pascal Schmidt
+.\" (C) 2008, Pascal Schmidt
 .\"
-.TH unfsd 8 "03 Sep 2007"
+.TH unfsd 8 "05 Jan 2008"
 .SH NAME
 unfsd \- NFS server process
 .SH SYNOPSIS
@@ -361,6 +361,29 @@ some NFS clients do not cope well with this situation as, for
 instance, it is then possible for two files in the one apparent
 filesystem to have the same inode number. To avoid this, make sure
 that the client mounts each exported file system. 
+.PP
+Due to the way
+.B unfsd
+operates, it needs execute (lookup) and read permission on all directories
+from the root directory all the way up to exported directories.
+For example, if
+.I /usr/share
+is exported,
+.B unfsd
+is going to need permission for
+.IR / ", " /usr ", and " /usr/share .
+Since root squashing can be in effect,
+.B unfsd
+may run as the nobody user, which normally means having to grant
+execute (lookup) and read permission for everybody on the server.
+In the above example,
+.B unfsd
+also needs permission to access
+.IR /usr/share/.. ,
+which can be different from
+.I /usr
+for some special setups (for example when using bind mounts under
+Linux).
 .SH FILES
 .TP 20
 .I /etc/exports
