@@ -66,11 +66,11 @@ backend_statstruct st_cache;
  */
 uint32 get_gen(backend_statstruct obuf, U(int fd), U(const char *path))
 {
-#if HAVE_STRUCT_STAT_ST_GEN == 1
+#ifdef HAVE_STRUCT_STAT_ST_GEN
     return obuf.st_gen;
 #endif
 
-#if HAVE_STRUCT_STAT_ST_GEN == 0 && HAVE_LINUX_EXT2_FS_H == 1
+#if !defined(HAVE_STRUCT_STAT_ST_GEN) && defined(HAVE_LINUX_EXT2_FS_H)
     int newfd, res;
     uint32 gen;
     uid_t euid;
@@ -112,7 +112,7 @@ uint32 get_gen(backend_statstruct obuf, U(int fd), U(const char *path))
     return gen;
 #endif
 
-#if HAVE_STRUCT_STAT_ST_GEN == 0 && HAVE_LINUX_EXT2_FS_H == 0
+#if !defined(HAVE_STRUCT_STAT_ST_GEN) && !defined(HAVE_LINUX_EXT2_FS_H)
     return obuf.st_ino;
 #endif
 }
@@ -158,7 +158,7 @@ static const unfs3_fh_t invalid_fh = {.dev = 0,.ino = 0,.gen = 0,.len =
 	0,.inos = {0}
 };
 #else
-static const unfs3_fh_t invalid_fh = { 0, 0, 0, 0, {0} };
+static const unfs3_fh_t invalid_fh = { 0, 0, 0, 0, 0, {0} };
 #endif
 
 /*
