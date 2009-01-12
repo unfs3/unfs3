@@ -33,5 +33,38 @@ AC_CHECK_FUNCS(setgroups)
 UNFS3_SOLARIS_RPC
 UNFS3_PORTMAP_DEFINE
 UNFS3_COMPILE_WARNINGS
-AC_ARG_ENABLE(cluster,[  --enable-cluster        include clustering extensions],[AC_DEFINE([WANT_CLUSTER], [], [Cluster extensions]) AC_SUBST([SUBDIRS],[Extras]) AC_SUBST([EXTRAOBJ],[Extras/lib.a])])
+
+AC_ARG_ENABLE(afs,
+	AS_HELP_STRING([--enable-afs], [include better support for exporting from AFS]),
+	[AC_DEFINE([AFS_SUPPORT], [], [Enable better support for exporting from AFS])])
+
+AC_ARG_WITH(afs-prefix,
+	AS_HELP_STRING([--with-afs-prefix=PFX], [use AFS libs installed under PFX]),
+	[AFS_INCLUDES="-I$withval/include"
+	 AFS_LIBS="-L$withval/lib/afs"],
+	[AFS_INCLUDES=""
+	 AFS_LIBS="-L/usr/lib/afs"])
+
+AFS_LIBS="$AFS_LIBS -lsys -lrx -lafsutil -llwp"
+
+if test "_$enable_afs" != _yes
+then
+	AFS_INCLUDES=
+	AFS_LIBS=
+fi
+
+AC_SUBST([AFS_INCLUDES])
+AC_SUBST([AFS_LIBS])
+
+AC_ARG_ENABLE(cluster,
+	AS_HELP_STRING([--enable-cluster], [include clustering extensions]),
+	[AC_DEFINE([WANT_CLUSTER], [], [Cluster extensions])
+	 SUBDIRS=Extras
+	 EXTRAOBJ=Extras/lib.a],
+	[SUBDIRS=
+	 EXTRAOBJ=])
+
+AC_SUBST([SUBDIRS])
+AC_SUBST([EXTRAOBJ])
+
 AC_OUTPUT(Makefile Config/Makefile Extras/Makefile)
