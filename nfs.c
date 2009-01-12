@@ -10,10 +10,10 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/param.h>		       /* needed for statfs() on NetBSD */
-#if HAVE_SYS_MOUNT_H == 1
+#ifdef HAVE_SYS_MOUNT_H
 #include <sys/mount.h>		       /* dito */
 #endif
-#if HAVE_SYS_VMOUNT_H == 1
+#ifdef HAVE_SYS_VMOUNT_H
 #include <sys/vmount.h>		       /* AIX */
 #endif
 #include <rpc/rpc.h>
