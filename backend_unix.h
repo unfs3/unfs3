@@ -81,4 +81,18 @@
 #define backend_lchown chown
 #endif
 
+#ifdef AFS_SUPPORT
+#  undef  backend_get_gen
+#  define backend_get_gen	afs_get_gen
+#  undef  backend_stat
+#  define backend_stat		afs_stat
+#  undef  backend_fstat
+#  define backend_fstat		afs_fstat
+#  undef  backend_lstat
+#  define backend_lstat		afs_lstat
+#  undef  backend_statstruct
+#  define backend_statstruct	struct stat_plus_afs
+#  include "afssupport.h"
+#endif
+
 #endif
