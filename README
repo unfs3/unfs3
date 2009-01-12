@@ -23,6 +23,10 @@ following options are recognized in the exports file: ro, rw,
 root_squash, all_squash, no_root_squash, no_all_squash. If
 other options are present, they are ignored.
 
+UNFS3 can be used to (re-)export part of an AFS network filesystem. 
+Because AFS does not simulate inodes particularly well, configuring the 
+source with --enable-afs is recommended in this scenario.
+
 Cluster extensions compatible to the older ClusterNFS project
 are supported when the source is configured with --enable-cluster.
 
