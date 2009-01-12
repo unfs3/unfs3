@@ -1,19 +1,21 @@
 CC = @CC@
-CFLAGS = @CFLAGS@ -D_GNU_SOURCE
+CFLAGS = @CFLAGS@ @AFS_INCLUDES@ -D_GNU_SOURCE -I.
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 VERSION = @PACKAGE_VERSION@
 RM = rm -f
 MAKE = make
 
-SOURCES = attr.c daemon.c error.c fd_cache.c fh.c fh_cache.c locate.c \
+SOURCES = afsgettimes.c afssupport.c attr.c daemon.c error.c fd_cache.c fh.c fh_cache.c locate.c \
           md5.c mount.c nfs.c password.c readdir.c user.c xdr.c winsupport.c
-OBJS = attr.o daemon.o error.o fd_cache.o fh.o fh_cache.o locate.o \
+OBJS = afsgettimes.o afssupport.o attr.o daemon.o error.o fd_cache.o fh.o fh_cache.o locate.o \
        md5.o mount.o nfs.o password.o readdir.o user.o xdr.o winsupport.o
 CONFOBJ = Config/lib.a
 EXTRAOBJ = @EXTRAOBJ@
-LDFLAGS = @LDFLAGS@ @LIBS@ @LEXLIB@
+LDFLAGS = @LDFLAGS@ @LIBS@ @LEXLIB@ @AFS_LIBS@
 EXEEXT = @EXEEXT@
+
+srcdir = @srcdir@
 
 prefix = @prefix@
 exec_prefix = @exec_prefix@
@@ -25,26 +27,28 @@ SUBDIRS = Config @SUBDIRS@
 
 DESTDIR =
 
+VPATH = $(srcdir)
+
 all: subdirs unfsd$(EXEEXT)
 
 unfsd$(EXEEXT): $(OBJS) $(CONFOBJ) $(EXTRAOBJ)
 	$(CC) -o $@ $(OBJS) $(CONFOBJ) $(EXTRAOBJ) $(LDFLAGS)
 
 subdirs:
-	for i in $(SUBDIRS); do cd $$i; $(MAKE) all; cd ..; done
+	for i in $(SUBDIRS); do (cd $$i && $(MAKE) all) || exit; done
 
 install: unfsd$(EXEEXT)
 	$(INSTALL) -d $(DESTDIR)$(sbindir)
 	$(INSTALL) -d $(DESTDIR)$(mandir)/man7
 	$(INSTALL) -d $(DESTDIR)$(mandir)/man8
 	$(INSTALL) unfsd$(EXEEXT) $(DESTDIR)$(sbindir)/unfsd$(EXEEXT)
-	$(INSTALL_DATA) Extras/tags.7 $(DESTDIR)$(mandir)/man7/tags.7
-	$(INSTALL_DATA) unfsd.8       $(DESTDIR)$(mandir)/man8/unfsd.8
+	$(INSTALL_DATA) $(srcdir)/Extras/tags.7 $(DESTDIR)$(mandir)/man7/tags.7
+	$(INSTALL_DATA) $(srcdir)/unfsd.8       $(DESTDIR)$(mandir)/man8/unfsd.8
 
 # Not installed by default, since it installs files outside prefix
 install-init: unfsd.init
 	$(INSTALL) -d $(DESTDIR)/etc/init.d
-	$(INSTALL) unfsd.init $(DESTDIR)/etc/init.d/unfsd
+	$(INSTALL) $(srcdir)/unfsd.init $(DESTDIR)/etc/init.d/unfsd
 
 install-strip: install
 	strip $(DESTDIR)$(sbindir)/unfsd$(EXEEXT)
@@ -55,13 +59,13 @@ uninstall:
 	$(RM) $(DESTDIR)$(mandir)/man8/unfsd.8
 
 clean:
-	for i in $(SUBDIRS); do cd $$i; $(MAKE) clean; cd ..; done
+	for i in $(SUBDIRS); do (cd $$i && $(MAKE) clean) || exit; done
 	$(RM) $(OBJS)
 	$(RM) unfsd$(EXEEXT)
 	$(RM) unfs3-$(VERSION).tar.gz
 
 distclean: clean
-	for i in $(SUBDIRS); do cd $$i; $(MAKE) distclean; cd ..; done
+	for i in $(SUBDIRS); do (cd $$i && $(MAKE) distclean) || exit; done
 	$(RM) Makefile config.h
 	$(RM) config.log config.status
 
@@ -70,7 +74,7 @@ maintainer-clean: distclean
 	$(RM) -rf autom4te.cache
 
 dep: $(SOURCES)
-	for i in $(SUBDIRS); do cd $$i; $(MAKE) dep; cd ..; done
+	for i in $(SUBDIRS); do (cd $$i && $(MAKE) dep) || exit; done
 	$(CC) $(CFLAGS) -MM $(SOURCES) >> Makefile
 
 .PHONY: dist unfs3-$(VERSION).tar.gz
@@ -78,11 +82,10 @@ dep: $(SOURCES)
 dist: unfs3-$(VERSION).tar.gz
 
 unfs3-$(VERSION).tar.gz:
-	rm -rf /tmp/unfs3-make-dist-dir
-	mkdir /tmp/unfs3-make-dist-dir
-	ln -sf `pwd` /tmp/unfs3-make-dist-dir/unfs3-$(VERSION)
-	(cd /tmp/unfs3-make-dist-dir; \
-	 tar zcf unfs3-$(VERSION)/unfs3-$(VERSION).tar.gz \
+	rm -rf unfs3-$(VERSION)
+	ln -sf `cd $(srcdir) && /bin/pwd` unfs3-$(VERSION)
+
+	tar zcf unfs3-$(VERSION).tar.gz \
 	 unfs3-$(VERSION)/fd_cache.c \
 	 unfs3-$(VERSION)/md5.h \
 	 unfs3-$(VERSION)/xdr.h \
@@ -152,7 +155,11 @@ unfs3-$(VERSION).tar.gz:
 	 unfs3-$(VERSION)/configure.ac \
 	 unfs3-$(VERSION)/mount.h \
 	 unfs3-$(VERSION)/readdir.c \
-	 unfs3-$(VERSION)/user.h)
-	rm -rf /tmp/unfs3-make-dist-dir
+	 unfs3-$(VERSION)/user.h \
+	 unfs3-$(VERSION)/afsgettimes.c \
+	 unfs3-$(VERSION)/afssupport.h \
+	 unfs3-$(VERSION)/afssupport.c
+
+	rm -f unfs3-$(VERSION)
 
 # automatically generated dependencies follow
