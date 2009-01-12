@@ -27,7 +27,7 @@
 #ifndef WIN32
 int gen_nonce(char *nonce)
 {
-    struct stat st;
+    backend_statstruct st;
     struct tms tmsbuf;
     md5_state_t state;
     unsigned int *arr;
@@ -43,7 +43,7 @@ int gen_nonce(char *nonce)
 
     /* No /dev/random; do it by hand */
     arr = (unsigned int *) nonce;
-    stat("/tmp", &st);
+    backend_stat("/tmp", &st);
     arr[0] = st.st_mtime;
     arr[1] = st.st_atime;
     arr[2] = st.st_ctime;
