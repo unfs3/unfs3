@@ -1,24 +1,19 @@
-What's new or changed in 0.9.22
+What's new or changed in 0.9.23
 ===============================
 
-Garrett Cooper reported that Andy Levine found a bug
-where the "no_all_squash" option is unusable due to a
-spelling mistake in the options parser. This is fixed now.
-
-Wesley Shields reported build problems on more recent
-FreeBSD systems which are fixed now.
-
-Bernhard Duebi reported problems with filesystem size
-reporting when using a Solaris Zone. This is fixed now.
-
-The BUGS section of the manpage has been updated to
-explicitly list the permissions that UNFS3 will need
-for exported directories and the parents of exported
-directories.
+Daniel Richard G. provided a large patch to allow better
+support for exporting files from AFS network filesystems.
+The new code provides the basis for avoiding inode number
+clashes on AFS files, which could otherwise lead to clients
+confusing different files.
 
 
 ChangeLog
 =========
+
+Version 0.9.23
+
+  - include AFS support for better serving of files from AFS filesystems
 
 Version 0.9.22
 
