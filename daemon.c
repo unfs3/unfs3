@@ -34,7 +34,7 @@
 #include <unistd.h>
 #include <errno.h>
 
-#if HAVE_RPC_SVC_SOC_H == 1
+#ifdef HAVE_RPC_SVC_SOC_H
 # include <rpc/svc_soc.h>
 #endif
 
@@ -741,7 +741,7 @@ static SVCXPRT *create_udp_transport(unsigned int port)
 	sin.sin_port = htons(port);
 	sin.sin_addr.s_addr = opt_bind_addr.s_addr;
 	sock = socket(PF_INET, SOCK_DGRAM, 0);
-	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *) &on, sizeof(on));
+	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (const char *) &on, sizeof(on));
 	if (bind(sock, (struct sockaddr *) &sin, sizeof(struct sockaddr))) {
 	    perror("bind");
 	    fprintf(stderr, "Couldn't bind to udp port %d\n", port);
@@ -773,7 +773,7 @@ static SVCXPRT *create_tcp_transport(unsigned int port)
 	sin.sin_port = htons(port);
 	sin.sin_addr.s_addr = opt_bind_addr.s_addr;
 	sock = socket(PF_INET, SOCK_STREAM, 0);
-	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (char *) &on, sizeof(on));
+	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (const char *) &on, sizeof(on));
 	if (bind(sock, (struct sockaddr *) &sin, sizeof(struct sockaddr))) {
 	    perror("bind");
 	    fprintf(stderr, "Couldn't bind to tcp port %d\n", port);
@@ -793,7 +793,7 @@ static SVCXPRT *create_tcp_transport(unsigned int port)
 
 /* Run RPC service. This is our own implementation of svc_run(), which
    allows us to handle other events as well. */
-static void unfs3_svc_run()
+static void unfs3_svc_run(void)
 {
     fd_set readfds;
     struct timeval tv;
