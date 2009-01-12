@@ -53,7 +53,7 @@
 #define SIG_PF void(*)(int)
 #endif
 
-#define UNFS_NAME "UNFS3 unfsd " PACKAGE_VERSION " (C) 2006, Pascal Schmidt <unfs3-server@ewetel.net>\n"
+#define UNFS_NAME "UNFS3 unfsd " PACKAGE_VERSION " (C) 2009, Pascal Schmidt <unfs3-server@ewetel.net>\n"
 
 /* write verifier */
 writeverf3 wverf;
