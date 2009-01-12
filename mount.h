@@ -25,7 +25,7 @@ enum mountstat3 {
 	MNT3ERR_INVAL = 22,
 	MNT3ERR_NAMETOOLONG = 63,
 	MNT3ERR_NOTSUPP = 10004,
-	MNT3ERR_SERVERFAULT = 10006,
+	MNT3ERR_SERVERFAULT = 10006
 };
 typedef enum mountstat3 mountstat3;
 
