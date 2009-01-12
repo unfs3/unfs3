@@ -4,17 +4,17 @@
  * (C) 2003, Pascal Schmidt
  * see file LICENSE for license details
  */
-#include "../config.h"
+#include "config.h"
 
 #include <rpc/rpc.h>
 #include <string.h>
 
-#include "../nfs.h"
+#include "nfs.h"
 #include "y.tab.h"
 
 #define YY_NO_UNPUT
 
-YYSTYPE yylval;
+extern YYSTYPE yylval;
 extern int e_error;
 
 /*
