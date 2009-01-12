@@ -1,9 +1,12 @@
 CC = @CC@
-CFLAGS = @CFLAGS@
+CFLAGS = @CFLAGS@ -I.. -I$(srcdir) -I$(top_srcdir)
 AR = ar
 RM = rm -f
 LEX = @LEX@
 YACC = @YACC@
+
+top_srcdir = @top_srcdir@
+srcdir = @srcdir@
 
 OBJS = @LEX_OUTPUT_ROOT@.o y.tab.o
 
@@ -12,15 +15,15 @@ all: lib.a
 lib.a: $(OBJS)
 	$(AR) crs lib.a $(OBJS)
 
-y.tab.h y.tab.c: exports.y
-	$(YACC) -d exports.y
+y.tab.h y.tab.c: $(srcdir)/exports.y
+	$(YACC) -d $(srcdir)/exports.y
 
-y.tab.o: y.tab.c exports.h ../nfs.h ../mount.h ../daemon.h
+y.tab.o: y.tab.c $(srcdir)/exports.h $(top_srcdir)/nfs.h $(top_srcdir)/mount.h $(top_srcdir)/daemon.h
 
-@LEX_OUTPUT_ROOT@.c: exports.l
-	$(LEX) exports.l
+@LEX_OUTPUT_ROOT@.c: $(srcdir)/exports.l
+	$(LEX) $(srcdir)/exports.l
 
-@LEX_OUTPUT_ROOT@.o: @LEX_OUTPUT_ROOT@.c y.tab.h ../nfs.h
+@LEX_OUTPUT_ROOT@.o: @LEX_OUTPUT_ROOT@.c y.tab.h $(top_srcdir)/nfs.h
 
 dep:
 	:
