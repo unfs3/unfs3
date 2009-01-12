@@ -13,7 +13,7 @@
 #define U(x) x
 #endif
 
-#if HAVE_STDINT_H == 1
+#ifdef HAVE_STDINT_H
 #include <stdint.h>
 #endif
 
@@ -45,24 +45,24 @@ typedef char *nfspath;
 #define NFS3_CREATEVERFSIZE 8
 #define NFS3_WRITEVERFSIZE 8
 
-#if HAVE_UINT64 == 0
+#ifndef HAVE_UINT64
 typedef uint64_t uint64;
 #endif
 
-#if HAVE_INT64 == 0
+#ifndef HAVE_INT64
 typedef int64_t int64;
 #endif
 
-#if HAVE_UINT32 == 0
-#if HAVE_XDR_U_LONG == 1
+#ifndef HAVE_UINT32
+#ifdef HAVE_XDR_U_LONG
 typedef u_long uint32;
 #else
 typedef uint32_t uint32;
 #endif
 #endif
 
-#if HAVE_INT32 == 0
-#if HAVE_XDR_LONG == 1
+#ifndef HAVE_INT32
+#ifdef HAVE_XDR_LONG
 typedef long int32;
 #else
 typedef int32_t int32;
@@ -124,7 +124,7 @@ enum nfsstat3 {
 	NFS3ERR_TOOSMALL = 10005,
 	NFS3ERR_SERVERFAULT = 10006,
 	NFS3ERR_BADTYPE = 10007,
-	NFS3ERR_JUKEBOX = 10008,
+	NFS3ERR_JUKEBOX = 10008
 };
 typedef enum nfsstat3 nfsstat3;
 
@@ -135,7 +135,7 @@ enum ftype3 {
 	NF3CHR = 4,
 	NF3LNK = 5,
 	NF3SOCK = 6,
-	NF3FIFO = 7,
+	NF3FIFO = 7
 };
 typedef enum ftype3 ftype3;
 
@@ -216,7 +216,7 @@ typedef struct post_op_fh3 post_op_fh3;
 enum time_how {
 	DONT_CHANGE = 0,
 	SET_TO_SERVER_TIME = 1,
-	SET_TO_CLIENT_TIME = 2,
+	SET_TO_CLIENT_TIME = 2
 };
 typedef enum time_how time_how;
 
@@ -455,7 +455,7 @@ typedef struct READ3res READ3res;
 enum stable_how {
 	UNSTABLE = 0,
 	DATA_SYNC = 1,
-	FILE_SYNC = 2,
+	FILE_SYNC = 2
 };
 typedef enum stable_how stable_how;
 
@@ -496,7 +496,7 @@ typedef struct WRITE3res WRITE3res;
 enum createmode3 {
 	UNCHECKED = 0,
 	GUARDED = 1,
-	EXCLUSIVE = 2,
+	EXCLUSIVE = 2
 };
 typedef enum createmode3 createmode3;
 
