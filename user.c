@@ -158,7 +158,7 @@ int has_group(int group, struct svc_req *req)
 /*
  * switch to root
  */
-void switch_to_root()
+void switch_to_root(void)
 {
     if (!can_switch)
 	return;

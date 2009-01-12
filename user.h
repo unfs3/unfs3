@@ -19,7 +19,7 @@ int has_group(int group, struct svc_req *req);
 
 void get_squash_ids(void);
 
-void switch_to_root();
+void switch_to_root(void);
 void switch_user(struct svc_req *req);
 
 void read_executable(struct svc_req *req, backend_statstruct buf);
