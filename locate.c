@@ -16,11 +16,11 @@
 #include <string.h>
 #include <unistd.h>
 
-#if HAVE_MNTENT_H == 1
+#ifdef HAVE_MNTENT_H
 #include <mntent.h>
 #endif
 
-#if HAVE_SYS_MNTTAB_H == 1
+#ifdef HAVE_SYS_MNTTAB_H
 #include <sys/mnttab.h>
 #endif
 
@@ -49,7 +49,7 @@ static int locate_pfx(const char *pfx, uint32 dev, uint64 ino, char *result)
     char path[NFS_MAXPATHLEN];
     backend_dirstream *search;
     struct dirent *ent;
-    struct stat buf;
+    backend_statstruct buf;
     int res;
 
     search = opendir(pfx);
@@ -62,7 +62,7 @@ static int locate_pfx(const char *pfx, uint32 dev, uint64 ino, char *result)
 
 	sprintf(path, "%s/%s", pfx, ent->d_name);
 
-	res = lstat(path, &buf);
+	res = backend_lstat(path, &buf);
 	if (res != 0)
 	    continue;
 
@@ -105,11 +105,11 @@ char *locate_file(U(uint32 dev), U(uint64 ino))
     int res;
 #endif
 
-#if HAVE_MNTENT_H == 1
+#ifdef HAVE_MNTENT_H
     struct mntent *ent;
 #endif
 
-#if HAVE_SYS_MNTTAB_H == 1
+#ifdef HAVE_SYS_MNTTAB_H
     struct mnttab ent;
     int found = FALSE;
 #endif
@@ -117,7 +117,7 @@ char *locate_file(U(uint32 dev), U(uint64 ino))
     if (!opt_brute_force)
 	return NULL;
 
-#if HAVE_MNTENT_H == 1
+#ifdef HAVE_MNTENT_H
     mtab = setmntent("/etc/mtab", "r");
     if (!mtab)
 	return NULL;
@@ -141,7 +141,7 @@ char *locate_file(U(uint32 dev), U(uint64 ino))
     }
 #endif
 
-#if HAVE_SYS_MNTTAB_H == 1
+#ifdef HAVE_SYS_MNTTAB_H
     mtab = fopen("/etc/mnttab", "r");
     if (!mtab)
 	return NULL;
