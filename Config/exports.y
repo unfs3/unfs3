@@ -4,13 +4,13 @@
  * (C) 2004, Pascal Schmidt
  * see file LICENSE for license details
  */
-#include "../config.h"
+#include "config.h"
 
 #include <rpc/rpc.h>
 #include <limits.h>
 
 #ifdef WIN32
-#include "../winsupport.h"
+#include "winsupport.h"
 #else
 #include <netdb.h>
 #include <syslog.h>
@@ -22,10 +22,10 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../nfs.h"
-#include "../mount.h"
-#include "../daemon.h"
-#include "../backend.h"
+#include "nfs.h"
+#include "mount.h"
+#include "daemon.h"
+#include "backend.h"
 #include "exports.h"
 
 #ifndef PATH_MAX
