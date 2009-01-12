@@ -1060,3 +1060,6 @@ int win_check_create_verifier(backend_statstruct * buf, createverf3 verf)
 }
 
 #endif				       /* WIN32 */
+
+/* ISO C forbids an empty source file */
+typedef short pier;
