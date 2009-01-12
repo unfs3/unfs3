@@ -166,7 +166,7 @@ READDIR3res read_dir(const char *path, cookie3 cookie, cookieverf3 verf,
 
 	    strcpy(&obj[i * NFS_MAXPATHLEN], this->d_name);
 
-#ifdef WIN32
+#if defined(WIN32) || defined(AFS_SUPPORT)
 	    /* See comment in attr.c:get_post_buf */
 	    entry[i].fileid = (buf.st_ino >> 32) ^ (buf.st_ino & 0xffffffff);
 #else

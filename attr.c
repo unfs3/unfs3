@@ -189,8 +189,8 @@ post_op_attr get_post_buf(backend_statstruct buf, struct svc_req * req)
 	    result.post_op_attr_u.attributes.fsid = export_fsid;
 	}
     }
-#ifdef WIN32
-    /* Recent Linux kernels (2.6.24 and newer) exposes large fileids even to
+#if defined(WIN32) || defined(AFS_SUPPORT)
+    /* Recent Linux kernels (2.6.24 and newer) expose large fileids even to
        non-LFS 32-bit applications, unless kernel parameter
        nfs.enable_ino64=0. This means that applications will fail with
        EOVERFLOW. On Windows, we always have large st_ino:s. To avoid
