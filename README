@@ -1,5 +1,5 @@
 UNFS3 (User-Space NFSv3 Server)
-(C) 2003-2006, Pascal Schmidt <unfs3-server@ewetel.net>
+(C) 2003-2009, Pascal Schmidt <unfs3-server@ewetel.net>
 
 
 INTRODUCTION
@@ -34,23 +34,19 @@ are supported when the source is configured with --enable-cluster.
 SUPPORTED SYSTEMS
 =================
 
-Linux:		compiles and runs, passes Connectathon 2003 NFS
-		testsuite's "basic" and "general" tests, survives
-		fsx stress testing
+unfs3 is developed and tested on Linux, but should also compile
+and run on other Unix systems. In the past, versions of unfs3
+have been successfully tested on NetBSD, FreeBSD, Solaris, AIX,
+Irix, and Mac OS X. There is also some support for running on
+Windows, see doc/README.win for details.
 
-Solaris: 	compiles and runs, survives light testing
+Releases are tested by trying to compile them on Linux using both
+GNU make and FreeBSD make. The basic tests of the Connectathon
+NFS testsuite are then used to very basic functionality of the
+server.
 
-NetBSD: 	compiles and runs, but there are compatibility
-		problems with the in-kernel NFS client
-
-AIX:		compiles
-
-Irix:		compiles (with gcc and native compiler)
-
-OS X:		compiles
-
-Note that only Linux support is checked for all releases. If unfs3
-breaks on other platforms, a bug report is appreciated.
+If unfs3 doesn't build or work on a Unix system, a problem
+report is appreciated.
 
 
 INSTALLATION
