@@ -7,6 +7,9 @@ The new code provides the basis for avoiding inode number
 clashes on AFS files, which could otherwise lead to clients
 confusing different files.
 
+Integrated a patch from Michael Tokarev for using
+svc_getreq_poll() when provided by the operating system.
+
 
 ChangeLog
 =========
@@ -14,6 +17,7 @@ ChangeLog
 Version 0.9.23
 
   - include AFS support for better serving of files from AFS filesystems
+  - use svc_getreq_poll() when available
 
 Version 0.9.22
 

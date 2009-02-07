@@ -37,6 +37,9 @@
 #ifdef HAVE_RPC_SVC_SOC_H
 # include <rpc/svc_soc.h>
 #endif
+#ifdef HAVE_SVC_GETREQ_POLL
+# include <sys/poll.h>
+#endif
 
 #include "nfs.h"
 #include "mount.h"
@@ -795,11 +798,29 @@ static SVCXPRT *create_tcp_transport(unsigned int port)
    allows us to handle other events as well. */
 static void unfs3_svc_run(void)
 {
+#ifdef HAVE_SVC_GETREQ_POLL
+    int r;
+#else
     fd_set readfds;
     struct timeval tv;
+#endif
 
     for (;;) {
 	fd_cache_close_inactive();
+
+#ifdef HAVE_SVC_GETREQ_POLL
+	r = poll(svc_pollfd, svc_max_pollfd, 2*1000);
+	if (r < 0) {
+		if (errno == EINTR) {
+		    continue;
+		}
+		perror("unfs3_svc_run: poll failed");
+		return;
+	}
+	else if (r)
+		svc_getreq_poll(svc_pollfd, r);
+
+#else
 	readfds = svc_fdset;
 	tv.tv_sec = 1;
 	tv.tv_usec = 0;
@@ -821,6 +842,7 @@ static void unfs3_svc_run(void)
 	    default:
 		svc_getreqset(&readfds);
 	}
+#endif
     }
 }
 
