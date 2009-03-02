@@ -56,7 +56,7 @@ typedef struct _backend_statstruct
         uint32  st_uid;
         uint32  st_gid;
         _dev_t  st_rdev;
-        _off_t  st_size;
+        __int64 st_size;
         short   st_blksize;
         _off_t  st_blocks;
         time_t  st_atime;
@@ -73,7 +73,7 @@ typedef struct _backend_passwdstruct
 /* Only includes fields actually used by unfs3 */
 typedef struct _backend_statvfsstruct
 {
-        unsigned long  f_bsize;    /* file system block size */
+        unsigned long  f_frsize;    /* file system block size */
         uint64         f_blocks;   /* size of fs in f_frsize units */
         uint64         f_bfree;    /* # free blocks */
         uint64         f_bavail;   /* # free blocks for non-root */
@@ -90,8 +90,8 @@ typedef struct _UNFS3_WIN_DIR
 } UNFS3_WIN_DIR;
 
 int inet_aton(const char *cp, struct in_addr *addr);
-ssize_t pread(int fd, void *buf, size_t count, off_t offset);
-ssize_t pwrite(int fd, const void *buf, size_t count, off_t offset);
+ssize_t pread(int fd, void *buf, size_t count, off64_t offset);
+ssize_t pwrite(int fd, const void *buf, size_t count, off64_t offset);
 void syslog(int priority, const char *format, ...);
 
 int win_seteuid(uid_t euid);

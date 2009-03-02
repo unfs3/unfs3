@@ -361,28 +361,35 @@ int inet_aton(const char *cp, struct in_addr *addr)
    replacement" at:
    http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dnucmg/html/UCMGch10.asp
 */
-ssize_t pread(int fd, void *buf, size_t count, off_t offset)
+ssize_t pread(int fd, void *buf, size_t count, off64_t offset)
 {
     ssize_t size;
-    off_t ret;
+    __int64 ret;
 
-    if ((ret = lseek(fd, offset, SEEK_SET)) < 0)
-	return -1;
+    if ((ret = _lseeki64(fd, (__int64)offset, SEEK_SET)) < 0)
+    {
+		fprintf(stderr, "Seeking for offset %I64d failed when reading.\n", offset);
+    	return -1;
+	}
+	
     size = read(fd, buf, count);
     return size;
 }
 
-ssize_t pwrite(int fd, const void *buf, size_t count, off_t offset)
+ssize_t pwrite(int fd, const void *buf, size_t count, off64_t offset)
 {
     ssize_t size;
-    off_t ret;
+    __int64 ret;
     HANDLE h;
     FILETIME ft;
     SYSTEMTIME st;
     ULARGE_INTEGER fti;
 
-    if ((ret = lseek(fd, offset, SEEK_SET)) < 0)
-	return -1;
+    if ((ret = _lseeki64(fd, (__int64)offset, SEEK_SET)) < 0)
+	{
+		fprintf(stderr, "Seeking for offset %I64d failed when writing.\n", offset);
+		return -1;
+	}
     size = write(fd, buf, count);
 
     /* Since we are using the CreationTime attribute as "ctime", we need to
@@ -485,7 +492,7 @@ int win_stat(const char *file_name, backend_statstruct * buf)
     size_t namelen;
     wchar_t *splitpoint;
     char savedchar;
-    struct _stat win_statbuf;
+    struct _stati64 win_statbuf;
 
     /* Special case: Our top-level virtual root, containing each drive
        represented as a directory. Compare with "My Computer" etc. This
@@ -512,7 +519,7 @@ int win_stat(const char *file_name, backend_statstruct * buf)
 	return -1;
     }
 
-    ret = _wstat(winpath, &win_statbuf);
+    ret = _wstati64(winpath, &win_statbuf);
     if (ret < 0) {
 	free(winpath);
 	return ret;
@@ -773,7 +780,7 @@ int win_statvfs(const char *path, backend_statvfsstruct * buf)
 
     if (!strcmp("/", path)) {
 	/* Emulate root */
-	buf->f_bsize = 1024;
+	buf->f_frsize = 1024;
 	buf->f_blocks = 1024;
 	buf->f_bfree = 0;
 	buf->f_bavail = 0;
@@ -804,7 +811,7 @@ int win_statvfs(const char *path, backend_statvfsstruct * buf)
 	return -1;
     }
 
-    buf->f_bsize = BytesPerSector;
+    buf->f_frsize = BytesPerSector;
     buf->f_blocks = TotalNumberOfBytes.QuadPart / BytesPerSector;
     buf->f_bfree = TotalNumberOfFreeBytes.QuadPart / BytesPerSector;
     buf->f_bavail = FreeBytesAvailable.QuadPart / BytesPerSector;

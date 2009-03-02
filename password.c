@@ -19,7 +19,9 @@
 #include <sys/times.h>		       /* times */
 #endif				       /* WIN32 */
 #include <fcntl.h>
+#ifndef WIN32
 #include <sys/time.h>		       /* gettimeofday */
+#endif
 #include "md5.h"
 #include "backend.h"
 #include "daemon.h"		       /* logmsg */

@@ -356,7 +356,7 @@ READ3res *nfsproc3_read_3_svc(READ3args * argp, struct svc_req * rqstp)
 	fd = fd_open(path, argp->file, UNFS3_FD_READ, TRUE);
 	if (fd != -1) {
 	    /* read one more to check for eof */
-	    res = backend_pread(fd, buf, argp->count + 1, argp->offset);
+	    res = backend_pread(fd, buf, argp->count + 1, (off64_t)argp->offset);
 
 	    /* eof if we could not read one more */
 	    result.READ3res_u.resok.eof = (res <= (int64) argp->count);
@@ -417,7 +417,7 @@ WRITE3res *nfsproc3_write_3_svc(WRITE3args * argp, struct svc_req * rqstp)
 	if (fd != -1) {
 	    res =
 		backend_pwrite(fd, argp->data.data_val, argp->data.data_len,
-			       argp->offset);
+			       (off64_t)argp->offset);
 
 	    /* close for real if not UNSTABLE write */
 	    if (argp->stable == UNSTABLE)

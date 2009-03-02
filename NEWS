@@ -10,6 +10,9 @@ confusing different files.
 Integrated a patch from Michael Tokarev for using
 svc_getreq_poll() when provided by the operating system.
 
+Applied a patch from Dai Lin to allow serving files larger
+than 4GB from Windows.
+
 
 ChangeLog
 =========
@@ -18,6 +21,7 @@ Version 0.9.23
 
   - include AFS support for better serving of files from AFS filesystems
   - use svc_getreq_poll() when available
+  - fix serving files larger than 4GB from Windows
 
 Version 0.9.22
 
