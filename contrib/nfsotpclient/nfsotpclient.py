@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*-mode: python; coding: iso-8859-1 -*-
 #
-# Copyright (c) 2002-2005 Cendio AB. All rights reserved.
+# Copyright 2002-2005 Cendio AB
 
 import sys
 import rpc
