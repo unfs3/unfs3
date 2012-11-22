@@ -1,6 +1,6 @@
 CC = @CC@
 CFLAGS = @CFLAGS@ -I.. -I$(srcdir) -I$(top_srcdir)
-AR = ar
+AR = @AR@
 RM = rm -f
 LEX = @LEX@
 YACC = @YACC@
