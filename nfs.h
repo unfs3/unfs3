@@ -69,6 +69,12 @@ typedef int32_t int32;
 #endif
 #endif
 
+#ifndef HAVE_OFF64_T
+#ifdef __APPLE__
+typedef off_t off64_t;
+#endif
+#endif
+
 typedef char *filename3;
 
 typedef char *nfspath3;

@@ -204,6 +204,7 @@ static void remove_pid_file(void)
  */
 static void parse_options(int argc, char **argv)
 {
+
     int opt = 0;
     char *optstring = "bcC:de:hl:m:n:prstTuwi:";
 
@@ -737,6 +738,9 @@ static SVCXPRT *create_udp_transport(unsigned int port)
     int sock;
     const int on = 1;
 
+    /* Make sure we null the entire sockaddr_in structure */
+    memset(&sin, 0, sizeof(struct sockaddr_in));
+
     if (port == 0)
 	sock = RPC_ANYSOCK;
     else {
@@ -768,6 +772,9 @@ static SVCXPRT *create_tcp_transport(unsigned int port)
     struct sockaddr_in sin;
     int sock;
     const int on = 1;
+
+    /* Make sure we null the entire sockaddr_in structure */
+    memset(&sin, 0, sizeof(struct sockaddr_in));
 
     if (port == 0)
 	sock = RPC_ANYSOCK;
@@ -881,6 +888,9 @@ int main(int argc, char **argv)
     sigset_t actset;
 #endif				       /* WIN32 */
     int res;
+
+    /* Clear opt_bind_addr structure before we use it */
+    memset(&opt_bind_addr, 0, sizeof(struct in_addr));
 
     opt_bind_addr.s_addr = INADDR_ANY;
 
