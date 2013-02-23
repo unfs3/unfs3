@@ -19,5 +19,6 @@ unfs3_fh_t fh_comp(const char *path, struct svc_req *rqstp, int need_dir);
 unfs3_fh_t *fh_comp_ptr(const char *path, struct svc_req *rqstp, int need_dir);
 
 char *fh_cache_add(uint32 dev, uint64 ino, const char *path);
+void fh_cache_update(nfs_fh3 fh, char *path);
 
 #endif

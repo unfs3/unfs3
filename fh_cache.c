@@ -199,6 +199,18 @@ static char *fh_cache_lookup(uint32 dev, uint64 ino)
 }
 
 /*
+ * update a fh inode cache for an operation like rename
+ */
+void fh_cache_update(nfs_fh3 fh, char *path)
+{
+    unfs3_fh_t *obj = (void *) fh.data.data_val;
+    backend_statstruct buf;
+
+    if (backend_lstat(path, &buf) != -1) {
+	fh_cache_add(obj->dev, buf.st_ino, path);
+    }
+}
+/*
  * resolve a filename into a path
  * cache-using wrapper for fh_decomp_raw
  */

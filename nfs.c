@@ -895,6 +895,8 @@ RENAME3res *nfsproc3_rename_3_svc(RENAME3args * argp, struct svc_req * rqstp)
 	    res = backend_rename(from_obj, to_obj);
 	    if (res == -1)
 		result.status = rename_err();
+	    /* Update the fh_cache with moved inode value */
+	    fh_cache_update(argp->to.dir, to_obj);
 	}
     }
 
