@@ -192,22 +192,47 @@ bool_t xdr_uint64(XDR * xdrs, uint64 * objp)
 #endif
 #endif
 
-#if !defined(HAVE_XDR_UINT32) && defined(HAVE_XDR_U_LONG)
+#ifndef HAVE_XDR_UINT32
+# ifdef HAVE_XDR_UINT32_T
 bool_t xdr_uint32(XDR * xdrs, uint32 * objp)
 {
-    if (!xdr_u_long(xdrs, objp))
-	return FALSE;
+    if (!xdr_uint32_t(xdrs, objp))
+        return FALSE;
     return TRUE;
 }
+# elif defined(HAVE_XDR_U_INT32_T)
+bool_t xdr_uint32(XDR * xdrs, uint32 * objp)
+{
+    if (!xdr_u_int32_t(xdrs, objp))
+        return FALSE;
+    return TRUE;
+}
+# elif defined(HAVE_XDR_U_INT)
+bool_t xdr_uint32(XDR * xdrs, uint32 * objp)
+{
+    if (!xdr_u_int(xdrs, objp))
+        return FALSE;
+    return TRUE;
+}
+# endif
 #endif
 
-#if !defined(HAVE_XDR_INT32) && defined(HAVE_XDR_LONG)
+#ifndef HAVE_XDR_INT32
+# ifdef HAVE_XDR_INT32_T
 bool_t xdr_int32(XDR * xdrs, int32 * objp)
 {
-    if (!xdr_long(xdrs, objp))
-	return FALSE;
+    if (!xdr_int32_t(xdrs, objp))
+        return FALSE;
     return TRUE;
 }
+# elif defined(HAVE_XDR_INT)
+bool_t xdr_int32(XDR * xdrs, int32 * objp)
+{
+    if (!xdr_int(xdrs, objp))
+        return FALSE;
+    return TRUE;
+}
+# endif
 #endif
 
 bool_t xdr_filename3(XDR * xdrs, filename3 * objp)

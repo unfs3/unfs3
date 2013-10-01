@@ -54,19 +54,11 @@ typedef int64_t int64;
 #endif
 
 #ifndef HAVE_UINT32
-#ifdef HAVE_XDR_U_LONG
-typedef u_long uint32;
-#else
 typedef uint32_t uint32;
-#endif
 #endif
 
 #ifndef HAVE_INT32
-#ifdef HAVE_XDR_LONG
-typedef long int32;
-#else
 typedef int32_t int32;
-#endif
 #endif
 
 #ifndef HAVE_OFF64_T
