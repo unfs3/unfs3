@@ -4,6 +4,9 @@ AC_PROG_INSTALL
 AC_PROG_CC([gcc egcs kgcc cc])
 AC_CHECK_TOOL([AR], [ar])
 AC_PROG_LEX
+AS_IF([test "x$LEX" == "x:"], [
+  AC_MSG_ERROR([flex or lex missing.])
+])
 AC_PROG_YACC
 AC_HEADER_STDC
 AC_SYS_LARGEFILE
