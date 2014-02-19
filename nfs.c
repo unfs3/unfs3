@@ -2,6 +2,7 @@
 /*
  * UNFS3 NFS protocol procedures
  * (C) 2004, Pascal Schmidt
+ * Copyright 2014 Karl Mikaelsson <derfian@cendio.se> for Cendio AB
  * see file LICENSE for license details
  */
 
@@ -237,62 +238,39 @@ ACCESS3res *nfsproc3_access_3_svc(ACCESS3args * argp, struct svc_req * rqstp)
     char *path;
     post_op_attr post;
     mode_t mode;
-    int access = 0;
+    int newaccess = 0;
 
     PREP(path, argp->object);
     post = get_post_cached(rqstp);
     mode = post.post_op_attr_u.attributes.mode;
 
-    /* owner permissions */
-    if (is_owner(st_cache.st_uid, rqstp)) {
-	if (mode & S_IRUSR)
-	    access |= ACCESS3_READ;
-	if (mode & S_IWUSR)
-	    access |= ACCESS3_MODIFY | ACCESS3_EXTEND;
-	if (mode & S_IXUSR) {
-	    access |= ACCESS3_EXECUTE;
-	    if (opt_readable_executables)
-		access |= ACCESS3_READ;
-	}
-    } else if (has_group(st_cache.st_gid, rqstp)) {
-	/* group permissions */
-	if (mode & S_IRGRP)
-	    access |= ACCESS3_READ;
-	if (mode & S_IWGRP)
-	    access |= ACCESS3_MODIFY | ACCESS3_EXTEND;
-	if (mode & S_IXGRP) {
-	    access |= ACCESS3_EXECUTE;
-	    if (opt_readable_executables)
-		access |= ACCESS3_READ;
-	}
-    } else {
-	/* other permissions */
-	if (mode & S_IROTH)
-	    access |= ACCESS3_READ;
-	if (mode & S_IWOTH)
-	    access |= ACCESS3_MODIFY | ACCESS3_EXTEND;
-	if (mode & S_IXOTH) {
-	    access |= ACCESS3_EXECUTE;
-	    if (opt_readable_executables)
-		access |= ACCESS3_READ;
-	}
+    if (access(path, R_OK) != -1)
+        newaccess |= ACCESS3_READ;
+
+    if (access(path, W_OK) != -1)
+        newaccess |= ACCESS3_MODIFY | ACCESS3_EXTEND;
+
+    if (access(path, X_OK) != -1) {
+        newaccess |= ACCESS3_EXECUTE;
+        if (opt_readable_executables)
+            newaccess |= ACCESS3_READ;
     }
 
     /* root is allowed everything */
     if (get_uid(rqstp) == 0)
-	access |= ACCESS3_READ | ACCESS3_MODIFY | ACCESS3_EXTEND;
+	newaccess |= ACCESS3_READ | ACCESS3_MODIFY | ACCESS3_EXTEND;
 
     /* adjust if directory */
     if (post.post_op_attr_u.attributes.type == NF3DIR) {
-	if (access & (ACCESS3_READ | ACCESS3_EXECUTE))
-	    access |= ACCESS3_LOOKUP;
-	if (access & ACCESS3_MODIFY)
-	    access |= ACCESS3_DELETE;
-	access &= ~ACCESS3_EXECUTE;
+	if (newaccess & (ACCESS3_READ | ACCESS3_EXECUTE))
+	    newaccess |= ACCESS3_LOOKUP;
+	if (newaccess & ACCESS3_MODIFY)
+	    newaccess |= ACCESS3_DELETE;
+	newaccess &= ~ACCESS3_EXECUTE;
     }
 
     result.status = NFS3_OK;
-    result.ACCESS3res_u.resok.access = access & argp->access;
+    result.ACCESS3res_u.resok.access = newaccess & argp->access;
     result.ACCESS3res_u.resok.obj_attributes = post;
 
     return &result;
