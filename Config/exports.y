@@ -331,7 +331,8 @@ static void set_hostname(const char *name)
 	if (ent) {
 		memcpy(&cur_host.addr, ent->h_addr_list[0],
 		       sizeof(struct in_addr));
-		cur_host.mask.s_addr = ~0UL;
+		cur_host.mask.s_addr = 0;
+		cur_host.mask.s_addr = ~cur_host.mask.s_addr;
 	} else {
 		logmsg(LOG_CRIT, "could not resolve hostname '%s'", name);
 		e_error = TRUE;
@@ -347,7 +348,8 @@ static void set_ipaddr(const char *addr)
 	
 	if (!inet_aton(addr, &cur_host.addr))
 		e_error = TRUE;
-	cur_host.mask.s_addr = ~0UL;
+	cur_host.mask.s_addr = 0;
+	cur_host.mask.s_addr = ~cur_host.mask.s_addr;
 }
 
 /*

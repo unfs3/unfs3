@@ -48,6 +48,9 @@ NETCOMP [0-9]{1,2}
 NET {IP}"/"{NETCOMP}
 OLDNET {IP}"/"{IP}
 
+%option nounput
+%option noinput
+
 %%
 
 ^{WHITE}*\n		{ /* eat empty line */ }
