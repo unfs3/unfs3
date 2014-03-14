@@ -189,6 +189,13 @@ post_op_attr get_post_buf(backend_statstruct buf, struct svc_req * req)
 	    result.post_op_attr_u.attributes.fsid = export_fsid;
 	}
     }
+
+    /* Always truncate fsid to a 32-bit value, even though the fsid is
+       defined as a uint64. We only use 32-bit variables for
+       fsid/dev_t:s internally. This caused problems on systems where
+       dev_t is signed, such as 32-bit OS X. */
+    result.post_op_attr_u.attributes.fsid &= 0xFFFFFFFF;
+
 #if defined(WIN32) || defined(AFS_SUPPORT)
     /* Recent Linux kernels (2.6.24 and newer) expose large fileids even to
        non-LFS 32-bit applications, unless kernel parameter
