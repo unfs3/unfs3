@@ -28,7 +28,8 @@
 #define closelog()      do { } while (0)
 
 #define O_NONBLOCK      0
-#define ELOOP           ENAMETOOLONG
+
+#include "winerrno.h"
 
 #define S_IRWXG 0
 #define S_IXGRP S_IRGRP

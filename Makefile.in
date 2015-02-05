@@ -100,6 +100,7 @@ unfs3-$(VERSION).tar.gz:
 	 unfs3-$(VERSION)/user.c \
 	 unfs3-$(VERSION)/unfs3.spec \
 	 unfs3-$(VERSION)/winsupport.h \
+	 unfs3-$(VERSION)/winerrno.h \
 	 unfs3-$(VERSION)/readdir.h \
 	 unfs3-$(VERSION)/nfs.c \
 	 unfs3-$(VERSION)/configure \
