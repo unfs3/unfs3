@@ -205,7 +205,7 @@ static char *fh_cache_lookup(uint32 dev, uint64 ino)
 char *fh_decomp(nfs_fh3 fh)
 {
     char *result;
-    unfs3_fh_t *obj = (void *) fh.data.data_val;
+    unfs3_fh_t obj = fh_decode(&fh);
     time_t *last_mtime;
     uint32 *dir_hash, new_dir_hash;
 
@@ -216,8 +216,8 @@ char *fh_decomp(nfs_fh3 fh)
 
     /* Does the fsid match some static fsid? */
     if ((result =
-	 export_point_from_fsid(obj->dev, &last_mtime, &dir_hash)) != NULL) {
-	if (obj->ino == 0x1) {
+	 export_point_from_fsid(obj.dev, &last_mtime, &dir_hash)) != NULL) {
+	if (obj.ino == 0x1) {
 	    /* This FH refers to the export point itself */
 	    /* Need to fill stat cache */
 	    st_cache_valid = TRUE;
@@ -248,7 +248,7 @@ char *fh_decomp(nfs_fh3 fh)
 		    st_cache.st_blocks = 8;
 	    }
 
-	    st_cache.st_dev = obj->dev;
+	    st_cache.st_dev = obj.dev;
 	    st_cache.st_ino = 0x1;
 
 	    /* It's very important that we get mtime correct, since it's used 
@@ -288,20 +288,20 @@ char *fh_decomp(nfs_fh3 fh)
     }
 
     /* try lookup in cache, increase cache usage counter */
-    result = fh_cache_lookup(obj->dev, obj->ino);
+    result = fh_cache_lookup(obj.dev, obj.ino);
     fh_cache_use++;
 
     if (!result) {
 	/* not found, resolve the hard way */
-	result = fh_decomp_raw(obj);
+	result = fh_decomp_raw(&obj);
 
 	/* if still not found, do full recursive search) */
 	if (!result)
-	    result = backend_locate_file(obj->dev, obj->ino);
+	    result = backend_locate_file(obj.dev, obj.ino);
 
 	if (result)
 	    /* add to cache for later use if resolution ok */
-	    result = fh_cache_add(obj->dev, obj->ino, result);
+	    result = fh_cache_add(obj.dev, obj.ino, result);
 	else
 	    /* could not resolve in any way */
 	    st_cache_valid = FALSE;

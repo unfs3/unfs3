@@ -97,7 +97,7 @@ int mangle_gid(int id)
  */
 int get_uid(struct svc_req *req)
 {
-    struct authunix_parms *auth = (void *) req->rq_clntcred;
+    struct authunix_parms *auth = (struct authunix_parms *) req->rq_clntcred;
     int squash = squash_uid;
 
     if (exports_anonuid() != ANON_NOTSPECIAL)
@@ -114,7 +114,7 @@ int get_uid(struct svc_req *req)
  */
 static int get_gid(struct svc_req *req)
 {
-    struct authunix_parms *auth = (void *) req->rq_clntcred;
+    struct authunix_parms *auth = (struct authunix_parms *) req->rq_clntcred;
     int squash = squash_gid;
 
     if (exports_anongid() != ANON_NOTSPECIAL)
@@ -139,7 +139,7 @@ int is_owner(int owner, struct svc_req *req)
  */
 int has_group(int group, struct svc_req *req)
 {
-    struct authunix_parms *auth = (void *) req->rq_clntcred;
+    struct authunix_parms *auth = (struct authunix_parms *) req->rq_clntcred;
     unsigned int i;
 
     if (req->rq_cred.oa_flavor == AUTH_UNIX) {
@@ -172,7 +172,7 @@ void switch_to_root(void)
  */
 static int switch_groups(struct svc_req *req)
 {
-    struct authunix_parms *auth = (void *) req->rq_clntcred;
+    struct authunix_parms *auth = (struct authunix_parms *) req->rq_clntcred;
     unsigned int i, max;
 
     max = (auth->aup_len <= 32) ? auth->aup_len : 32;

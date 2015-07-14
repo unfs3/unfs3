@@ -241,9 +241,9 @@ int fd_open(const char *path, nfs_fh3 nfh, int kind, int allow_caching)
 {
     int idx, res, fd;
     backend_statstruct buf;
-    unfs3_fh_t *fh = (void *) nfh.data.data_val;
+    unfs3_fh_t fh = fh_decode(&nfh);
 
-    idx = idx_by_fh(fh, kind);
+    idx = idx_by_fh(&fh, kind);
 
     if (idx != -1) {
 	if (fd_cache[idx].fd == -1) {
@@ -264,8 +264,8 @@ int fd_open(const char *path, nfs_fh3 nfh, int kind, int allow_caching)
 	/* check for local fs race */
 	res = backend_fstat(fd, &buf);
 	if ((res == -1) ||
-	    (fh->dev != buf.st_dev || fh->ino != buf.st_ino ||
-	     fh->gen != backend_get_gen(buf, fd, path))) {
+	    (fh.dev != buf.st_dev || fh.ino != buf.st_ino ||
+	     fh.gen != backend_get_gen(buf, fd, path))) {
 	    /* 
 	     * local fs changed meaning of path between
 	     * calling NFS operation doing fh_decomp and
@@ -283,7 +283,7 @@ int fd_open(const char *path, nfs_fh3 nfh, int kind, int allow_caching)
 	 * success, add to cache for later use
 	 */
 	if (allow_caching)
-	    fd_cache_add(fd, fh, kind);
+	    fd_cache_add(fd, &fh, kind);
 	return fd;
     }
 }
@@ -326,9 +326,9 @@ int fd_close(int fd, int kind, int really_close)
 int fd_sync(nfs_fh3 nfh)
 {
     int idx;
-    unfs3_fh_t *fh = (void *) nfh.data.data_val;
+    unfs3_fh_t fh = fh_decode(&nfh);
 
-    idx = idx_by_fh(fh, UNFS3_FD_WRITE);
+    idx = idx_by_fh(&fh, UNFS3_FD_WRITE);
     if (idx != -1)
 	/* delete entry, will fsync() and close() the fd */
 	return fd_cache_del(idx, FALSE);

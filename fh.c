@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <assert.h>
 
 #if HAVE_LINUX_EXT2_FS_H == 1
 
@@ -128,14 +129,14 @@ uint32 get_gen(backend_statstruct obuf, U(int fd), U(const char *path))
  */
 int nfh_valid(nfs_fh3 fh)
 {
-    unfs3_fh_t *obj = (void *) fh.data.data_val;
+    unfs3_fh_t obj = fh_decode(&fh);
 
     /* too small? */
     if (fh.data.data_len < FH_MINLEN)
 	return FALSE;
 
     /* encoded length different from real length? */
-    if (fh.data.data_len != fh_length(obj))
+    if (fh.data.data_len != fh_length(&obj))
 	return FALSE;
 
     return TRUE;
@@ -267,9 +268,8 @@ u_int fh_length(const unfs3_fh_t * fh)
 unfs3_fh_t *fh_extend(nfs_fh3 nfh, uint32 dev, uint64 ino, uint32 gen)
 {
     static unfs3_fh_t new;
-    unfs3_fh_t *fh = (void *) nfh.data.data_val;
 
-    memcpy(&new, fh, fh_length(fh));
+    new = fh_decode(&nfh);
 
     if (new.len == 0) {
 	char *path;
@@ -305,13 +305,13 @@ post_op_fh3 fh_extend_post(nfs_fh3 fh, uint32 dev, uint64 ino, uint32 gen)
 {
     post_op_fh3 post;
     unfs3_fh_t *new;
+    static char buffer[FH_MAXBUF];
 
     new = fh_extend(fh, dev, ino, gen);
 
     if (new) {
 	post.handle_follows = TRUE;
-	post.post_op_fh3_u.handle.data.data_len = fh_length(new);
-	post.post_op_fh3_u.handle.data.data_val = (char *) new;
+	post.post_op_fh3_u.handle = fh_encode(new, buffer);
     } else
 	post.handle_follows = FALSE;
 
@@ -470,4 +470,70 @@ char *fh_decomp_raw(const unfs3_fh_t * fh)
 
     /* could not find object */
     return NULL;
+}
+
+/*
+ * Convert a nfs_fh3 to a unfs3_fh_t
+ */
+unfs3_fh_t fh_decode(const nfs_fh3 *fh)
+{
+    unfs3_fh_t obj;
+    const char *buf;
+
+    assert(fh);
+    assert(fh->data.data_len >= FH_MINLEN);
+    assert(fh->data.data_len <= (FH_MINLEN + FH_MAXLEN));
+    assert(fh->data.data_val);
+
+    buf = fh->data.data_val;
+
+    memcpy(&obj.dev, buf, sizeof(obj.dev));
+    buf += sizeof(obj.dev);
+    memcpy(&obj.ino, buf, sizeof(obj.ino));
+    buf += sizeof(obj.ino);
+    memcpy(&obj.gen, buf, sizeof(obj.gen));
+    buf += sizeof(obj.gen);
+    memcpy(&obj.pwhash, buf, sizeof(obj.pwhash));
+    buf += sizeof(obj.pwhash);
+    memcpy(&obj.len, buf, sizeof(obj.len));
+    buf += sizeof(obj.len);
+
+    assert(fh->data.data_len == (FH_MINLEN + obj.len));
+
+    if (obj.len)
+        memcpy(obj.inos, buf, obj.len);
+
+    return obj;
+}
+
+/*
+ * Convert a unfs3_fh_t to a nfs_fh3
+ */
+nfs_fh3 fh_encode(const unfs3_fh_t *fh, char *buffer)
+{
+    nfs_fh3 handle;
+    char *buf;
+
+    assert(fh);
+    assert(buffer);
+
+    handle.data.data_len = fh_length(fh);
+    handle.data.data_val = buffer;
+
+    buf = buffer;
+
+    memcpy(buf, &fh->dev, sizeof(fh->dev));
+    buf += sizeof(fh->dev);
+    memcpy(buf, &fh->ino, sizeof(fh->ino));
+    buf += sizeof(fh->ino);
+    memcpy(buf, &fh->gen, sizeof(fh->gen));
+    buf += sizeof(fh->gen);
+    memcpy(buf, &fh->pwhash, sizeof(fh->pwhash));
+    buf += sizeof(fh->pwhash);
+    memcpy(buf, &fh->len, sizeof(fh->len));
+    buf += sizeof(fh->len);
+    if (fh->len)
+        memcpy(buf, fh->inos, fh->len);
+
+    return handle;
 }

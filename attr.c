@@ -148,7 +148,7 @@ post_op_attr get_post_buf(backend_statstruct buf, struct svc_req * req)
     if (opt_singleuser) {
 	unsigned int req_uid = 0;
 	unsigned int req_gid = 0;
-	struct authunix_parms *auth = (void *) req->rq_clntcred;
+	struct authunix_parms *auth = (struct authunix_parms *) req->rq_clntcred;
 	uid_t ruid = backend_getuid();
 
 	if (req->rq_cred.oa_flavor == AUTH_UNIX) {
@@ -246,9 +246,9 @@ static post_op_attr get_post_ll(const char *path, uint32 dev, uint64 ino,
 post_op_attr get_post_attr(const char *path, nfs_fh3 nfh,
 			   struct svc_req * req)
 {
-    unfs3_fh_t *fh = (void *) nfh.data.data_val;
+    unfs3_fh_t fh = fh_decode(&nfh);
 
-    return get_post_ll(path, fh->dev, fh->ino, req);
+    return get_post_ll(path, fh.dev, fh.ino, req);
 }
 
 /*
@@ -318,7 +318,7 @@ static nfsstat3 set_time(const char *path, backend_statstruct buf, sattr3 new)
  */
 static nfsstat3 set_attr_unsafe(const char *path, nfs_fh3 nfh, sattr3 new)
 {
-    unfs3_fh_t *fh = (void *) nfh.data.data_val;
+    unfs3_fh_t fh = fh_decode(&nfh);
     uid_t new_uid;
     gid_t new_gid;
     backend_statstruct buf;
@@ -329,7 +329,7 @@ static nfsstat3 set_attr_unsafe(const char *path, nfs_fh3 nfh, sattr3 new)
 	return NFS3ERR_STALE;
 
     /* check local fs race */
-    if (buf.st_dev != fh->dev || buf.st_ino != fh->ino)
+    if (buf.st_dev != fh.dev || buf.st_ino != fh.ino)
 	return NFS3ERR_STALE;
 
     /* set file size */
@@ -373,7 +373,7 @@ static nfsstat3 set_attr_unsafe(const char *path, nfs_fh3 nfh, sattr3 new)
  */
 nfsstat3 set_attr(const char *path, nfs_fh3 nfh, sattr3 new)
 {
-    unfs3_fh_t *fh = (void *) nfh.data.data_val;
+    unfs3_fh_t fh = fh_decode(&nfh);
     int res, fd;
     uid_t new_uid;
     gid_t new_gid;
@@ -416,8 +416,8 @@ nfsstat3 set_attr(const char *path, nfs_fh3 nfh, sattr3 new)
     }
 
     /* check local fs race */
-    if (fh->dev != buf.st_dev || fh->ino != buf.st_ino ||
-	fh->gen != backend_get_gen(buf, fd, path)) {
+    if (fh.dev != buf.st_dev || fh.ino != buf.st_ino ||
+	fh.gen != backend_get_gen(buf, fd, path)) {
 	backend_close(fd);
 	return NFS3ERR_STALE;
     }

@@ -55,7 +55,7 @@
  * otherwise zero result structure and return with error status
  */
 #define PREP(p,f) do {						\
-                      unfs3_fh_t *fh = (void *)f.data.data_val; \
+                      unfs3_fh_t fh = fh_decode(&f); \
                       switch_to_root();				\
                       p = fh_decomp(f);				\
                       if (exports_options(p, rqstp, NULL, NULL) == -1) { \
@@ -66,7 +66,7 @@
                               result.status = NFS3ERR_STALE;	\
                           return &result;			\
                       }						\
-                      if (fh->pwhash != export_password_hash) { \
+                      if (fh.pwhash != export_password_hash) { \
                           memset(&result, 0, sizeof(result));	\
                           result.status = NFS3ERR_STALE;        \
                           return &result;                       \
@@ -188,6 +188,7 @@ LOOKUP3res *nfsproc3_lookup_3_svc(LOOKUP3args * argp, struct svc_req * rqstp)
 {
     static LOOKUP3res result;
     unfs3_fh_t *fh;
+    static char fhbuf[FH_MAXBUF];
     char *path;
     char obj[NFS_MAXPATHLEN];
     backend_statstruct buf;
@@ -214,9 +215,7 @@ LOOKUP3res *nfsproc3_lookup_3_svc(LOOKUP3args * argp, struct svc_req * rqstp)
 	    }
 
 	    if (fh) {
-		result.LOOKUP3res_u.resok.object.data.data_len =
-		    fh_length(fh);
-		result.LOOKUP3res_u.resok.object.data.data_val = (char *) fh;
+		result.LOOKUP3res_u.resok.object = fh_encode(fh, fhbuf);
 		result.LOOKUP3res_u.resok.obj_attributes =
 		    get_post_buf(buf, rqstp);
 	    } else {
