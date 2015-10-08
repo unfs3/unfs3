@@ -161,7 +161,7 @@ bool_t xdr_uint64(XDR * xdrs, uint64 * objp)
 #else
 bool_t xdr_uint64(XDR * xdrs, uint64 * objp)
 {
-    char buf[8];
+    unsigned char buf[8];
 
     if (xdrs->x_op == XDR_ENCODE) {
 	buf[0] = (*objp >> 56) & 0xFF;
