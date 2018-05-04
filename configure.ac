@@ -25,6 +25,10 @@ AC_CHECK_TYPES(uint32,,,[#include <sys/inttypes.h>])
 AC_CHECK_TYPES(int64,,,[#include <sys/inttypes.h>])
 AC_CHECK_TYPES(uint64,,,[#include <sys/inttypes.h>])
 AC_CHECK_MEMBERS([struct stat.st_gen],,,[#include <sys/stat.h>])
+AC_CHECK_MEMBERS([struct stat.st_atimespec],,,[#include <sys/stat.h>])
+AC_CHECK_MEMBERS([struct stat.st_mtimespec],,,[#include <sys/stat.h>])
+AC_CHECK_MEMBERS([struct stat.st_atim],,,[#include <sys/stat.h>])
+AC_CHECK_MEMBERS([struct stat.st_mtim],,,[#include <sys/stat.h>])
 AC_CHECK_MEMBERS([struct __rpc_svcxprt.xp_fd],,,[#include <rpc/rpc.h>])
 AC_CHECK_FUNCS(xdr_int xdr_u_int)
 AC_CHECK_FUNCS(xdr_int32 xdr_int32_t)
@@ -37,6 +41,7 @@ AC_CHECK_FUNCS(setresuid setresgid)
 AC_CHECK_FUNCS(vsyslog)
 AC_CHECK_FUNCS(lchown)
 AC_CHECK_FUNCS(setgroups)
+AC_CHECK_FUNCS(utimes)
 UNFS3_SOLARIS_RPC
 UNFS3_PORTMAP_DEFINE
 UNFS3_COMPILE_WARNINGS

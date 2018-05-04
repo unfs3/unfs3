@@ -274,13 +274,15 @@ post_op_attr get_post_cached(struct svc_req * req)
 
 /*
  * setting of time, races with local filesystem
- *
- * there is no futimes() function in POSIX or Linux
  */
 static nfsstat3 set_time(const char *path, backend_statstruct buf, sattr3 new)
 {
-    time_t new_atime, new_mtime;
+    struct timespec new_atime, new_mtime;
+#ifdef HAVE_UTIMES
+    struct timeval tv[2];
+#else
     struct utimbuf utim;
+#endif
     int res;
 
     /* set atime and mtime */
@@ -288,24 +290,54 @@ static nfsstat3 set_time(const char *path, backend_statstruct buf, sattr3 new)
 
 	/* compute atime to set */
 	if (new.atime.set_it == SET_TO_SERVER_TIME)
-	    new_atime = time(NULL);
+	    clock_gettime(CLOCK_REALTIME, &new_atime);
 	else if (new.atime.set_it == SET_TO_CLIENT_TIME)
-	    new_atime = new.atime.set_atime_u.atime.seconds;
-	else			       /* DONT_CHANGE */
-	    new_atime = buf.st_atime;
+        {
+	    new_atime.tv_sec = new.atime.set_atime_u.atime.seconds;
+            new_atime.tv_nsec = new.atime.set_atime_u.atime.nseconds;
+        }
+	else {			       /* DONT_CHANGE */
+#if defined(HAVE_STRUCT_STAT_ST_ATIMESPEC)
+	    new_atime = buf.st_atimespec;
+#elif defined(HAVE_STRUCT_STAT_ST_ATIM)
+            new_atime = buf.st_atim;
+#else
+            new_atime.tv_sec = buf.st_atime;
+            new_atime.tv_nsec = 0;
+#endif
+        }
 
 	/* compute mtime to set */
 	if (new.mtime.set_it == SET_TO_SERVER_TIME)
-	    new_mtime = time(NULL);
-	else if (new.mtime.set_it == SET_TO_CLIENT_TIME)
-	    new_mtime = new.mtime.set_mtime_u.mtime.seconds;
-	else			       /* DONT_CHANGE */
-	    new_mtime = buf.st_mtime;
+	    clock_gettime(CLOCK_REALTIME, &new_mtime);
+	else if (new.mtime.set_it == SET_TO_CLIENT_TIME) {
+	    new_mtime.tv_sec = new.mtime.set_mtime_u.mtime.seconds;
+            new_mtime.tv_nsec = new.mtime.set_mtime_u.mtime.nseconds;
+        }
+	else {			       /* DONT_CHANGE */
+#if defined(HAVE_STRUCT_STAT_ST_MTIMESPEC)
+	    new_mtime = buf.st_mtimespec;
+#elif defined(HAVE_STRUCT_STAT_ST_MTIM)
+            new_mtime = buf.st_mtim;
+#else
+            new_mtime.tv_sec = buf.st_mtime;
+            new_mtime.tv_nsec = 0;
+#endif
+        }
 
-	utim.actime = new_atime;
-	utim.modtime = new_mtime;
+#ifdef HAVE_UTIMES
+        tv[0].tv_sec = new_atime.tv_sec;
+        tv[0].tv_usec = new_atime.tv_nsec / 1000;
+        tv[1].tv_sec = new_mtime.tv_sec;
+        tv[1].tv_usec = new_mtime.tv_nsec / 1000;
+
+        res = backend_utimes(path, tv);
+#else
+        utim.actime = new_atime.tv_sec;
+	utim.modtime = new_mtime.tv_sec;
 
 	res = backend_utime(path, &utim);
+#endif /* HAVE_UTIMES */
 	if (res == -1)
 	    return setattr_err();
     }

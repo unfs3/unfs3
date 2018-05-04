@@ -74,6 +74,7 @@
 #define backend_getpid getpid
 #define backend_store_create_verifier store_create_verifier
 #define backend_check_create_verifier check_create_verifier
+#define backend_utimes utimes
 
 #if HAVE_LCHOWN == 1
 #define backend_lchown lchown
