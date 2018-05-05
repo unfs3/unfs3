@@ -278,7 +278,9 @@ post_op_attr get_post_cached(struct svc_req * req)
 static nfsstat3 set_time(const char *path, backend_statstruct buf, sattr3 new)
 {
     struct timespec new_atime, new_mtime;
-#ifdef HAVE_UTIMES
+#if defined(HAVE_UTIMENSAT)
+    struct timespec ts[2];
+#elif defined(HAVE_UTIMES)
     struct timeval tv[2];
 #else
     struct utimbuf utim;
@@ -325,7 +327,12 @@ static nfsstat3 set_time(const char *path, backend_statstruct buf, sattr3 new)
 #endif
         }
 
-#ifdef HAVE_UTIMES
+#if defined(HAVE_UTIMENSAT)
+        ts[0] = new_atime;
+        ts[1] = new_mtime;
+
+        res = backend_utimensat(-1, path, ts, 0);
+#elif defined(HAVE_UTIMES)
         tv[0].tv_sec = new_atime.tv_sec;
         tv[0].tv_usec = new_atime.tv_nsec / 1000;
         tv[1].tv_sec = new_mtime.tv_sec;
