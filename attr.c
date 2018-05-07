@@ -78,6 +78,66 @@ static post_op_attr error_attr = {.attributes_follow = FALSE };
 static post_op_attr error_attr = { FALSE };
 #endif
 
+struct timespec nfstime3_to_timespec(const nfstime3 nt) {
+    struct timespec ts;
+    ts.tv_sec = nt.seconds;
+    ts.tv_nsec = nt.nseconds;
+    return ts;
+}
+
+nfstime3 timespec_to_nfstime3(const struct timespec ts) {
+    nfstime3 nt;
+    nt.seconds = ts.tv_sec;
+    nt.nseconds = ts.tv_nsec;
+    return nt;
+}
+
+/*
+ * Helper functions to extract nfstime3 structures from stat
+ * structures, depending on what precision is available.
+ */
+nfstime3 get_stat_atime(const backend_statstruct statbuf)
+{
+    nfstime3 time;
+#if defined(HAVE_STRUCT_STAT_ST_ATIMESPEC)
+    time = timespec_to_nfstime3(statbuf.st_atimespec);
+#elif defined(HAVE_STRUCT_STAT_ST_ATIM)
+    time = timespec_to_nfstime3(statbuf.st_atim);
+#else
+    time.seconds = statbuf.st_atime;
+    time.nseconds = 0;
+#endif
+    return time;
+}
+
+nfstime3 get_stat_mtime(const backend_statstruct statbuf)
+{
+    nfstime3 time;
+#if defined(HAVE_STRUCT_STAT_ST_ATIMESPEC)
+    time = timespec_to_nfstime3(statbuf.st_mtimespec);
+#elif defined(HAVE_STRUCT_STAT_ST_ATIM)
+    time = timespec_to_nfstime3(statbuf.st_mtim);
+#else
+    time.seconds = statbuf.st_mtime;
+    time.nseconds = 0;
+#endif
+    return time;
+}
+
+nfstime3 get_stat_ctime(const backend_statstruct statbuf)
+{
+    nfstime3 time;
+#if defined(HAVE_STRUCT_STAT_ST_ATIMESPEC)
+    time = timespec_to_nfstime3(statbuf.st_ctimespec);
+#elif defined(HAVE_STRUCT_STAT_ST_ATIM)
+    time = timespec_to_nfstime3(statbuf.st_ctim);
+#else
+    time.seconds = statbuf.st_ctime;
+    time.nseconds = 0;
+#endif
+    return time;
+}
+
 /*
  * return pre-operation attributes
  *
@@ -95,10 +155,8 @@ pre_op_attr get_pre_cached(void)
     result.attributes_follow = TRUE;
 
     result.pre_op_attr_u.attributes.size = st_cache.st_size;
-    result.pre_op_attr_u.attributes.mtime.seconds = st_cache.st_mtime;
-    result.pre_op_attr_u.attributes.mtime.nseconds = 0;
-    result.pre_op_attr_u.attributes.ctime.seconds = st_cache.st_ctime;
-    result.pre_op_attr_u.attributes.ctime.nseconds = 0;
+    result.pre_op_attr_u.attributes.mtime = get_stat_mtime(st_cache);
+    result.pre_op_attr_u.attributes.ctime = get_stat_ctime(st_cache);
 
     return result;
 }
@@ -207,12 +265,10 @@ post_op_attr get_post_buf(backend_statstruct buf, struct svc_req * req)
 #else
     result.post_op_attr_u.attributes.fileid = buf.st_ino;
 #endif
-    result.post_op_attr_u.attributes.atime.seconds = buf.st_atime;
-    result.post_op_attr_u.attributes.atime.nseconds = 0;
-    result.post_op_attr_u.attributes.mtime.seconds = buf.st_mtime;
-    result.post_op_attr_u.attributes.mtime.nseconds = 0;
-    result.post_op_attr_u.attributes.ctime.seconds = buf.st_ctime;
-    result.post_op_attr_u.attributes.ctime.nseconds = 0;
+
+    result.post_op_attr_u.attributes.atime = get_stat_atime(buf);
+    result.post_op_attr_u.attributes.mtime = get_stat_mtime(buf);
+    result.post_op_attr_u.attributes.ctime = get_stat_ctime(buf);
 
     return result;
 }
@@ -287,44 +343,26 @@ static nfsstat3 set_time(const char *path, backend_statstruct buf, sattr3 new)
 #endif
     int res;
 
-    /* set atime and mtime */
+    /* Do nothing if both are DONT_CHANGE */
     if (new.atime.set_it != DONT_CHANGE || new.mtime.set_it != DONT_CHANGE) {
 
-	/* compute atime to set */
-	if (new.atime.set_it == SET_TO_SERVER_TIME)
-	    clock_gettime(CLOCK_REALTIME, &new_atime);
-	else if (new.atime.set_it == SET_TO_CLIENT_TIME)
-        {
-	    new_atime.tv_sec = new.atime.set_atime_u.atime.seconds;
-            new_atime.tv_nsec = new.atime.set_atime_u.atime.nseconds;
-        }
-	else {			       /* DONT_CHANGE */
-#if defined(HAVE_STRUCT_STAT_ST_ATIMESPEC)
-	    new_atime = buf.st_atimespec;
-#elif defined(HAVE_STRUCT_STAT_ST_ATIM)
-            new_atime = buf.st_atim;
-#else
-            new_atime.tv_sec = buf.st_atime;
-            new_atime.tv_nsec = 0;
-#endif
+        /* compute atime to set */
+        if (new.atime.set_it == SET_TO_SERVER_TIME)
+            clock_gettime(CLOCK_REALTIME, &new_atime);
+        else if (new.atime.set_it == SET_TO_CLIENT_TIME)
+            new_atime = nfstime3_to_timespec(new.atime.set_atime_u.atime);
+        else {			       /* DONT_CHANGE */
+            new_atime = nfstime3_to_timespec(get_stat_atime(buf));
         }
 
-	/* compute mtime to set */
-	if (new.mtime.set_it == SET_TO_SERVER_TIME)
-	    clock_gettime(CLOCK_REALTIME, &new_mtime);
-	else if (new.mtime.set_it == SET_TO_CLIENT_TIME) {
-	    new_mtime.tv_sec = new.mtime.set_mtime_u.mtime.seconds;
-            new_mtime.tv_nsec = new.mtime.set_mtime_u.mtime.nseconds;
+        /* compute mtime to set */
+        if (new.mtime.set_it == SET_TO_SERVER_TIME) {
+            clock_gettime(CLOCK_REALTIME, &new_mtime);
         }
-	else {			       /* DONT_CHANGE */
-#if defined(HAVE_STRUCT_STAT_ST_MTIMESPEC)
-	    new_mtime = buf.st_mtimespec;
-#elif defined(HAVE_STRUCT_STAT_ST_MTIM)
-            new_mtime = buf.st_mtim;
-#else
-            new_mtime.tv_sec = buf.st_mtime;
-            new_mtime.tv_nsec = 0;
-#endif
+        else if (new.mtime.set_it == SET_TO_CLIENT_TIME)
+            new_mtime = nfstime3_to_timespec(new.mtime.set_mtime_u.mtime);
+        else {			       /* DONT_CHANGE */
+            new_mtime = nfstime3_to_timespec(get_stat_mtime(buf));
         }
 
 #if defined(HAVE_UTIMENSAT)
@@ -339,16 +377,16 @@ static nfsstat3 set_time(const char *path, backend_statstruct buf, sattr3 new)
         tv[1].tv_usec = new_mtime.tv_nsec / 1000;
 
         res = backend_utimes(path, tv);
-#else
+#else /* !HAVE_UTIMENSAT && !HAVE_UTIMES */
         utim.actime = new_atime.tv_sec;
-	utim.modtime = new_mtime.tv_sec;
+        utim.modtime = new_mtime.tv_sec;
 
-	res = backend_utime(path, &utim);
-#endif /* HAVE_UTIMES */
-	if (res == -1)
-	    return setattr_err();
+        res = backend_utime(path, &utim);
+#endif /* HAVE_UTIMENSAT */
+
+        if (res == -1)
+            return setattr_err();
     }
-
     return NFS3_OK;
 }
 
