@@ -1,25 +1,17 @@
-dnl Special rpc library for Solaris
-dnl
-AC_DEFUN([UNFS3_SOLARIS_RPC],[
-  AC_CHECK_FUNC(svc_tli_create, [
-    # On Solaris, you must link with librpcsoc, or the binaries won't work. 
-    LDFLAGS="-L=/usr/ucblib -R/usr/ucblib $LDFLAGS"
-    AC_CHECK_LIB(rpcsoc, svctcp_create, 
-        [ LIBS="-lrpcsoc $LIBS" ],
-        [ AC_MSG_WARN([*** Cannot find librpcsoc. On Solaris, install package SUNWscpu. ***]) ]
-    )
-  ])
-])
-dnl PORTMAP define needed for Solaris
-dnl
-AC_DEFUN([UNFS3_PORTMAP_DEFINE],[
-  AC_DEFINE([PORTMAP], [], [Define to an empty value if you use Solaris.])
-])
-dnl Set compiler warnings for gcc
-dnl
-AC_DEFUN([UNFS3_COMPILE_WARNINGS],[
-  if test "$GCC" = "yes"
-  then
-    CFLAGS="$CFLAGS -Wall -W"
-  fi
-])
+# generated automatically by aclocal 1.15.1 -*- Autoconf -*-
+
+# Copyright (C) 1996-2017 Free Software Foundation, Inc.
+
+# This file is free software; the Free Software Foundation
+# gives unlimited permission to copy and/or distribute it,
+# with or without modifications, as long as this notice is preserved.
+
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY, to the extent permitted by law; without
+# even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+# PARTICULAR PURPOSE.
+
+m4_ifndef([AC_CONFIG_MACRO_DIRS], [m4_defun([_AM_CONFIG_MACRO_DIRS], [])m4_defun([AC_CONFIG_MACRO_DIRS], [_AM_CONFIG_MACRO_DIRS($@)])])
+m4_include([m4/unfs3-compile-warnings.m4])
+m4_include([m4/unfs3-solaris-portmap.m4])
+m4_include([m4/unfs3-solaris-rpc.m4])
