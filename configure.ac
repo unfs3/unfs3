@@ -14,6 +14,7 @@ AC_SYS_LARGEFILE
 AC_SEARCH_LIBS(xdr_int, nsl)
 AC_SEARCH_LIBS(socket, socket)
 AC_SEARCH_LIBS(inet_aton, resolv)
+AC_SEARCH_LIBS(clock_gettime, rt)
 AC_CHECK_HEADERS(mntent.h,,,[#include <stdio.h>])
 AC_CHECK_HEADERS(stdint.h,,,[#include <stdio.h>])
 AC_CHECK_HEADERS(sys/mnttab.h,,,[#include <stdio.h>])
@@ -46,6 +47,7 @@ AC_CHECK_FUNCS(lchown)
 AC_CHECK_FUNCS(setgroups)
 AC_CHECK_FUNCS(utimes)
 AC_CHECK_FUNCS(utimensat)
+AC_CHECK_FUNCS(clock_gettime)
 UNFS3_SOLARIS_RPC
 UNFS3_PORTMAP_DEFINE
 UNFS3_COMPILE_WARNINGS

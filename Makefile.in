@@ -7,9 +7,9 @@ RM = rm -f
 MAKE = make
 
 SOURCES = afsgettimes.c afssupport.c attr.c daemon.c error.c fd_cache.c fh.c fh_cache.c locate.c \
-          md5.c mount.c nfs.c password.c readdir.c user.c xdr.c winsupport.c
+          md5.c mount.c nfs.c password.c readdir.c user.c xdr.c winsupport.c clock_gettime.c
 OBJS = afsgettimes.o afssupport.o attr.o daemon.o error.o fd_cache.o fh.o fh_cache.o locate.o \
-       md5.o mount.o nfs.o password.o readdir.o user.o xdr.o winsupport.o
+       md5.o mount.o nfs.o password.o readdir.o user.o xdr.o winsupport.o clock_gettime.o
 CONFOBJ = Config/lib.a
 EXTRAOBJ = @EXTRAOBJ@
 LDFLAGS = @LDFLAGS@ @LIBS@ @LEXLIB@ @AFS_LIBS@

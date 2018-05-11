@@ -28,6 +28,10 @@
 #include "user.h"
 #include "Config/exports.h"
 
+#ifndef HAVE_CLOCK_GETTIME
+# include "clock_gettime.h"
+#endif /* HAVE_CLOCK_GETTIME */
+
 /*
  * check whether stat_cache is for a regular file
  *
@@ -347,8 +351,9 @@ static nfsstat3 set_time(const char *path, backend_statstruct buf, sattr3 new)
     if (new.atime.set_it != DONT_CHANGE || new.mtime.set_it != DONT_CHANGE) {
 
         /* compute atime to set */
-        if (new.atime.set_it == SET_TO_SERVER_TIME)
+        if (new.atime.set_it == SET_TO_SERVER_TIME) {
             clock_gettime(CLOCK_REALTIME, &new_atime);
+        }
         else if (new.atime.set_it == SET_TO_CLIENT_TIME)
             new_atime = nfstime3_to_timespec(new.atime.set_atime_u.atime);
         else {			       /* DONT_CHANGE */
