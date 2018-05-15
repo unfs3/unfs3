@@ -1,6 +1,7 @@
 #include <time.h>
 #include <sys/time.h>
 #include <errno.h>
+#include "config.h"
 #include "clock_gettime.h"
 
 #ifndef HAVE_CLOCK_GETTIME
