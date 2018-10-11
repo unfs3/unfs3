@@ -113,7 +113,8 @@ void logmsg(int prio, const char *fmt, ...)
  */
 struct in_addr get_remote(struct svc_req *rqstp)
 {
-    return (svc_getcaller(rqstp->rq_xprt))->sin_addr;
+    struct sockaddr_in *tptr=(struct sockaddr_in*)svc_getcaller(rqstp->rq_xprt);
+    return tptr->sin_addr;
 }
 
 /*
@@ -121,7 +122,8 @@ struct in_addr get_remote(struct svc_req *rqstp)
  */
 short get_port(struct svc_req *rqstp)
 {
-    return (svc_getcaller(rqstp->rq_xprt))->sin_port;
+    struct sockaddr_in *tptr=(struct sockaddr_in*)svc_getcaller(rqstp->rq_xprt);
+    return tptr->sin_port;
 }
 
 /*
