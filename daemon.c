@@ -1144,7 +1144,10 @@ int main(int argc, char **argv)
 	sigaction(SIGALRM, &act, NULL);
 
 	/* don't make directory we started in busy */
-	chdir("/");
+	if(chdir("/") < 0) {
+	    fprintf(stderr, "could not change working directory\n");
+	    daemon_exit(0);
+	}
 
 	/* detach from terminal */
 	if (opt_detach) {
