@@ -996,7 +996,8 @@ int main(int argc, char **argv)
 	sigaction(SIGALRM, &act, NULL);
 
 	/* don't make directory we started in busy */
-	chdir("/");
+	if(chdir("/") < 0)
+	    daemon_exit(0);
 
 	/* detach from terminal */
 	if (opt_detach) {
