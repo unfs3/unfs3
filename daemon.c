@@ -153,7 +153,7 @@ int get_socket_type(struct svc_req *rqstp)
 /*
  * write current pid to a file
  */
-static void create_pid_file(void)
+static void create_pid_file(int pid)
 {
     char buf[16];
     int fd, res, len;
@@ -175,7 +175,7 @@ static void create_pid_file(void)
     }
 #endif
 
-    sprintf(buf, "%i\n", backend_getpid());
+    sprintf(buf, "%i\n", pid);
     len = strlen(buf);
 
     res = backend_pwrite(fd, buf, len, 0);
@@ -970,6 +970,10 @@ int main(int argc, char **argv)
 	    fprintf(stderr, "could not fork into background\n");
 	    daemon_exit(0);
 	}
+	if (pid)
+	    create_pid_file(pid);
+    } else {
+	create_pid_file(backend_getpid());
     }
 #endif				       /* WIN32 */
 
@@ -1006,8 +1010,10 @@ int main(int argc, char **argv)
 	/* no umask to not screw up create modes */
 	umask(0);
 
+#ifdef WIN32
 	/* create pid file if wanted */
-	create_pid_file();
+	create_pid_file(backend_getpid());
+#endif
 
 	/* initialize internal stuff */
 	fh_cache_init();
