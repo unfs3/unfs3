@@ -28,6 +28,10 @@
 #include "user.h"
 #include "Config/exports.h"
 
+#ifndef HAVE_CLOCK_GETTIME
+# include "clock_gettime.h"
+#endif /* HAVE_CLOCK_GETTIME */
+
 /*
  * check whether stat_cache is for a regular file
  *
@@ -78,6 +82,66 @@ static post_op_attr error_attr = {.attributes_follow = FALSE };
 static post_op_attr error_attr = { FALSE };
 #endif
 
+struct timespec nfstime3_to_timespec(const nfstime3 nt) {
+    struct timespec ts;
+    ts.tv_sec = nt.seconds;
+    ts.tv_nsec = nt.nseconds;
+    return ts;
+}
+
+nfstime3 timespec_to_nfstime3(const struct timespec ts) {
+    nfstime3 nt;
+    nt.seconds = ts.tv_sec;
+    nt.nseconds = ts.tv_nsec;
+    return nt;
+}
+
+/*
+ * Helper functions to extract nfstime3 structures from stat
+ * structures, depending on what precision is available.
+ */
+nfstime3 get_stat_atime(const backend_statstruct statbuf)
+{
+    nfstime3 time;
+#if defined(HAVE_STRUCT_STAT_ST_ATIMESPEC)
+    time = timespec_to_nfstime3(statbuf.st_atimespec);
+#elif defined(HAVE_STRUCT_STAT_ST_ATIM)
+    time = timespec_to_nfstime3(statbuf.st_atim);
+#else
+    time.seconds = statbuf.st_atime;
+    time.nseconds = 0;
+#endif
+    return time;
+}
+
+nfstime3 get_stat_mtime(const backend_statstruct statbuf)
+{
+    nfstime3 time;
+#if defined(HAVE_STRUCT_STAT_ST_ATIMESPEC)
+    time = timespec_to_nfstime3(statbuf.st_mtimespec);
+#elif defined(HAVE_STRUCT_STAT_ST_ATIM)
+    time = timespec_to_nfstime3(statbuf.st_mtim);
+#else
+    time.seconds = statbuf.st_mtime;
+    time.nseconds = 0;
+#endif
+    return time;
+}
+
+nfstime3 get_stat_ctime(const backend_statstruct statbuf)
+{
+    nfstime3 time;
+#if defined(HAVE_STRUCT_STAT_ST_ATIMESPEC)
+    time = timespec_to_nfstime3(statbuf.st_ctimespec);
+#elif defined(HAVE_STRUCT_STAT_ST_ATIM)
+    time = timespec_to_nfstime3(statbuf.st_ctim);
+#else
+    time.seconds = statbuf.st_ctime;
+    time.nseconds = 0;
+#endif
+    return time;
+}
+
 /*
  * return pre-operation attributes
  *
@@ -95,10 +159,8 @@ pre_op_attr get_pre_cached(void)
     result.attributes_follow = TRUE;
 
     result.pre_op_attr_u.attributes.size = st_cache.st_size;
-    result.pre_op_attr_u.attributes.mtime.seconds = st_cache.st_mtime;
-    result.pre_op_attr_u.attributes.mtime.nseconds = 0;
-    result.pre_op_attr_u.attributes.ctime.seconds = st_cache.st_ctime;
-    result.pre_op_attr_u.attributes.ctime.nseconds = 0;
+    result.pre_op_attr_u.attributes.mtime = get_stat_mtime(st_cache);
+    result.pre_op_attr_u.attributes.ctime = get_stat_ctime(st_cache);
 
     return result;
 }
@@ -207,12 +269,10 @@ post_op_attr get_post_buf(backend_statstruct buf, struct svc_req * req)
 #else
     result.post_op_attr_u.attributes.fileid = buf.st_ino;
 #endif
-    result.post_op_attr_u.attributes.atime.seconds = buf.st_atime;
-    result.post_op_attr_u.attributes.atime.nseconds = 0;
-    result.post_op_attr_u.attributes.mtime.seconds = buf.st_mtime;
-    result.post_op_attr_u.attributes.mtime.nseconds = 0;
-    result.post_op_attr_u.attributes.ctime.seconds = buf.st_ctime;
-    result.post_op_attr_u.attributes.ctime.nseconds = 0;
+
+    result.post_op_attr_u.attributes.atime = get_stat_atime(buf);
+    result.post_op_attr_u.attributes.mtime = get_stat_mtime(buf);
+    result.post_op_attr_u.attributes.ctime = get_stat_ctime(buf);
 
     return result;
 }
@@ -274,42 +334,64 @@ post_op_attr get_post_cached(struct svc_req * req)
 
 /*
  * setting of time, races with local filesystem
- *
- * there is no futimes() function in POSIX or Linux
  */
 static nfsstat3 set_time(const char *path, backend_statstruct buf, sattr3 new)
 {
-    time_t new_atime, new_mtime;
+    struct timespec new_atime, new_mtime;
+#if defined(HAVE_UTIMENSAT)
+    struct timespec ts[2];
+#elif defined(HAVE_UTIMES)
+    struct timeval tv[2];
+#else
     struct utimbuf utim;
+#endif
     int res;
 
-    /* set atime and mtime */
+    /* Do nothing if both are DONT_CHANGE */
     if (new.atime.set_it != DONT_CHANGE || new.mtime.set_it != DONT_CHANGE) {
 
-	/* compute atime to set */
-	if (new.atime.set_it == SET_TO_SERVER_TIME)
-	    new_atime = time(NULL);
-	else if (new.atime.set_it == SET_TO_CLIENT_TIME)
-	    new_atime = new.atime.set_atime_u.atime.seconds;
-	else			       /* DONT_CHANGE */
-	    new_atime = buf.st_atime;
+        /* compute atime to set */
+        if (new.atime.set_it == SET_TO_SERVER_TIME) {
+            clock_gettime(CLOCK_REALTIME, &new_atime);
+        }
+        else if (new.atime.set_it == SET_TO_CLIENT_TIME)
+            new_atime = nfstime3_to_timespec(new.atime.set_atime_u.atime);
+        else {			       /* DONT_CHANGE */
+            new_atime = nfstime3_to_timespec(get_stat_atime(buf));
+        }
 
-	/* compute mtime to set */
-	if (new.mtime.set_it == SET_TO_SERVER_TIME)
-	    new_mtime = time(NULL);
-	else if (new.mtime.set_it == SET_TO_CLIENT_TIME)
-	    new_mtime = new.mtime.set_mtime_u.mtime.seconds;
-	else			       /* DONT_CHANGE */
-	    new_mtime = buf.st_mtime;
+        /* compute mtime to set */
+        if (new.mtime.set_it == SET_TO_SERVER_TIME) {
+            clock_gettime(CLOCK_REALTIME, &new_mtime);
+        }
+        else if (new.mtime.set_it == SET_TO_CLIENT_TIME)
+            new_mtime = nfstime3_to_timespec(new.mtime.set_mtime_u.mtime);
+        else {			       /* DONT_CHANGE */
+            new_mtime = nfstime3_to_timespec(get_stat_mtime(buf));
+        }
 
-	utim.actime = new_atime;
-	utim.modtime = new_mtime;
+#if defined(HAVE_UTIMENSAT)
+        ts[0] = new_atime;
+        ts[1] = new_mtime;
 
-	res = backend_utime(path, &utim);
-	if (res == -1)
-	    return setattr_err();
+        res = backend_utimensat(-1, path, ts, 0);
+#elif defined(HAVE_UTIMES)
+        tv[0].tv_sec = new_atime.tv_sec;
+        tv[0].tv_usec = new_atime.tv_nsec / 1000;
+        tv[1].tv_sec = new_mtime.tv_sec;
+        tv[1].tv_usec = new_mtime.tv_nsec / 1000;
+
+        res = backend_utimes(path, tv);
+#else /* !HAVE_UTIMENSAT && !HAVE_UTIMES */
+        utim.actime = new_atime.tv_sec;
+        utim.modtime = new_mtime.tv_sec;
+
+        res = backend_utime(path, &utim);
+#endif /* HAVE_UTIMENSAT */
+
+        if (res == -1)
+            return setattr_err();
     }
-
     return NFS3_OK;
 }
 
