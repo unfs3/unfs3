@@ -1,4 +1,4 @@
-AC_INIT(unfs3, 0.9.23) 
+AC_INIT([unfs3],[0.9.23])
 AC_CONFIG_MACRO_DIRS([m4])
 AC_CONFIG_HEADER(config.h)
 AC_PROG_INSTALL
@@ -75,4 +75,5 @@ AC_ARG_ENABLE(cluster,
 AC_SUBST([SUBDIRS])
 AC_SUBST([EXTRAOBJ])
 
-AC_OUTPUT(Makefile Config/Makefile Extras/Makefile)
+AC_CONFIG_FILES([Makefile Config/Makefile Extras/Makefile])
+AC_OUTPUT
