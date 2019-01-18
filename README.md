@@ -1,9 +1,6 @@
-UNFS3 (User-Space NFSv3 Server)
+# UNFS3, a User-Space NFSv3 Server
+
 (C) 2003-2009, Pascal Schmidt <unfs3-server@ewetel.net>
-
-
-INTRODUCTION
-============
 
 UNFS3 is a user-space implementation of the NFSv3 server
 specification.
@@ -23,16 +20,15 @@ following options are recognized in the exports file: ro, rw,
 root_squash, all_squash, no_root_squash, no_all_squash. If
 other options are present, they are ignored.
 
-UNFS3 can be used to (re-)export part of an AFS network filesystem. 
-Because AFS does not simulate inodes particularly well, configuring the 
+UNFS3 can be used to (re-)export part of an AFS network filesystem.
+Because AFS does not simulate inodes particularly well, configuring the
 source with --enable-afs is recommended in this scenario.
 
 Cluster extensions compatible to the older ClusterNFS project
 are supported when the source is configured with --enable-cluster.
 
 
-SUPPORTED SYSTEMS
-=================
+## Supported systems
 
 unfs3 is developed and tested on Linux, but should also compile
 and run on other Unix systems. In the past, versions of unfs3
@@ -49,26 +45,24 @@ If unfs3 doesn't build or work on a Unix system, a problem
 report is appreciated.
 
 
-INSTALLATION
-============
+## Building from source
 
 You will need gcc, lex (flex), and yacc (bison) to compile UNFS3.
 
-	./configure
-	make
-	make install
+    ./bootstrap   # (only when building from git)
+    ./configure
+    make
+    make install
 
 Please read the manpage for information about command-line
 options.
 
-	man 8 unfsd
+    man 8 unfsd
 
 If you decide to modify the code yourself, you can run
 
-	make dep
-	
+    make dep
+
 to append dependency information to the Makefile, so that make
 knows which files depend on each other and recompiles all the
 necessary files on changes.
-
-
