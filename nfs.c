@@ -506,7 +506,6 @@ CREATE3res *nfsproc3_create_3_svc(CREATE3args * argp, struct svc_req * rqstp)
 	    /* So far, so good */
 	    gen = backend_get_gen(buf, fd, obj);
 	    fh_cache_add(buf.st_dev, buf.st_ino, obj);
-	    backend_close(fd);
 
 	    result.CREATE3res_u.resok.obj =
 		fh_extend_post(argp->where.dir, buf.st_dev, buf.st_ino, gen);
@@ -516,9 +515,10 @@ CREATE3res *nfsproc3_create_3_svc(CREATE3args * argp, struct svc_req * rqstp)
 
 	if (res == -1) {
 	    /* backend_fstat() or backend_store_create_verifier() failed */
-	    backend_close(fd);
 	    result.status = NFS3ERR_IO;
 	}
+
+	backend_close(fd);
 
     } else if (result.status == NFS3_OK) {
 	/* open() failed */
@@ -527,25 +527,26 @@ CREATE3res *nfsproc3_create_3_svc(CREATE3args * argp, struct svc_req * rqstp)
 	    fd = backend_open(obj, O_NONBLOCK);
 	    if (fd != -1) {
 		res = backend_fstat(fd, &buf);
-	    }
 
-	    if (res != -1) {
-		if (backend_check_create_verifier
-		    (&buf, argp->how.createhow3_u.verf)) {
-		    /* The verifier matched. Return success */
-		    gen = backend_get_gen(buf, fd, obj);
-		    fh_cache_add(buf.st_dev, buf.st_ino, obj);
-		    backend_close(fd);
+		if (res != -1) {
+		    if (backend_check_create_verifier
+			(&buf, argp->how.createhow3_u.verf)) {
+			/* The verifier matched. Return success */
+			gen = backend_get_gen(buf, fd, obj);
+			fh_cache_add(buf.st_dev, buf.st_ino, obj);
 
-		    result.CREATE3res_u.resok.obj =
-			fh_extend_post(argp->where.dir, buf.st_dev,
-				       buf.st_ino, gen);
-		    result.CREATE3res_u.resok.obj_attributes =
-			get_post_buf(buf, rqstp);
-		} else {
-		    /* The verifier doesn't match */
-		    result.status = NFS3ERR_EXIST;
+			result.CREATE3res_u.resok.obj =
+			    fh_extend_post(argp->where.dir, buf.st_dev,
+					   buf.st_ino, gen);
+			result.CREATE3res_u.resok.obj_attributes =
+			    get_post_buf(buf, rqstp);
+		    } else {
+			/* The verifier doesn't match */
+			result.status = NFS3ERR_EXIST;
+		    }
 		}
+
+		backend_close(fd);
 	    }
 	}
 	if (res == -1) {
