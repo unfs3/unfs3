@@ -427,17 +427,43 @@ WRITE3res *nfsproc3_write_3_svc(WRITE3args * argp, struct svc_req * rqstp)
     return &result;
 }
 
-#ifndef WIN32
+/* seconds between 1970-01-01 and 1980-01-01 */
+static const unsigned FT80SEC = 315532800;
 
 /*
  * store verifier in atime and mtime 
  */
 static int store_create_verifier(char *obj, createverf3 verf)
 {
+    char hashbuf[9];
+    uint32 hash;
     struct utimbuf ubuf;
 
-    ubuf.actime = verf[0] | verf[1] << 8 | verf[2] << 16 | verf[3] << 24;
-    ubuf.modtime = verf[4] | verf[5] << 8 | verf[6] << 16 | verf[7] << 24;
+    /* FAT has a very limited number of bits for file times, so we hash
+       the verifier down to 32 bits to be able to fit it in. This
+       increases the risk of collisions a bit, but we should hopefully
+       not have the kind of load where this is a problem. */
+    memcpy(hashbuf, verf, 8);
+    hashbuf[8] = '\0';
+    hash = fnv1a_32(hashbuf, 0);
+
+    /* FAT can only store dates in the interval 1980-01-01 to 2107-12-31.
+       However, since the utime interface uses Epoch time, we are further
+       limited to 1980-01-01 to 2038-01-19, assuming 32 bit signed time_t.
+       math.log(2**31-1 - FT80SEC, 2) = 30.7, which means that we only have
+       30 bits. WriteTime then only has a resolution of 2 seconds, meaning
+       we lose yet another bit there. And finally AccessTime has the really
+       poor resolution of 1 day. So we need to spread things out. */
+
+    /* 29 bits in WriteTime */
+    ubuf.modtime = ((hash & 0x1fffffff) * 2) + FT80SEC;
+    /* And the remaining 3 bits in AccessTime. Things get hairy here as
+       Windows stores time stamps in local time on FAT. But since we only
+       have a resolution of a whole day, the conversion between UTC and
+       local time might shift us over to the wrong day. To handle this
+       we sacrifice a few bits and shift the value up enough that we can
+       mask off any conversion noise when we compare later. */
+    ubuf.actime = (((((hash >> 29) * 24) << 6) | 0x20) * 3600) + FT80SEC;
 
     return backend_utime(obj, &ubuf);
 }
@@ -447,12 +473,21 @@ static int store_create_verifier(char *obj, createverf3 verf)
  */
 static int check_create_verifier(backend_statstruct * buf, createverf3 verf)
 {
-    return ((buf->st_atime ==
-	     (verf[0] | verf[1] << 8 | verf[2] << 16 | verf[3] << 24))
-	    && (buf->st_mtime ==
-		(verf[4] | verf[5] << 8 | verf[6] << 16 | verf[7] << 24)));
+    char hashbuf[9];
+    uint32 hash, expected;
+
+    /* Compute the expected value, same as above */
+    memcpy(hashbuf, verf, 8);
+    hashbuf[8] = '\0';
+    expected = fnv1a_32(hashbuf, 0);
+
+    /* Extract the hash from the file, strategically dropping bits where
+       the file system might have messed things up for us (see above). */
+    hash = (buf->st_mtime - FT80SEC) / 2;
+    hash |= ((((buf->st_atime - FT80SEC) / 3600) >> 6) / 24) << 29;
+
+    return hash == expected;
 }
-#endif				       /* WIN32 */
 
 CREATE3res *nfsproc3_create_3_svc(CREATE3args * argp, struct svc_req * rqstp)
 {
@@ -495,10 +530,7 @@ CREATE3res *nfsproc3_create_3_svc(CREATE3args * argp, struct svc_req * rqstp)
 	    /* Successful stat */
 	    if (argp->how.mode == EXCLUSIVE) {
 		/* Save verifier in atime and mtime */
-		res =
-		    backend_store_create_verifier(obj,
-						  argp->how.createhow3_u.
-						  verf);
+		res = store_create_verifier(obj, argp->how.createhow3_u.verf);
 	    }
 	}
 
@@ -514,7 +546,7 @@ CREATE3res *nfsproc3_create_3_svc(CREATE3args * argp, struct svc_req * rqstp)
 	}
 
 	if (res == -1) {
-	    /* backend_fstat() or backend_store_create_verifier() failed */
+	    /* backend_fstat() or store_create_verifier() failed */
 	    result.status = NFS3ERR_IO;
 	}
 
@@ -529,8 +561,7 @@ CREATE3res *nfsproc3_create_3_svc(CREATE3args * argp, struct svc_req * rqstp)
 		res = backend_fstat(fd, &buf);
 
 		if (res != -1) {
-		    if (backend_check_create_verifier
-			(&buf, argp->how.createhow3_u.verf)) {
+		    if (check_create_verifier(&buf, argp->how.createhow3_u.verf)) {
 			/* The verifier matched. Return success */
 			gen = backend_get_gen(buf, fd, obj);
 			fh_cache_add(buf.st_dev, buf.st_ino, obj);

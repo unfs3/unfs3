@@ -77,7 +77,5 @@
 #define backend_gen_nonce win_gen_nonce
 #define backend_flock flock(fd, op) (-1)
 #define backend_getpid getpid
-#define backend_store_create_verifier win_store_create_verifier
-#define backend_check_create_verifier win_check_create_verifier
 
 #endif
