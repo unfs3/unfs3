@@ -879,8 +879,8 @@ static int win_utime_creation(const char *path, const struct utimbuf *times,
     wchar_t *winpath;
     int ret = 0;
     HANDLE h;
-    ULARGE_INTEGER fti;
-    FILETIME xtime, mtime;
+    unsigned long long fti;
+    FILETIME atime, mtime;
 
     if (!strcmp("/", path)) {
 	/* Emulate root */
@@ -896,12 +896,12 @@ static int win_utime_creation(const char *path, const struct utimbuf *times,
 
     /* Unfortunately, we cannot use utime(), since it doesn't support
        directories. */
-    fti.QuadPart = UInt32x32To64(times->actime + FT70SEC, 10000000);
-    xtime.dwHighDateTime = fti.HighPart;
-    xtime.dwLowDateTime = fti.LowPart;
-    fti.QuadPart = UInt32x32To64(times->modtime + FT70SEC, 10000000);
-    mtime.dwHighDateTime = fti.HighPart;
-    mtime.dwLowDateTime = fti.LowPart;
+    fti = ((unsigned long long)times->actime + FT70SEC) * 10000000;
+    xtime.dwHighDateTime = (fti >> 32) & 0xffffffff;
+    xtime.dwLowDateTime = fti & 0xffffffff;
+    fti = ((unsigned long long)times->modtime + FT70SEC) * 10000000;
+    mtime.dwHighDateTime = (fti >> 32) & 0xffffffff;
+    mtime.dwLowDateTime = fti & 0xffffffff;
 
     h = CreateFileW(winpath, FILE_WRITE_ATTRIBUTES,
 		    FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
