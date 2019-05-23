@@ -476,7 +476,7 @@ int win_stat(const char *file_name, backend_statstruct * buf)
     struct _stati64 win_statbuf;
     HANDLE h;
     unsigned long long fti;
-    FILETIME ctime, atime, mtime;
+    FILETIME atime, mtime;
 
     /* Special case: Our top-level virtual root, containing each drive
        represented as a directory. Compare with "My Computer" etc. This
@@ -525,7 +525,7 @@ int win_stat(const char *file_name, backend_statstruct * buf)
 		    FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
 		    FILE_ATTRIBUTE_NORMAL | FILE_FLAG_BACKUP_SEMANTICS, NULL);
 
-    retval = GetFileTime(h, &ctime, &atime, &mtime);
+    retval = GetFileTime(h, NULL, &atime, &mtime);
     CloseHandle(h);
 
     if (!retval) {
@@ -538,8 +538,8 @@ int win_stat(const char *file_name, backend_statstruct * buf)
     buf->st_atime = fti / 10000000 - FT70SEC;
     fti = (unsigned long long)mtime.dwHighDateTime << 32 | mtime.dwLowDateTime;
     buf->st_mtime = fti / 10000000 - FT70SEC;
-    fti = (unsigned long long)ctime.dwHighDateTime << 32 | ctime.dwLowDateTime;
-    buf->st_ctime = fti / 10000000 - FT70SEC;
+    /* Windows doesn't have "change time", so use modification time */
+    buf->st_ctime = buf->st_mtime;
 
     retval = GetFullPathNameW(winpath, wsizeof(pathbuf), pathbuf, NULL);
     if (!retval) {
