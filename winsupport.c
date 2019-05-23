@@ -29,7 +29,7 @@
 #define MAX_NUM_DRIVES 26
 #define FT70SEC 11644473600LL	       /* seconds between 1601-01-01 and
 				          1970-01-01 */
-#define FT80SEC 315529200	       /* seconds between 1970-01-01 and
+#define FT80SEC 315532800	       /* seconds between 1970-01-01 and
 				          1980-01-01 */
 
 #define wsizeof(x) (sizeof(x)/sizeof(wchar_t))
