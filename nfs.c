@@ -531,6 +531,15 @@ CREATE3res *nfsproc3_create_3_svc(CREATE3args * argp, struct svc_req * rqstp)
 	    if (argp->how.mode == EXCLUSIVE) {
 		/* Save verifier in atime and mtime */
 		res = store_create_verifier(obj, argp->how.createhow3_u.verf);
+		/* Check that it was properly stored */
+		if (res != -1) {
+		    res = backend_stat(obj, &buf);
+		}
+		if (res != -1) {
+		    if (!check_create_verifier(&buf, argp->how.createhow3_u.verf)) {
+			res = -1;
+		    }
+		}
 	    }
 	}
 
