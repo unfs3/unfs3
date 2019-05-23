@@ -496,6 +496,9 @@ int win_stat(const char *file_name, backend_statstruct * buf)
     wchar_t *splitpoint;
     char savedchar;
     struct _stati64 win_statbuf;
+    HANDLE h;
+    unsigned long long fti;
+    FILETIME ctime, atime, mtime;
 
     /* Special case: Our top-level virtual root, containing each drive
        represented as a directory. Compare with "My Computer" etc. This
@@ -535,10 +538,30 @@ int win_stat(const char *file_name, backend_statstruct * buf)
     buf->st_gid = win_statbuf.st_gid;
     buf->st_rdev = win_statbuf.st_rdev;
     buf->st_size = win_statbuf.st_size;
-    buf->st_atime = win_statbuf.st_atime;
-    buf->st_mtime = win_statbuf.st_mtime;
-    buf->st_ctime = win_statbuf.st_ctime;
     buf->st_blocks = win_statbuf.st_size / 512;
+
+    /* Windows miscalculates DST sometimes in stat() calls, so we need
+       to use more standard Windows APIs */
+
+    h = CreateFileW(winpath, FILE_READ_ATTRIBUTES,
+		    FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
+		    FILE_ATTRIBUTE_NORMAL | FILE_FLAG_BACKUP_SEMANTICS, NULL);
+
+    retval = GetFileTime(h, &ctime, &atime, &mtime);
+    CloseHandle(h);
+
+    if (!retval) {
+	free(winpath);
+	errno = EACCES;
+	return -1;
+    }
+
+    fti = (unsigned long long)atime.dwHighDateTime << 32 | atime.dwLowDateTime;
+    buf->st_atime = fti / 10000000 - FT70SEC;
+    fti = (unsigned long long)mtime.dwHighDateTime << 32 | mtime.dwLowDateTime;
+    buf->st_mtime = fti / 10000000 - FT70SEC;
+    fti = (unsigned long long)ctime.dwHighDateTime << 32 | ctime.dwLowDateTime;
+    buf->st_ctime = fti / 10000000 - FT70SEC;
 
     retval = GetFullPathNameW(winpath, wsizeof(pathbuf), pathbuf, NULL);
     if (!retval) {
