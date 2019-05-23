@@ -8,6 +8,9 @@
 #ifdef WIN32
 #define _WIN32_WINDOWS 0x0410	       /* We require Windows 98 or later For
 				          GetLongPathName */
+
+#include "config.h"
+
 #include <errno.h>
 #include <stdio.h>
 #include "winsupport.h"
