@@ -889,6 +889,9 @@ int main(int argc, char **argv)
 #endif				       /* WIN32 */
     int res;
 
+    /* flush stdout after each newline */
+    setvbuf(stdout, NULL, _IOLBF, 0);
+
     /* Clear opt_bind_addr structure before we use it */
     memset(&opt_bind_addr, 0, sizeof(struct in_addr));
 
@@ -923,9 +926,6 @@ int main(int argc, char **argv)
     if (opt_detach) {
 	/* prepare syslog access */
 	openlog("unfsd", LOG_CONS | LOG_PID, LOG_DAEMON);
-    } else {
-	/* flush stdout after each newline */
-	setvbuf(stdout, NULL, _IOLBF, 0);
     }
 
     /* NFS transports */
