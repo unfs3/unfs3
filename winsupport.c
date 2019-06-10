@@ -472,9 +472,7 @@ int win_stat(const char *file_name, backend_statstruct * buf)
     wchar_t *splitpoint;
     char savedchar;
     struct _stati64 win_statbuf;
-    HANDLE h;
     unsigned long long fti;
-    FILETIME atime, mtime;
 
     /* Special case: Our top-level virtual root, containing each drive
        represented as a directory. Compare with "My Computer" etc. This
@@ -493,6 +491,13 @@ int win_stat(const char *file_name, backend_statstruct * buf)
 	buf->st_dev = 0xff;
 	buf->st_ino = 1;
 	return 0;
+    }
+
+    /* Since we're using FindFile() we have to make sure no one is
+       trying to sneak in wildcard characters */
+    if (strcspn(file_name, "*?<>\"") != strlen(file_name)) {
+	errno = EINVAL;
+	return -1;
     }
 
     winpath = intpath2winpath(file_name);
@@ -517,27 +522,51 @@ int win_stat(const char *file_name, backend_statstruct * buf)
     buf->st_blocks = win_statbuf.st_size / 512;
 
     /* Windows miscalculates DST sometimes in stat() calls, so we need
-       to use more standard Windows APIs */
+       to use more standard Windows APIs. However CreateFile() cannot
+       open files we don't have access to (excluding GetFileTime()) and
+       GetFileAttributesEx() doesn't work on locked files. So that
+       leaves FindFile() which seems to work everywhere. We just need
+       to avoid wildcards (checked above). */
 
-    h = CreateFileW(winpath, FILE_READ_ATTRIBUTES,
-		    FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING,
-		    FILE_ATTRIBUTE_NORMAL | FILE_FLAG_BACKUP_SEMANTICS, NULL);
+    if (wcslen(winpath) == 3) {
+	WIN32_FILE_ATTRIBUTE_DATA fileinfo;
 
-    retval = GetFileTime(h, NULL, &atime, &mtime);
-    CloseHandle(h);
+	/* But just to make things interesting FindFile() doesn't work on
+	   root directories, so we have to use GetFileAttributesEx() here
+	   and pray there are no locking issues... */
 
-    if (!retval) {
-	free(winpath);
-	errno = EACCES;
-	return -1;
+	retval = GetFileAttributesExW(winpath, GetFileExInfoStandard, &fileinfo);
+	if (!retval) {
+	    free(winpath);
+	    errno = EACCES;
+	    return -1;
+	}
+
+	fti = (unsigned long long)fileinfo.ftLastAccessTime.dwHighDateTime << 32 | fileinfo.ftLastAccessTime.dwLowDateTime;
+	buf->st_atime = fti / 10000000 - FT70SEC;
+	fti = (unsigned long long)fileinfo.ftLastWriteTime.dwHighDateTime << 32 | fileinfo.ftLastWriteTime.dwLowDateTime;
+	buf->st_mtime = fti / 10000000 - FT70SEC;
+	/* Windows doesn't have "change time", so use modification time */
+	buf->st_ctime = buf->st_mtime;
+    } else {
+	HANDLE h;
+	WIN32_FIND_DATAW finddata;
+
+	h = FindFirstFileW(winpath, &finddata);
+	if (h == INVALID_HANDLE_VALUE) {
+	    free(winpath);
+	    errno = EACCES;
+	    return -1;
+	}
+	FindClose(h);
+
+	fti = (unsigned long long)finddata.ftLastAccessTime.dwHighDateTime << 32 | finddata.ftLastAccessTime.dwLowDateTime;
+	buf->st_atime = fti / 10000000 - FT70SEC;
+	fti = (unsigned long long)finddata.ftLastWriteTime.dwHighDateTime << 32 | finddata.ftLastWriteTime.dwLowDateTime;
+	buf->st_mtime = fti / 10000000 - FT70SEC;
+	/* Windows doesn't have "change time", so use modification time */
+	buf->st_ctime = buf->st_mtime;
     }
-
-    fti = (unsigned long long)atime.dwHighDateTime << 32 | atime.dwLowDateTime;
-    buf->st_atime = fti / 10000000 - FT70SEC;
-    fti = (unsigned long long)mtime.dwHighDateTime << 32 | mtime.dwLowDateTime;
-    buf->st_mtime = fti / 10000000 - FT70SEC;
-    /* Windows doesn't have "change time", so use modification time */
-    buf->st_ctime = buf->st_mtime;
 
     retval = GetFullPathNameW(winpath, wsizeof(pathbuf), pathbuf, NULL);
     if (!retval) {
