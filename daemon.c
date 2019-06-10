@@ -892,6 +892,13 @@ int main(int argc, char **argv)
     /* flush stdout after each newline */
     setvbuf(stdout, NULL, _IOLBF, 0);
 
+#ifdef WIN32
+    /* Windows doesn't have line buffering, and it even buffers
+       stderr by default, so turn off all buffering */
+    setvbuf(stdout, NULL, _IONBF, 0);
+    setvbuf(stderr, NULL, _IONBF, 0);
+#endif
+
     /* Clear opt_bind_addr structure before we use it */
     memset(&opt_bind_addr, 0, sizeof(struct in_addr));
 
