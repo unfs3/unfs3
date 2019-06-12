@@ -568,6 +568,25 @@ int win_stat(const char *file_name, backend_statstruct * buf)
 	buf->st_ctime = buf->st_mtime;
     }
 
+    /*
+     * Windows doesn't update the modification time for directories
+     * on FAT, so mark it as invalid (0) and let upper layers deal
+     * with this by looking at the contents
+     */
+    if (S_ISDIR(buf->st_mode)) {
+	wchar_t rootpath[4];
+	wchar_t fsname[MAX_PATH+1];
+
+	wcsncpy(rootpath, winpath, 3);
+	rootpath[3] = L'\0';
+	retval = GetVolumeInformationW(rootpath, NULL, 0, NULL, NULL,
+	                               NULL, fsname, sizeof(fsname));
+	if (retval && (wcsstr(fsname, L"FAT") != NULL)) {
+	    buf->st_mtime = 0;
+	    buf->st_ctime = 0;
+	}
+    }
+
     retval = GetFullPathNameW(winpath, wsizeof(pathbuf), pathbuf, NULL);
     if (!retval) {
 	errno = ENOENT;
