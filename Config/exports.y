@@ -91,7 +91,7 @@ int e_error = FALSE;
 uint32 fnv1a_32(const char *str)
 {
     static const uint32 fnv_32_prime = 0x01000193;
-    uint32 hval = fnv_32_prime;
+    uint32 hval = 0x811c9dc5;
     
     while (*str) {
 	hval ^= *str++;
@@ -104,7 +104,7 @@ uint32 fnv1a_32(const char *str)
 uint32 wfnv1a_32(const wchar_t *str)
 {
     static const uint32 fnv_32_prime = 0x01000193;
-    uint32 hval = fnv_32_prime;
+    uint32 hval = 0x811c9dc5;
     
     while (*str) {
 	hval ^= *str++;
