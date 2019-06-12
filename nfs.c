@@ -216,6 +216,7 @@ LOOKUP3res *nfsproc3_lookup_3_svc(LOOKUP3args * argp, struct svc_req * rqstp)
 
 	    if (fh) {
 		result.LOOKUP3res_u.resok.object = fh_encode(fh, fhbuf);
+		fix_dir_times(obj, &buf);
 		result.LOOKUP3res_u.resok.obj_attributes =
 		    get_post_buf(buf, rqstp);
 	    } else {

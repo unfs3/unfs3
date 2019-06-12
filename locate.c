@@ -69,6 +69,7 @@ static int locate_pfx(const char *pfx, uint32 dev, uint64 ino, char *result)
 	/* check for matching object */
 	if (buf.st_dev == dev && buf.st_ino == ino) {
 	    strcpy(result, path);
+	    fix_dir_times(path, &buf);
 	    st_cache = buf;
 	    st_cache_valid = TRUE;
 	    closedir(search);

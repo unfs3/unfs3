@@ -23,4 +23,6 @@ mode_t create_mode(sattr3 sattr);
 
 nfsstat3 atomic_attr(sattr3 sattr);
 
+void fix_dir_times(const char *path, backend_statstruct *buf);
+
 #endif

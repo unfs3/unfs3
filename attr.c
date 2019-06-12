@@ -17,6 +17,7 @@
 #endif
 #include <utime.h>
 #include <errno.h>
+#include <dirent.h>
 
 #include "backend.h"
 #include "nfs.h"
@@ -236,6 +237,8 @@ static post_op_attr get_post_ll(const char *path, uint32 dev, uint64 ino,
     /* protect against local fs race */
     if (dev != buf.st_dev || ino != buf.st_ino)
 	return error_attr;
+
+    fix_dir_times(path, &buf);
 
     return get_post_buf(buf, req);
 }
@@ -500,4 +503,114 @@ nfsstat3 atomic_attr(sattr3 attr)
 	return NFS3ERR_INVAL;
     else
 	return NFS3_OK;
+}
+
+/*
+ * generate a hash based on directory contents
+ */
+static uint32 directory_hash(const char *path)
+{
+    backend_dirstream *search;
+    struct dirent *this;
+    uint32 hval = 0;
+
+    search = backend_opendir(path);
+    if (!search) {
+	return 0;
+    }
+
+    hval = fnv1a_32("");
+    while ((this = backend_readdir(search)) != NULL) {
+	hval = fnv1a_32_update(this->d_name, hval);
+    }
+
+    backend_closedir(search);
+    return hval;
+}
+
+struct bad_dir_entry {
+    char *path;
+    uint32_t hash;
+    time_t time;
+    time_t last_used;
+};
+
+#define BAD_DIR_CACHE_SIZE 256
+static struct bad_dir_entry bad_dir_cache[BAD_DIR_CACHE_SIZE];
+
+/*
+ * returns a free bad dir cache entry, picking the least recently used
+ * one if necessary
+ */
+static struct bad_dir_entry* get_free_bad_dir_entry(void)
+{
+    int best;
+
+    best = 0;
+    for (int i = 0;i < BAD_DIR_CACHE_SIZE;i++) {
+	if (bad_dir_cache[i].path == NULL) {
+	    best = i;
+	    break;
+	}
+
+	if (bad_dir_cache[i].last_used < bad_dir_cache[best].last_used)
+	    best = i;
+    }
+
+    free(bad_dir_cache[best].path);
+    bad_dir_cache[best].path = NULL;
+
+    return &bad_dir_cache[best];
+}
+
+/*
+ * returns a matching bad dir cache entry, or a new one if necessary
+ */
+static struct bad_dir_entry* find_bad_dir_entry(const char *path)
+{
+    struct bad_dir_entry *new_entry;
+
+    for (int i = 0;i < BAD_DIR_CACHE_SIZE;i++) {
+	if (bad_dir_cache[i].path == NULL)
+	    continue;
+
+	if (strcmp(path, bad_dir_cache[i].path) == 0) {
+	    bad_dir_cache[i].last_used = time(NULL);
+	    return &bad_dir_cache[i];
+	}
+    }
+
+    new_entry = get_free_bad_dir_entry();
+
+    new_entry->path = strdup(path);
+    new_entry->hash = 0;
+    new_entry->time = 0;
+    new_entry->last_used = time(NULL);
+
+    return new_entry;
+}
+
+/*
+ * adjust mtime/ctime for broken directories (happens with FAT)
+ */
+void fix_dir_times(const char *path, backend_statstruct *buf)
+{
+    struct bad_dir_entry *entry;
+    uint32 hash;
+
+    if (!S_ISDIR(buf->st_mode))
+	return;
+    if ((buf->st_mtime != 0) && (buf->st_ctime != 0))
+	return;
+
+    entry = find_bad_dir_entry(path);
+
+    hash = directory_hash(path);
+    if (hash != entry->hash) {
+	entry->hash = hash;
+	entry->time = time(NULL);
+    }
+
+    buf->st_mtime = entry->time;
+    buf->st_ctime = entry->time;
 }

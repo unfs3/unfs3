@@ -90,8 +90,12 @@ int e_error = FALSE;
  */
 uint32 fnv1a_32(const char *str)
 {
+    return fnv1a_32_update(str, 0x811c9dc5);
+}
+
+uint32 fnv1a_32_update(const char *str, uint32 hval)
+{
     static const uint32 fnv_32_prime = 0x01000193;
-    uint32 hval = 0x811c9dc5;
     
     while (*str) {
 	hval ^= *str++;

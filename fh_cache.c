@@ -22,6 +22,7 @@
 #include "fh_cache.h"
 #include "mount.h"
 #include "daemon.h"
+#include "attr.h"
 #include "Config/exports.h"
 #include "backend.h"
 
@@ -179,6 +180,7 @@ static char *fh_cache_lookup(uint32 dev, uint64 ino)
 	    fh_cache[i].use = fh_cache_next();
 
 	    /* update stat cache */
+	    fix_dir_times(fh_cache[i].path, &buf);
 	    st_cache_valid = TRUE;
 	    st_cache = buf;
 
@@ -244,6 +246,7 @@ char *fh_decomp(nfs_fh3 fh)
 		    st_cache.st_blksize = 512;
 		if (st_cache.st_blocks == 0)
 		    st_cache.st_blocks = 8;
+		fix_dir_times(result, &st_cache);
 	    }
 
 	    st_cache.st_dev = obj.dev;

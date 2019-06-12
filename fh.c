@@ -36,6 +36,7 @@
 #include "mount.h"
 #include "daemon.h"
 #include "fh.h"
+#include "attr.h"
 #include "backend.h"
 #include "Config/exports.h"
 
@@ -334,6 +335,8 @@ post_op_fh3 fh_extend_type(nfs_fh3 fh, const char *path, unsigned int type)
 	return result;
     }
 
+    fix_dir_times(path, &buf);
+
     st_cache_valid = TRUE;
     st_cache = buf;
 
@@ -407,6 +410,7 @@ static int fh_rec(const unfs3_fh_t * fh, int pos, const char *lead,
 		/* found the object */
 		sprintf(result, "%s/%s", lead + 1, entry->d_name);
 		/* update stat cache */
+		fix_dir_times(result, &buf);
 		st_cache_valid = TRUE;
 		st_cache = buf;
 		matches++;
