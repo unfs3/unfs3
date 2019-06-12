@@ -597,11 +597,11 @@ int win_stat(const char *file_name, backend_statstruct * buf)
     splitpoint = &pathbuf[namelen / 2];
     savedchar = *splitpoint;
     *splitpoint = '\0';
-    buf->st_ino = wfnv1a_32(pathbuf, 0);
+    buf->st_ino = wfnv1a_32(pathbuf);
     assert(sizeof(buf->st_ino) == 8);
     buf->st_ino = buf->st_ino << 32;
     *splitpoint = savedchar;
-    buf->st_ino |= wfnv1a_32(splitpoint, 0);
+    buf->st_ino |= wfnv1a_32(splitpoint);
 
 #if 0
     fprintf(stderr,

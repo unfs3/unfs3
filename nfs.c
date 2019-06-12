@@ -445,7 +445,7 @@ static int store_create_verifier(char *obj, createverf3 verf)
        not have the kind of load where this is a problem. */
     memcpy(hashbuf, verf, 8);
     hashbuf[8] = '\0';
-    hash = fnv1a_32(hashbuf, 0);
+    hash = fnv1a_32(hashbuf);
 
     /* FAT can only store dates in the interval 1980-01-01 to 2107-12-31.
        However, since the utime interface uses Epoch time, we are further
@@ -479,7 +479,7 @@ static int check_create_verifier(backend_statstruct * buf, createverf3 verf)
     /* Compute the expected value, same as above */
     memcpy(hashbuf, verf, 8);
     hashbuf[8] = '\0';
-    expected = fnv1a_32(hashbuf, 0);
+    expected = fnv1a_32(hashbuf);
 
     /* Extract the hash from the file, strategically dropping bits where
        the file system might have messed things up for us (see above). */

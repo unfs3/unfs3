@@ -55,24 +55,6 @@
  */
 #define NAME_SIZE(x) (((strlen((x))+3)/4)*4)
 
-uint32 directory_hash(const char *path)
-{
-    backend_dirstream *search;
-    struct dirent *this;
-    uint32 hval = 0;
-
-    search = backend_opendir(path);
-    if (!search) {
-	return 0;
-    }
-
-    while ((this = backend_readdir(search)) != NULL) {
-	hval = fnv1a_32(this->d_name, hval);
-    }
-
-    backend_closedir(search);
-    return hval;
-}
 
 /*
  * perform a READDIR operation
