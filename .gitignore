@@ -1,0 +1,10 @@
+configure
+config.*
+autom4te.cache
+Makefile
+lex.yy.c
+y.tab.*
+*.o
+lib.a
+unfsd
+unfsd.exe
