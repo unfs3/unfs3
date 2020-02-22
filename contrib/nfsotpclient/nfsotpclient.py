@@ -43,7 +43,7 @@ class NFSOTPClient:
         res = self.mountcl.mnt("@getnonce")
 
         if res.fhs_status != mountclient.mountconstants.MNT3_OK:
-            print >>sys.stderr, "Failed to get nonce:", mountclient.mountconstants.mountstat3_id[res.fhs_status]
+            print("Failed to get nonce:", mountclient.mountconstants.mountstat3_id[res.fhs_status], file=sys.stderr)
             sys.exit(1)
         
         fhandle = res.mountinfo.fhandle
@@ -52,7 +52,7 @@ class NFSOTPClient:
 
 
 def usage():
-    print >>sys.stderr, "Usage: nfsotpclient.py host[:port]"
+    print("Usage: nfsotpclient.py host[:port]", file=sys.stderr)
     sys.exit(1)
 
 
@@ -68,11 +68,11 @@ if __name__ == "__main__":
     else:
         # No port specified, fetch from portmapper
         # FIXME
-        print >>sys.stderr, "Portmapper support not yet implemented"
+        print("Portmapper support not yet implemented", file=sys.stderr)
         sys.exit(1)
 
     cl = NFSOTPClient(host, port)
     import getpass
     password = getpass.getpass()
     
-    print cl.getotp(password)
+    print(cl.getotp(password))

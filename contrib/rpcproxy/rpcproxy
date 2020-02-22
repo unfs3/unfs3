@@ -133,7 +133,7 @@ class RPCConnection:
         """Return true if last flag is set"""
         assert len(head) == FRAG_HEADER_LEN
         x = struct.unpack('>L', head)[0]
-        return ((x & 0x80000000L) != 0)
+        return ((x & 0x80000000) != 0)
 
 
     def rm_stream(self, stream):
@@ -146,7 +146,7 @@ class RPCConnection:
             frag_data = buffer(stream, fragpos, FRAG_SIZE)
             x = len(frag_data)
             if last:
-                x = x | 0x80000000L
+                x = x | 0x80000000
             frag_head = struct.pack('>L', x)
             data.append(frag_head + str(frag_data))
             if last:
@@ -217,7 +217,7 @@ class ServerConnection(RPCConnection):
 
     def eof_event(self):
         """Overridden eof_event, which re-connects"""
-        print >>sys.stderr, "Lost connection to server, trying to reconnect."
+        print("Lost connection to server, trying to reconnect.", file=sys.stderr)
         # Discard the current call
         self.current_cb("")
         self.current_cb = None
@@ -239,10 +239,10 @@ class ServerConnection(RPCConnection):
             while 1:
                 try:
                     srv_sock.connect((self.host, self.port))
-                    print >>sys.stderr, "Connected to %s:%d" % (self.host, self.port)
+                    print("Connected to %s:%d" % (self.host, self.port), file=sys.stderr)
                     break
-                except socket.error, e:
-                    print >>sys.stderr, "Connection to %s:%d failed: %s" % (self.host, self.port, e[1])
+                except socket.error as e:
+                    print("Connection to %s:%d failed: %s" % (self.host, self.port, e[1]), file=sys.stderr)
                     time.sleep(5)
             self.set_sock(srv_sock)
 

@@ -223,12 +223,12 @@ class Unpacker(xdrlib.Unpacker):
     def unpack_auth_unix(self):
         stamp=self.unpack_uint()
         machinename=self.unpack_string()
-        print "machinename: %s" % machinename
+        print("machinename: %s" % machinename)
         uid=self.unpack_uint()
         gid=self.unpack_uint()
         n_gids=self.unpack_uint()
         gids = []
-        print "n_gids: %d" % n_gids
+        print("n_gids: %d" % n_gids)
         for i in range(n_gids):
             gids.append(self.unpack_uint())
         return stamp, machinename, uid, gid, gids
@@ -237,10 +237,10 @@ class Unpacker(xdrlib.Unpacker):
     def unpack_callheader(self):
 	xid = self.unpack_uint()
 	msg_type = self.unpack_enum()
-	if msg_type <> CALL:
+	if msg_type != CALL:
 	    raise BadRPCMsgType(msg_type)
 	rpcvers = self.unpack_uint()
-	if rpcvers <> RPCVERSION:
+	if rpcvers != RPCVERSION:
 	    raise BadRPCVersion(rpcvers)
 	prog = self.unpack_uint()
 	vers = self.unpack_uint()
@@ -253,7 +253,7 @@ class Unpacker(xdrlib.Unpacker):
     def unpack_replyheader(self):
 	xid = self.unpack_uint()
 	msg_type = self.unpack_enum()
-	if msg_type <> REPLY:
+	if msg_type != REPLY:
 	    raise BadRPCMsgType(msg_type)
 	stat = self.unpack_enum()
 	if stat == MSG_DENIED:
@@ -266,7 +266,7 @@ class Unpacker(xdrlib.Unpacker):
 		stat = self.unpack_uint()
 		raise RPCAuthError(stat)
 	    raise RPCMsgDenied(stat)
-	if stat <> MSG_ACCEPTED:
+	if stat != MSG_ACCEPTED:
 	    raise BadRPCReplyType(stat)
 	verf = self.unpack_auth()
 	stat = self.unpack_enum()
@@ -280,7 +280,7 @@ class Unpacker(xdrlib.Unpacker):
 	    raise RPCProcUnavail()
 	if stat == GARBAGE_ARGS:
 	    raise RPCGarbageArgs()
-	if stat <> SUCCESS:
+	if stat != SUCCESS:
 	    raise RPCBadAcceptStats(stat)
 	return xid, verf
 	# Caller must get procedure-specific part of reply
@@ -329,7 +329,7 @@ def unix_epoch():
     offset, hh = divmod(hh + offset, 24)
     d = d + offset
     _unix_epoch = time.mktime((y, m, d, hh, mm, ss, 0, 0, 0))
-    print "Unix epoch:", time.ctime(_unix_epoch)
+    print("Unix epoch:", time.ctime(_unix_epoch))
     return _unix_epoch
 
 
@@ -349,7 +349,7 @@ class Client:
         # Servers may do XID caching, so try to come up with something
         # unique to start with. XIDs are 32 bits. Python integers are always
         # at least 32 bits. 
-	self.lastxid = int(long(time.time() * 1E6) & 0xfffffff)
+	self.lastxid = int(int(time.time() * 1E6) & 0xfffffff)
 	self.addpackers()
 	self.cred = None
 	self.verf = None
@@ -426,7 +426,7 @@ class Client:
 
 def sendfrag(sock, last, frag):
     x = len(frag)
-    if last: x = x | 0x80000000L
+    if last: x = x | 0x80000000
     header = (chr(int(x>>24 & 0xff)) + chr(int(x>>16 & 0xff)) + \
 	      chr(int(x>>8 & 0xff)) + chr(int(x & 0xff)))
     sock.send(header + frag)
@@ -438,7 +438,7 @@ def recvfrag(sock):
     header = sock.recv(4)
     if len(header) < 4:
 	raise EOFError
-    x = long(ord(header[0]))<<24 | ord(header[1])<<16 | \
+    x = int(ord(header[0]))<<24 | ord(header[1])<<16 | \
 	ord(header[2])<<8 | ord(header[3])
     last = ((x & 0x80000000) != 0)
     n = int(x & 0x7fffffff)
@@ -467,14 +467,15 @@ def bindresvport(sock, host):
     FIRST, LAST = 600, 1024 # Range of ports to try
     if last_resv_port_tried == None:
 	last_resv_port_tried = FIRST + os.getpid() % (LAST-FIRST)
-    for i in range(last_resv_port_tried, LAST) + \
-	      range(FIRST, last_resv_port_tried):
+    for i in list(range(last_resv_port_tried, LAST)) + \
+	      list(range(FIRST, last_resv_port_tried)):
 	last_resv_port_tried = i
 	try:
 	    sock.bind((host, i))
 	    return last_resv_port_tried
-	except socket.error, (errno, msg):
-	    if errno <> 114:
+	except socket.error as xxx_todo_changeme:
+	    (errno, msg) = xxx_todo_changeme.args
+	    if errno != 114:
 		raise socket.error(errno, msg)
     raise RuntimeError("can't assign reserved port")
 
@@ -493,7 +494,7 @@ class RawTCPClient(Client):
 	u = self.unpacker
 	u.reset(reply)
 	xid, verf = u.unpack_replyheader()
-	if xid <> self.lastxid:
+	if xid != self.lastxid:
 	    # Can't really happen since this is TCP...
 	    raise XidMismatch(xid, self.lastxid)
 
@@ -510,7 +511,7 @@ class RawUDPClient(Client):
 	try:
 	    from select import select
 	except ImportError:
-	    print 'WARNING: select not found, RPC may hang'
+	    print('WARNING: select not found, RPC may hang')
 	    select = None
 	BUFSIZE = 8192 # Max UDP buffer size
 	timeout = 1
@@ -530,7 +531,7 @@ class RawUDPClient(Client):
 	    u = self.unpacker
 	    u.reset(reply)
 	    xid, verf = u.unpack_replyheader()
-	    if xid <> self.lastxid:
+	    if xid != self.lastxid:
 ##				print 'BAD xid'
 		continue
 	    break
@@ -566,7 +567,7 @@ class RawBroadcastUDPClient(RawUDPClient):
 	try:
 	    from select import select
 	except ImportError:
-	    print 'WARNING: select not found, broadcast will hang'
+	    print('WARNING: select not found, broadcast will hang')
 	    select = None
 	BUFSIZE = 8192 # Max UDP buffer size (for reply)
 	replies = []
@@ -586,7 +587,7 @@ class RawBroadcastUDPClient(RawUDPClient):
 	    u = self.unpacker
 	    u.reset(reply)
 	    xid, verf = u.unpack_replyheader()
-	    if xid <> self.lastxid:
+	    if xid != self.lastxid:
 ##				print 'BAD xid'
 		continue
 	    reply = unpack_func()
@@ -829,11 +830,11 @@ class Server:
 	xid = self.unpacker.unpack_uint()
 	self.packer.pack_uint(xid)
 	temp = self.unpacker.unpack_enum()
-	if temp <> CALL:
+	if temp != CALL:
 	    return None # Not worthy of a reply
 	self.packer.pack_uint(REPLY)
 	temp = self.unpacker.unpack_uint()
-	if temp <> RPCVERSION:
+	if temp != RPCVERSION:
 	    self.packer.pack_uint(MSG_DENIED)
 	    self.packer.pack_uint(RPC_MISMATCH)
 	    self.packer.pack_uint(RPCVERSION)
@@ -842,17 +843,17 @@ class Server:
 	self.packer.pack_uint(MSG_ACCEPTED)
 	self.packer.pack_auth((AUTH_NULL, make_auth_null()))
 	prog = self.unpacker.unpack_uint()
-	if prog <> self.prog:
+	if prog != self.prog:
 	    self.packer.pack_uint(PROG_UNAVAIL)
 	    return self.packer.get_buffer()
 	vers = self.unpacker.unpack_uint()
-	if vers <> self.vers:
+	if vers != self.vers:
 	    self.packer.pack_uint(PROG_MISMATCH)
 	    self.packer.pack_uint(self.vers)
 	    self.packer.pack_uint(self.vers)
 	    return self.packer.get_buffer()
 	proc = self.unpacker.unpack_uint()
-	methname = 'handle_' + `proc`
+	methname = 'handle_' + repr(proc)
 	try:
 	    meth = getattr(self, methname)
 	except AttributeError:
@@ -915,8 +916,8 @@ class TCPServer(Server):
 		call = recvrecord(sock)
 	    except EOFError:
 		break
-	    except socket.error, msg:
-		print 'socket error:', msg
+	    except socket.error as msg:
+		print('socket error:', msg)
 		break
 	    reply = self.handle(call)
 	    if reply is not None:
@@ -964,7 +965,7 @@ class UDPServer(Server):
 	call, host_port = self.sock.recvfrom(8192)
 	self.sender_port = host_port
 	reply = self.handle(call)
-	if reply <> None:
+	if reply != None:
 	    self.sock.sendto(reply, host_port)
 
 
@@ -975,11 +976,11 @@ def test():
     list = pmap.Dump()
     list.sort()
     for prog, vers, prot, port in list:
-	print prog, vers,
-	if prot == IPPROTO_TCP: print 'tcp',
-	elif prot == IPPROTO_UDP: print 'udp',
-	else: print prot,
-	print port
+	print(prog, vers, end=' ')
+	if prot == IPPROTO_TCP: print('tcp', end=' ')
+	elif prot == IPPROTO_UDP: print('udp', end=' ')
+	else: print(prot, end=' ')
+	print(port)
 
 
 # Test program for broadcast operation -- dump everybody's portmapper status
@@ -992,7 +993,7 @@ def testbcast():
 	bcastaddr = '<broadcast>'
     def rh(reply, fromaddr):
 	host, port = fromaddr
-	print host + '\t' + `reply`
+	print(host + '\t' + repr(reply))
     pmap = BroadcastUDPPortMapperClient(bcastaddr)
     pmap.set_reply_handler(rh)
     pmap.set_timeout(5)
@@ -1010,21 +1011,21 @@ def testsvr():
 	def handle_1(self):
 	    arg = self.unpacker.unpack_string()
 	    self.turn_around()
-	    print 'RPC function 1 called, arg', `arg`
+	    print('RPC function 1 called, arg', repr(arg))
 	    self.packer.pack_string(arg + arg)
     #
     s = S('', 0x20000000, 1, 0)
     try:
 	s.unregister()
-    except PortMapError, e:
-	print 'RuntimeError:', e.args, '(ignored)'
+    except PortMapError as e:
+	print('RuntimeError:', e.args, '(ignored)')
     s.register()
-    print 'Service started...'
+    print('Service started...')
     try:
 	s.loop()
     finally:
 	s.unregister()
-	print 'Service interrupted.'
+	print('Service interrupted.')
 
 
 def testclt():
@@ -1038,9 +1039,9 @@ def testclt():
 		    self.packer.pack_string, \
 		    self.unpacker.unpack_string)
     c = C(host, 0x20000000, 1)
-    print 'making call...'
+    print('making call...')
     reply = c.call_1('hello, world, ')
-    print 'call returned', `reply`
+    print('call returned', repr(reply))
 
 
 # Local variables:
