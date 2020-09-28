@@ -14,4 +14,3 @@
 m4_ifndef([AC_CONFIG_MACRO_DIRS], [m4_defun([_AM_CONFIG_MACRO_DIRS], [])m4_defun([AC_CONFIG_MACRO_DIRS], [_AM_CONFIG_MACRO_DIRS($@)])])
 m4_include([m4/unfs3-compile-warnings.m4])
 m4_include([m4/unfs3-solaris-portmap.m4])
-m4_include([m4/unfs3-solaris-rpc.m4])
