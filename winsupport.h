@@ -90,7 +90,6 @@ typedef struct _UNFS3_WIN_DIR
     DWORD logdrives;
 } UNFS3_WIN_DIR;
 
-int inet_aton(const char *cp, struct in_addr *addr);
 ssize_t pread(int fd, void *buf, size_t count, off64_t offset);
 ssize_t pwrite(int fd, const void *buf, size_t count, off64_t offset);
 void syslog(int priority, const char *format, ...);

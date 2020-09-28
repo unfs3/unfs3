@@ -25,15 +25,6 @@ extern bool_t xdr_exportnode (XDR *, exportnode*);
 
 extern bool_t xdr_filename (XDR *, filename*);
 extern bool_t xdr_nfspath (XDR *, nfspath*);
-#ifndef HAVE_XDR_UINT64
-extern bool_t xdr_uint64 (XDR *, uint64*);
-#endif
-#ifndef HAVE_XDR_UINT32
-extern bool_t xdr_uint32 (XDR *, uint32*);
-#endif
-#ifndef HAVE_XDR_INT32
-extern bool_t xdr_int32 (XDR *, int32*);
-#endif
 extern bool_t xdr_filename3 (XDR *, filename3*);
 extern bool_t xdr_nfspath3 (XDR *, nfspath3*);
 extern bool_t xdr_fileid3 (XDR *, fileid3*);
