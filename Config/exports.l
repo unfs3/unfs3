@@ -50,6 +50,7 @@ OLDNET {IP}"/"{IP}
 
 %option nounput
 %option noinput
+%option noyywrap
 
 %%
 
