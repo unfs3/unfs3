@@ -27,7 +27,6 @@ source with --enable-afs is recommended in this scenario.
 Cluster extensions compatible to the older ClusterNFS project
 are supported when the source is configured with --enable-cluster.
 
-
 ## Supported systems
 
 unfs3 is developed and tested on Linux, but should also compile
@@ -44,12 +43,12 @@ server.
 If unfs3 doesn't build or work on a Unix system, a problem
 report is appreciated.
 
-
 ## Building from source
 
-You will need gcc, lex (flex), and yacc (bison) to compile UNFS3.
+You will need gcc, lex (flex), autoconf and yacc (bison) to compile UNFS3.
 
     ./bootstrap   # (only when building from git)
+    autoheader && autoconf
     ./configure
     make
     make install
