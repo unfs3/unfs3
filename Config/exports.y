@@ -324,6 +324,7 @@ static void set_hostname(const char *name)
 	struct hostent *ent;
 
 	if (strlen(name) + 1 > NFS_MAXPATHLEN) {
+		logmsg(LOG_CRIT, "hostname '%s' is too long", name);
 		e_error = TRUE;
 		return;
 	}
@@ -355,8 +356,10 @@ static void set_ipv4addr(const char *addr)
 
 	strcpy(cur_host.orig, addr);
 
-	if (inet_pton(AF_INET, addr, &in4) != 1)
+	if (inet_pton(AF_INET, addr, &in4) != 1) {
+		logmsg(LOG_CRIT, "could not parse IPv4 address '%s'", addr);
 		e_error = TRUE;
+	}
 
 	((uint32_t*)&cur_host.addr)[0] = 0;
 	((uint32_t*)&cur_host.addr)[1] = 0;
@@ -369,8 +372,10 @@ static void set_ipv6addr(const char *addr)
 {
 	strcpy(cur_host.orig, addr);
 
-	if (inet_pton(AF_INET6, addr, &cur_host.addr) != 1)
+	if (inet_pton(AF_INET6, addr, &cur_host.addr) != 1) {
+		logmsg(LOG_CRIT, "could not parse IPv6 address '%s'", addr);
 		e_error = TRUE;
+	}
 
 	/* Convert compat addresses to mapped */
 	if (IN6_IS_ADDR_V4COMPAT(&cur_host.addr)) {
@@ -391,6 +396,7 @@ static unsigned long make_prefix(const char *mask) {
 	int i, prefix;
 
 	if (!inet_aton(mask, &addr)) {
+		logmsg(LOG_CRIT, "could not parse IPv4 network mask '%s'", mask);
 		e_error = TRUE;
 		return 0;
 	}
@@ -406,8 +412,11 @@ static unsigned long make_prefix(const char *mask) {
 	}
 
 	for (; i < 32; i++) {
-		if (!(haddr & (1<<i)))
+		if (!(haddr & (1<<i))) {
+			logmsg(LOG_CRIT, "can not convert IPv4 network mask '%s' to a prefix", mask);
 			e_error = TRUE;
+			break;
+		}
 	}
 
 	return prefix;
@@ -520,6 +529,8 @@ static void add_option_with_value(const char *opt, const char *val)
  */
 void yyerror(U(char *s))
 {
+	logmsg(LOG_CRIT, "parser error: %s", s);
+
 	e_error = TRUE;
 	return;
 }
