@@ -25,7 +25,7 @@ void daemon_exit(int);
 void logmsg(int, const char *, ...);
 
 /* remote address */
-const struct in6_addr *get_remote(struct svc_req *);
+int get_remote(struct svc_req *, struct in6_addr *);
 short get_port(struct svc_req *);
 int get_socket_type(struct svc_req *rqstp);
 

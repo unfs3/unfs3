@@ -831,7 +831,7 @@ int exports_options(const char *path, struct svc_req *rqstp,
 		    char **password, uint32 *fsid)
 {
 	e_item *list;
-	const struct in6_addr *remote;
+	struct in6_addr remote;
 	unsigned int last_len = 0;
 	
 	exports_opts = -1;
@@ -844,7 +844,8 @@ int exports_options(const char *path, struct svc_req *rqstp,
 	if (!path || strstr(path, "/../"))
 		return exports_opts;
 	
-	remote = get_remote(rqstp);
+	if (get_remote(rqstp, &remote))
+		return exports_opts;
 
 	/* protect against SIGHUP reloading the list */
 	exports_access = TRUE;
@@ -858,7 +859,7 @@ int exports_options(const char *path, struct svc_req *rqstp,
 #else
 		    !win_utf8ncasecmp(path, list->path, strlen(list->path))) {
 #endif
-		    e_host* cur_host = find_host(remote, list, password, &export_password_hash);
+		    e_host* cur_host = find_host(&remote, list, password, &export_password_hash);
 
 			if (fsid != NULL)
 				*fsid = list->fsid;
