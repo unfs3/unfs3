@@ -738,6 +738,9 @@ static void register_mount_service(SVCXPRT * udptransp, SVCXPRT * tcptransp)
 static SVCXPRT *create_udp_transport(unsigned int port)
 {
     SVCXPRT *transp = NULL;
+    const struct sockaddr *sin;
+    size_t sin_len;
+    struct sockaddr_in sin4;
     struct sockaddr_in6 sin6;
     int sock;
     const int on = 1;
@@ -751,14 +754,33 @@ static SVCXPRT *create_udp_transport(unsigned int port)
 	sin6.sin6_family = AF_INET6;
 	sin6.sin6_port = htons(port);
 	sin6.sin6_addr = opt_bind_addr;
+
+	sin = (const struct sockaddr*)&sin6;
+	sin_len = sizeof(sin6);
+
 	sock = socket(PF_INET6, SOCK_DGRAM, 0);
+
+	if ((sock == -1) && (errno == EAFNOSUPPORT) && \
+	    (IN6_IS_ADDR_V4MAPPED(&opt_bind_addr) || \
+	     IN6_IS_ADDR_V4COMPAT(&opt_bind_addr))) {
+	    sin4.sin_family = AF_INET;
+	    sin4.sin_port = htons(port);
+	    sin4.sin_addr.s_addr = ((uint32_t*)&opt_bind_addr)[4];
+
+	    sin = (const struct sockaddr*)&sin4;
+	    sin_len = sizeof(sin4);
+
+	    sock = socket(PF_INET, SOCK_DGRAM, 0);
+	}
+
 	if (sock == -1) {
 	    perror("socket");
 	    fprintf(stderr, "Couldn't create a listening udp socket\n");
 	    exit(1);
 	}
+
 	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (const char *) &on, sizeof(on));
-	if (bind(sock, (struct sockaddr *) &sin6, sizeof(sin6))) {
+	if (bind(sock, sin, sin_len)) {
 	    perror("bind");
 	    fprintf(stderr, "Couldn't bind to udp port %d\n", port);
 	    exit(1);
@@ -778,6 +800,9 @@ static SVCXPRT *create_udp_transport(unsigned int port)
 static SVCXPRT *create_tcp_transport(unsigned int port)
 {
     SVCXPRT *transp = NULL;
+    const struct sockaddr *sin;
+    size_t sin_len;
+    struct sockaddr_in sin4;
     struct sockaddr_in6 sin6;
     int sock;
     const int on = 1;
@@ -791,14 +816,33 @@ static SVCXPRT *create_tcp_transport(unsigned int port)
 	sin6.sin6_family = AF_INET6;
 	sin6.sin6_port = htons(port);
 	sin6.sin6_addr = opt_bind_addr;
+
+	sin = (const struct sockaddr*)&sin6;
+	sin_len = sizeof(sin6);
+
 	sock = socket(PF_INET6, SOCK_STREAM, 0);
+
+	if ((sock == -1) && (errno == EAFNOSUPPORT) && \
+	    (IN6_IS_ADDR_V4MAPPED(&opt_bind_addr) || \
+	     IN6_IS_ADDR_V4COMPAT(&opt_bind_addr))) {
+	    sin4.sin_family = AF_INET;
+	    sin4.sin_port = htons(port);
+	    sin4.sin_addr.s_addr = ((uint32_t*)&opt_bind_addr)[4];
+
+	    sin = (const struct sockaddr*)&sin4;
+	    sin_len = sizeof(sin4);
+
+	    sock = socket(PF_INET, SOCK_STREAM, 0);
+	}
+
 	if (sock == -1) {
 	    perror("socket");
 	    fprintf(stderr, "Couldn't create a listening tcp socket\n");
 	    exit(1);
 	}
+
 	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (const char *) &on, sizeof(on));
-	if (bind(sock, (struct sockaddr *) &sin6, sizeof(sin6))) {
+	if (bind(sock, sin, sin_len)) {
 	    perror("bind");
 	    fprintf(stderr, "Couldn't bind to tcp port %d\n", port);
 	    exit(1);
