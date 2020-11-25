@@ -752,6 +752,11 @@ static SVCXPRT *create_udp_transport(unsigned int port)
 	sin6.sin6_port = htons(port);
 	sin6.sin6_addr = opt_bind_addr;
 	sock = socket(PF_INET6, SOCK_DGRAM, 0);
+	if (sock == -1) {
+	    perror("socket");
+	    fprintf(stderr, "Couldn't create a listening udp socket\n");
+	    exit(1);
+	}
 	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (const char *) &on, sizeof(on));
 	if (bind(sock, (struct sockaddr *) &sin6, sizeof(sin6))) {
 	    perror("bind");
@@ -787,6 +792,11 @@ static SVCXPRT *create_tcp_transport(unsigned int port)
 	sin6.sin6_port = htons(port);
 	sin6.sin6_addr = opt_bind_addr;
 	sock = socket(PF_INET6, SOCK_STREAM, 0);
+	if (sock == -1) {
+	    perror("socket");
+	    fprintf(stderr, "Couldn't create a listening tcp socket\n");
+	    exit(1);
+	}
 	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (const char *) &on, sizeof(on));
 	if (bind(sock, (struct sockaddr *) &sin6, sizeof(sin6))) {
 	    perror("bind");
