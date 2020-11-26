@@ -74,13 +74,13 @@ int want_cluster(const char *path)
 /*
  * get name of remote machine
  */
-static char *get_host(struct in_addr remote)
+static char *get_host(const struct in6_addr *remote)
 {
     static char buf[NFS_MAXPATHLEN];
     struct hostent *entry;
     char *dot;
 
-    entry = gethostbyaddr((char *) &remote, sizeof(struct in_addr), AF_INET);
+    entry = gethostbyaddr(&remote, sizeof(struct in6_addr), AF_INET6);
 
     if (entry) {
 	strcpy(buf, entry->h_name);
@@ -309,7 +309,7 @@ void cluster_netmask(char *buf, const char *remote, int n)
  */
 int cluster_lookup_lowlevel(char *path, struct svc_req *rqstp)
 {
-    struct in_addr raddr;
+    const struct in6_addr *raddr;
     char *remote, *hname, *master, *entry, *match;
     char buf[NFS_MAXPATHLEN];
     int i, res = CLU_MASTER;

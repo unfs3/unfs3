@@ -6,6 +6,7 @@
  */
 #include "config.h"
 
+#include <assert.h>
 #include <rpc/rpc.h>
 #include <limits.h>
 
@@ -48,15 +49,15 @@ extern FILE *yyin;
  */
 
 typedef struct {
-	char		orig[NFS_MAXPATHLEN];
-	int		options;
-        char            password[PASSWORD_MAXLEN+1];
-        uint32          password_hash;
-	struct in_addr	addr;
-	struct in_addr	mask;
-	uint32		anonuid;
-	uint32		anongid;
-	struct e_host	*next;
+	char			orig[NFS_MAXPATHLEN];
+	int			options;
+	char			password[PASSWORD_MAXLEN+1];
+	uint32			password_hash;
+	struct in6_addr	addr;
+	unsigned		prefix;
+	uint32			anonuid;
+	uint32			anongid;
+	struct e_host		*next;
 } e_host;
 
 typedef struct {
@@ -323,18 +324,23 @@ static void set_hostname(const char *name)
 	struct hostent *ent;
 
 	if (strlen(name) + 1 > NFS_MAXPATHLEN) {
+		logmsg(LOG_CRIT, "hostname '%s' is too long", name);
 		e_error = TRUE;
 		return;
 	}
 	strcpy(cur_host.orig, name);
 
+	// FIXME: We should use getaddrinfo() to get all addresses, and
+	//        to get IPv6 addresses
 	ent = gethostbyname(name);
 
 	if (ent) {
-		memcpy(&cur_host.addr, ent->h_addr_list[0],
-		       sizeof(struct in_addr));
-		cur_host.mask.s_addr = 0;
-		cur_host.mask.s_addr = ~cur_host.mask.s_addr;
+		((uint32_t*)&cur_host.addr)[0] = 0;
+		((uint32_t*)&cur_host.addr)[1] = 0;
+		((uint32_t*)&cur_host.addr)[2] = htonl(0xffff);
+		((uint32_t*)&cur_host.addr)[3] = ((const struct in_addr**)ent->h_addr_list)[0]->s_addr;
+
+		cur_host.prefix = 128;
 	} else {
 		logmsg(LOG_CRIT, "could not resolve hostname '%s'", name);
 		e_error = TRUE;
@@ -344,34 +350,82 @@ static void set_hostname(const char *name)
 /*
  * fill current host's address given an IP address
  */
-static void set_ipaddr(const char *addr)
+static void set_ipv4addr(const char *addr)
+{
+	struct in_addr in4;
+
+	strcpy(cur_host.orig, addr);
+
+	if (inet_pton(AF_INET, addr, &in4) != 1) {
+		logmsg(LOG_CRIT, "could not parse IPv4 address '%s'", addr);
+		e_error = TRUE;
+	}
+
+	((uint32_t*)&cur_host.addr)[0] = 0;
+	((uint32_t*)&cur_host.addr)[1] = 0;
+	((uint32_t*)&cur_host.addr)[2] = htonl(0xffff);
+	((uint32_t*)&cur_host.addr)[3] = in4.s_addr;
+
+	cur_host.prefix = 128;
+}
+static void set_ipv6addr(const char *addr)
 {
 	strcpy(cur_host.orig, addr);
-	
-	if (!inet_aton(addr, &cur_host.addr))
+
+	if (inet_pton(AF_INET6, addr, &cur_host.addr) != 1) {
+		logmsg(LOG_CRIT, "could not parse IPv6 address '%s'", addr);
 		e_error = TRUE;
-	cur_host.mask.s_addr = 0;
-	cur_host.mask.s_addr = ~cur_host.mask.s_addr;
+	}
+
+	/* Convert compat addresses to mapped */
+	if (IN6_IS_ADDR_V4COMPAT(&cur_host.addr)) {
+		((uint32_t*)&cur_host.addr)[0] = 0;
+		((uint32_t*)&cur_host.addr)[1] = 0;
+		((uint32_t*)&cur_host.addr)[2] = htonl(0xffff);
+	}
+
+	cur_host.prefix = 128;
 }
 
 /*
- * compute network bitmask
+ * compute network prefix
  */
-static unsigned long make_netmask(int bits) {
-	unsigned long buf = 0;
-	int i;
+static unsigned long make_prefix(const char *mask) {
+	struct in_addr addr;
+	uint32_t haddr;
+	int i, prefix;
 
-	for (i=0; i<bits; i++)
-		buf = (buf << 1) + 1;
-	for (; i < 32; i++)
-		buf = (buf << 1);
-	return htonl(buf);
+	if (!inet_aton(mask, &addr)) {
+		logmsg(LOG_CRIT, "could not parse IPv4 network mask '%s'", mask);
+		e_error = TRUE;
+		return 0;
+	}
+
+	haddr = ntohl(addr.s_addr);
+
+	prefix = 0;
+	for (i = 0; i < 32; i++) {
+		if (haddr & (1<<i)) {
+			prefix = 32 - i;
+			break;
+		}
+	}
+
+	for (; i < 32; i++) {
+		if (!(haddr & (1<<i))) {
+			logmsg(LOG_CRIT, "can not convert IPv4 network mask '%s' to a prefix", mask);
+			e_error = TRUE;
+			break;
+		}
+	}
+
+	return prefix;
 }
 
 /*
  * fill current host's address given IP address and netmask
  */
-static void set_ipnet(char *addr, int new)
+static void set_ipv4net(char *addr)
 {
 	char *pos, *net;
 
@@ -379,14 +433,42 @@ static void set_ipnet(char *addr, int new)
 	net = pos + 1;
 	*pos = 0;
 	
-	set_ipaddr(addr);
+	set_ipv4addr(addr);
 	
-	if (new)
-		cur_host.mask.s_addr = make_netmask(atoi(net));
-	else
-		if (!inet_aton(net, &cur_host.mask))
-			e_error = TRUE;
+	cur_host.prefix = atoi(net) + 128-32;
 
+	*pos = '/';
+	strcpy(cur_host.orig, addr);
+}
+
+static void set_ipv6net(char *addr)
+{
+	char *pos, *net;
+
+	pos = strchr(addr, '/');
+	net = pos + 1;
+	*pos = 0;
+	
+	set_ipv6addr(addr);
+	
+	cur_host.prefix = atoi(net);
+
+	*pos = '/';
+	strcpy(cur_host.orig, addr);
+}
+
+static void set_oldnet(char *addr)
+{
+	char *pos, *net;
+
+	pos = strchr(addr, '/');
+	net = pos + 1;
+	*pos = 0;
+	
+	set_ipv4addr(addr);
+
+	cur_host.prefix = make_prefix(net) + 128-32;
+	
 	*pos = '/';
 	strcpy(cur_host.orig, addr);
 }
@@ -447,6 +529,8 @@ static void add_option_with_value(const char *opt, const char *val)
  */
 void yyerror(U(char *s))
 {
+	logmsg(LOG_CRIT, "parser error: %s", s);
+
 	e_error = TRUE;
 	return;
 }
@@ -461,8 +545,10 @@ void yyerror(U(char *s))
 %token <text> ID
 %token <text> OPTVALUE
 %token <text> WHITE
-%token <text> IP
-%token <text> NET
+%token <text> IPV4
+%token <text> IPV6
+%token <text> IPV4NET
+%token <text> IPV6NET
 %token <text> OLDNET
 
 %%
@@ -493,9 +579,11 @@ host:
 
 name:
 	ID			{ set_hostname($1); }
-	| IP			{ set_ipaddr($1); }
-	| NET			{ set_ipnet($1, TRUE); }
-	| OLDNET		{ set_ipnet($1, FALSE); }
+	| IPV4			{ set_ipv4addr($1); }
+	| IPV6			{ set_ipv6addr($1); }
+	| IPV6NET		{ set_ipv6net($1); }
+	| IPV4NET		{ set_ipv4net($1); }
+	| OLDNET		{ set_oldnet($1); }
 	;
 	
 opts:
@@ -587,7 +675,7 @@ static void free_list(e_item *item)
  */
 void print_list(void)
 {
-	char addrbuf[16], maskbuf[16];
+	char addrbuf[INET6_ADDRSTRLEN];
 
 	e_item *item;
 	e_host *host;
@@ -597,13 +685,13 @@ void print_list(void)
 	while (item) {
 		host = item->hosts;
 		while (host) {
-			/* inet_ntoa returns static buffer */
-			strcpy(addrbuf, inet_ntoa(host->addr));
-			strcpy(maskbuf, inet_ntoa(host->mask));
-			printf("%s: ip %s mask %s options %i\n",
-		       		item->path, addrbuf, maskbuf,
-		       		host->options);
-		       	host = (e_host *) host->next;
+			inet_ntop(AF_INET6, &host->addr,
+			          addrbuf, sizeof(addrbuf));
+			printf("%s: ip %s/%d options %i\n",
+			       item->path, addrbuf,
+			       host->prefix,
+			       host->options);
+			host = (e_host *) host->next;
 		}
 		item = (e_item *) item->next;
 	}
@@ -675,16 +763,50 @@ int exports_parse(void)
 }
 
 /*
+ * compare the network part of two addresses
+ */
+static int is_equal_addr(const struct in6_addr *a,
+                         const struct in6_addr *b,
+                         unsigned prefix)
+{
+	unsigned byte, bit;
+	uint32_t mask[4], masked_a[4], masked_b[4];
+
+	mask[0] = mask[1] = mask[2] = mask[3] = 0;
+
+	for (byte = 0;byte < 4;byte++) {
+		for (bit = 0;bit < 32;bit++) {
+			if (((byte * 32) + bit) >= prefix)
+				break;
+
+			mask[byte] |= htonl(1 << (31 - bit));
+		}
+	}
+
+	assert(sizeof(struct in6_addr) == sizeof(uint32_t[4]));
+
+	memcpy(&masked_a, a, sizeof(struct in6_addr));
+	memcpy(&masked_b, b, sizeof(struct in6_addr));
+
+	for (byte = 0;byte < 4;byte++) {
+		masked_a[byte] &= mask[byte];
+		masked_b[byte] &= mask[byte];
+	}
+
+	return memcmp(masked_a, masked_b, sizeof(uint32_t[4])) == 0;
+}
+
+/*
  * find a given host inside a host list, return options
  */
-static e_host* find_host(struct in_addr remote, e_item *item,
+static e_host* find_host(const struct in6_addr *remote, e_item *item,
 		     char **password, uint32 *password_hash)
 {
 	e_host *host;
 
 	host = item->hosts;
 	while (host) {
-		if ((remote.s_addr & host->mask.s_addr) == host->addr.s_addr) {
+		if (is_equal_addr(remote, &host->addr, host->prefix)) {
 			if (password != NULL) 
 				*password = host->password;
 			if (password_hash != NULL)
@@ -709,7 +831,7 @@ int exports_options(const char *path, struct svc_req *rqstp,
 		    char **password, uint32 *fsid)
 {
 	e_item *list;
-	struct in_addr remote;
+	const struct in6_addr *remote;
 	unsigned int last_len = 0;
 	
 	exports_opts = -1;

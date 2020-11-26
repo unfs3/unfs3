@@ -37,7 +37,7 @@
 #ifdef HAVE_RPC_SVC_SOC_H
 # include <rpc/svc_soc.h>
 #endif
-#ifdef HAVE_SVC_GETREQ_POLL
+#if defined(HAVE_SVC_GETREQ_POLL) && HAVE_DECL_SVC_POLLFD
 # include <sys/poll.h>
 #endif
 
@@ -75,7 +75,7 @@ unsigned int opt_mount_port = NFS_PORT;
 int opt_singleuser = FALSE;
 int opt_brute_force = FALSE;
 int opt_testconfig = FALSE;
-struct in_addr opt_bind_addr;
+struct in6_addr opt_bind_addr;
 int opt_readable_executables = FALSE;
 char *opt_pid_file = NULL;
 
@@ -111,9 +111,9 @@ void logmsg(int prio, const char *fmt, ...)
 /*
  * return remote address from svc_req structure
  */
-struct in_addr get_remote(struct svc_req *rqstp)
+const struct in6_addr *get_remote(struct svc_req *rqstp)
 {
-    return (svc_getcaller(rqstp->rq_xprt))->sin_addr;
+    return &(svc_getcaller(rqstp->rq_xprt))->sin6_addr;
 }
 
 /*
@@ -121,7 +121,7 @@ struct in_addr get_remote(struct svc_req *rqstp)
  */
 short get_port(struct svc_req *rqstp)
 {
-    return (svc_getcaller(rqstp->rq_xprt))->sin_port;
+    return (svc_getcaller(rqstp->rq_xprt))->sin6_port;
 }
 
 /*
@@ -134,11 +134,7 @@ int get_socket_type(struct svc_req *rqstp)
 
     l = sizeof(v);
 
-#if HAVE_STRUCT___RPC_SVCXPRT_XP_FD == 1
     res = getsockopt(rqstp->rq_xprt->xp_fd, SOL_SOCKET, SO_TYPE, &v, &l);
-#else
-    res = getsockopt(rqstp->rq_xprt->xp_sock, SOL_SOCKET, SO_TYPE, &v, &l);
-#endif
 
     if (res < 0) {
 	logmsg(LOG_CRIT, "unable to determine socket type");
@@ -264,10 +260,18 @@ static void parse_options(int argc, char **argv)
 		exit(0);
 		break;
 	    case 'l':
-		opt_bind_addr.s_addr = inet_addr(optarg);
-		if (opt_bind_addr.s_addr == (unsigned) -1) {
-		    fprintf(stderr, "Invalid bind address\n");
-		    exit(1);
+		if (inet_pton(AF_INET6, optarg, &opt_bind_addr) != 1) {
+		    struct in_addr in4;
+
+		    if (inet_pton(AF_INET, optarg, &in4) != 1) {
+			fprintf(stderr, "Invalid bind address\n");
+			exit(1);
+		    }
+
+		    ((uint32_t*)&opt_bind_addr)[0] = 0;
+		    ((uint32_t*)&opt_bind_addr)[1] = 0;
+		    ((uint32_t*)&opt_bind_addr)[2] = htonl(0xffff);
+		    ((uint32_t*)&opt_bind_addr)[3] = in4.s_addr;
 		}
 		break;
 	    case 'm':
@@ -734,22 +738,49 @@ static void register_mount_service(SVCXPRT * udptransp, SVCXPRT * tcptransp)
 static SVCXPRT *create_udp_transport(unsigned int port)
 {
     SVCXPRT *transp = NULL;
-    struct sockaddr_in sin;
+    const struct sockaddr *sin;
+    size_t sin_len;
+    struct sockaddr_in sin4;
+    struct sockaddr_in6 sin6;
     int sock;
     const int on = 1;
 
-    /* Make sure we null the entire sockaddr_in structure */
-    memset(&sin, 0, sizeof(struct sockaddr_in));
+    /* Make sure we null the entire sockaddr_in6 structure */
+    memset(&sin6, 0, sizeof(struct sockaddr_in6));
 
     if (port == 0)
 	sock = RPC_ANYSOCK;
     else {
-	sin.sin_family = AF_INET;
-	sin.sin_port = htons(port);
-	sin.sin_addr.s_addr = opt_bind_addr.s_addr;
-	sock = socket(PF_INET, SOCK_DGRAM, 0);
+	sin6.sin6_family = AF_INET6;
+	sin6.sin6_port = htons(port);
+	sin6.sin6_addr = opt_bind_addr;
+
+	sin = (const struct sockaddr*)&sin6;
+	sin_len = sizeof(sin6);
+
+	sock = socket(PF_INET6, SOCK_DGRAM, 0);
+
+	if ((sock == -1) && (errno == EAFNOSUPPORT) && \
+	    (IN6_IS_ADDR_V4MAPPED(&opt_bind_addr) || \
+	     IN6_IS_ADDR_V4COMPAT(&opt_bind_addr))) {
+	    sin4.sin_family = AF_INET;
+	    sin4.sin_port = htons(port);
+	    sin4.sin_addr.s_addr = ((uint32_t*)&opt_bind_addr)[4];
+
+	    sin = (const struct sockaddr*)&sin4;
+	    sin_len = sizeof(sin4);
+
+	    sock = socket(PF_INET, SOCK_DGRAM, 0);
+	}
+
+	if (sock == -1) {
+	    perror("socket");
+	    fprintf(stderr, "Couldn't create a listening udp socket\n");
+	    exit(1);
+	}
+
 	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (const char *) &on, sizeof(on));
-	if (bind(sock, (struct sockaddr *) &sin, sizeof(struct sockaddr))) {
+	if (bind(sock, sin, sin_len)) {
 	    perror("bind");
 	    fprintf(stderr, "Couldn't bind to udp port %d\n", port);
 	    exit(1);
@@ -769,22 +800,49 @@ static SVCXPRT *create_udp_transport(unsigned int port)
 static SVCXPRT *create_tcp_transport(unsigned int port)
 {
     SVCXPRT *transp = NULL;
-    struct sockaddr_in sin;
+    const struct sockaddr *sin;
+    size_t sin_len;
+    struct sockaddr_in sin4;
+    struct sockaddr_in6 sin6;
     int sock;
     const int on = 1;
 
-    /* Make sure we null the entire sockaddr_in structure */
-    memset(&sin, 0, sizeof(struct sockaddr_in));
+    /* Make sure we null the entire sockaddr_in6 structure */
+    memset(&sin6, 0, sizeof(struct sockaddr_in6));
 
     if (port == 0)
 	sock = RPC_ANYSOCK;
     else {
-	sin.sin_family = AF_INET;
-	sin.sin_port = htons(port);
-	sin.sin_addr.s_addr = opt_bind_addr.s_addr;
-	sock = socket(PF_INET, SOCK_STREAM, 0);
+	sin6.sin6_family = AF_INET6;
+	sin6.sin6_port = htons(port);
+	sin6.sin6_addr = opt_bind_addr;
+
+	sin = (const struct sockaddr*)&sin6;
+	sin_len = sizeof(sin6);
+
+	sock = socket(PF_INET6, SOCK_STREAM, 0);
+
+	if ((sock == -1) && (errno == EAFNOSUPPORT) && \
+	    (IN6_IS_ADDR_V4MAPPED(&opt_bind_addr) || \
+	     IN6_IS_ADDR_V4COMPAT(&opt_bind_addr))) {
+	    sin4.sin_family = AF_INET;
+	    sin4.sin_port = htons(port);
+	    sin4.sin_addr.s_addr = ((uint32_t*)&opt_bind_addr)[4];
+
+	    sin = (const struct sockaddr*)&sin4;
+	    sin_len = sizeof(sin4);
+
+	    sock = socket(PF_INET, SOCK_STREAM, 0);
+	}
+
+	if (sock == -1) {
+	    perror("socket");
+	    fprintf(stderr, "Couldn't create a listening tcp socket\n");
+	    exit(1);
+	}
+
 	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (const char *) &on, sizeof(on));
-	if (bind(sock, (struct sockaddr *) &sin, sizeof(struct sockaddr))) {
+	if (bind(sock, sin, sin_len)) {
 	    perror("bind");
 	    fprintf(stderr, "Couldn't bind to tcp port %d\n", port);
 	    exit(1);
@@ -805,7 +863,7 @@ static SVCXPRT *create_tcp_transport(unsigned int port)
    allows us to handle other events as well. */
 static void unfs3_svc_run(void)
 {
-#ifdef HAVE_SVC_GETREQ_POLL
+#if defined(HAVE_SVC_GETREQ_POLL) && HAVE_DECL_SVC_POLLFD
     int r;
 #else
     fd_set readfds;
@@ -815,7 +873,7 @@ static void unfs3_svc_run(void)
     for (;;) {
 	fd_cache_close_inactive();
 
-#ifdef HAVE_SVC_GETREQ_POLL
+#if defined(HAVE_SVC_GETREQ_POLL) && HAVE_DECL_SVC_POLLFD
 	r = poll(svc_pollfd, svc_max_pollfd, 2*1000);
 	if (r < 0) {
 		if (errno == EINTR) {
@@ -900,9 +958,9 @@ int main(int argc, char **argv)
 #endif
 
     /* Clear opt_bind_addr structure before we use it */
-    memset(&opt_bind_addr, 0, sizeof(struct in_addr));
+    memset(&opt_bind_addr, 0, sizeof(opt_bind_addr));
 
-    opt_bind_addr.s_addr = INADDR_ANY;
+    opt_bind_addr = in6addr_any;
 
     parse_options(argc, argv);
     if (optind < argc) {

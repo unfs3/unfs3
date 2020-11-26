@@ -11,12 +11,6 @@
 #include <netinet/in.h>
 #endif				       /* WIN32 */
 
-#ifdef HAVE_XDR_U_INT64_T
-#define xdr_uint64_t xdr_u_int64_t
-#undef HAVE_XDR_UINT64_T
-#define HAVE_XDR_UINT64_T 1
-#endif
-
 #include "mount.h"
 #include "nfs.h"
 #include "xdr.h"
@@ -150,96 +144,6 @@ bool_t xdr_nfspath(XDR * xdrs, nfspath * objp)
     return TRUE;
 }
 
-#ifndef HAVE_XDR_UINT64
-#ifdef HAVE_XDR_UINT64_T
-bool_t xdr_uint64(XDR * xdrs, uint64 * objp)
-{
-    if (!xdr_uint64_t(xdrs, objp))
-	return FALSE;
-    return TRUE;
-}
-#else
-bool_t xdr_uint64(XDR * xdrs, uint64 * objp)
-{
-    unsigned char buf[8];
-
-    if (xdrs->x_op == XDR_ENCODE) {
-	buf[0] = (*objp >> 56) & 0xFF;
-	buf[1] = (*objp >> 48) & 0xFF;
-	buf[2] = (*objp >> 40) & 0xFF;
-	buf[3] = (*objp >> 32) & 0xFF;
-	buf[4] = (*objp >> 24) & 0xFF;
-	buf[5] = (*objp >> 16) & 0xFF;
-	buf[6] = (*objp >> 8) & 0xFF;
-	buf[7] = *objp & 0xFF;
-	if (!xdr_opaque(xdrs, buf, 8))
-	    return FALSE;
-	return TRUE;
-    } else if (xdrs->x_op == XDR_DECODE) {
-	if (!xdr_opaque(xdrs, buf, 8))
-	    return FALSE;
-	*objp = 0;
-	*objp |= (uint64)buf[0] << 56;
-	*objp |= (uint64)buf[1] << 48;
-	*objp |= (uint64)buf[2] << 40;
-	*objp |= (uint64)buf[3] << 32;
-	*objp |= (uint64)buf[4] << 24;
-	*objp |= (uint64)buf[5] << 16;
-	*objp |= (uint64)buf[6] << 8;
-	*objp |= (uint64)buf[7];
-	return TRUE;
-    }
-
-    if (!xdr_opaque(xdrs, buf, 8))
-	return FALSE;
-    return TRUE;
-}
-#endif
-#endif
-
-#ifndef HAVE_XDR_UINT32
-# ifdef HAVE_XDR_UINT32_T
-bool_t xdr_uint32(XDR * xdrs, uint32 * objp)
-{
-    if (!xdr_uint32_t(xdrs, objp))
-        return FALSE;
-    return TRUE;
-}
-# elif defined(HAVE_XDR_U_INT32_T)
-bool_t xdr_uint32(XDR * xdrs, uint32 * objp)
-{
-    if (!xdr_u_int32_t(xdrs, objp))
-        return FALSE;
-    return TRUE;
-}
-# elif defined(HAVE_XDR_U_INT)
-bool_t xdr_uint32(XDR * xdrs, uint32 * objp)
-{
-    if (!xdr_u_int(xdrs, objp))
-        return FALSE;
-    return TRUE;
-}
-# endif
-#endif
-
-#ifndef HAVE_XDR_INT32
-# ifdef HAVE_XDR_INT32_T
-bool_t xdr_int32(XDR * xdrs, int32 * objp)
-{
-    if (!xdr_int32_t(xdrs, objp))
-        return FALSE;
-    return TRUE;
-}
-# elif defined(HAVE_XDR_INT)
-bool_t xdr_int32(XDR * xdrs, int32 * objp)
-{
-    if (!xdr_int(xdrs, objp))
-        return FALSE;
-    return TRUE;
-}
-# endif
-#endif
-
 bool_t xdr_filename3(XDR * xdrs, filename3 * objp)
 {
     if (!xdr_string(xdrs, objp, ~0))
@@ -256,14 +160,14 @@ bool_t xdr_nfspath3(XDR * xdrs, nfspath3 * objp)
 
 bool_t xdr_fileid3(XDR * xdrs, fileid3 * objp)
 {
-    if (!xdr_uint64(xdrs, objp))
+    if (!xdr_uint64_t(xdrs, objp))
 	return FALSE;
     return TRUE;
 }
 
 bool_t xdr_cookie3(XDR * xdrs, cookie3 * objp)
 {
-    if (!xdr_uint64(xdrs, objp))
+    if (!xdr_uint64_t(xdrs, objp))
 	return FALSE;
     return TRUE;
 }
@@ -291,42 +195,42 @@ bool_t xdr_writeverf3(XDR * xdrs, writeverf3 objp)
 
 bool_t xdr_uid3(XDR * xdrs, uid3 * objp)
 {
-    if (!xdr_uint32(xdrs, objp))
+    if (!xdr_uint32_t(xdrs, objp))
 	return FALSE;
     return TRUE;
 }
 
 bool_t xdr_gid3(XDR * xdrs, gid3 * objp)
 {
-    if (!xdr_uint32(xdrs, objp))
+    if (!xdr_uint32_t(xdrs, objp))
 	return FALSE;
     return TRUE;
 }
 
 bool_t xdr_size3(XDR * xdrs, size3 * objp)
 {
-    if (!xdr_uint64(xdrs, objp))
+    if (!xdr_uint64_t(xdrs, objp))
 	return FALSE;
     return TRUE;
 }
 
 bool_t xdr_offset3(XDR * xdrs, offset3 * objp)
 {
-    if (!xdr_uint64(xdrs, objp))
+    if (!xdr_uint64_t(xdrs, objp))
 	return FALSE;
     return TRUE;
 }
 
 bool_t xdr_mode3(XDR * xdrs, mode3 * objp)
 {
-    if (!xdr_uint32(xdrs, objp))
+    if (!xdr_uint32_t(xdrs, objp))
 	return FALSE;
     return TRUE;
 }
 
 bool_t xdr_count3(XDR * xdrs, count3 * objp)
 {
-    if (!xdr_uint32(xdrs, objp))
+    if (!xdr_uint32_t(xdrs, objp))
 	return FALSE;
     return TRUE;
 }
@@ -347,9 +251,9 @@ bool_t xdr_ftype3(XDR * xdrs, ftype3 * objp)
 
 bool_t xdr_specdata3(XDR * xdrs, specdata3 * objp)
 {
-    if (!xdr_uint32(xdrs, &objp->specdata1))
+    if (!xdr_uint32_t(xdrs, &objp->specdata1))
 	return FALSE;
-    if (!xdr_uint32(xdrs, &objp->specdata2))
+    if (!xdr_uint32_t(xdrs, &objp->specdata2))
 	return FALSE;
     return TRUE;
 }
@@ -365,9 +269,9 @@ bool_t xdr_nfs_fh3(XDR * xdrs, nfs_fh3 * objp)
 
 bool_t xdr_nfstime3(XDR * xdrs, nfstime3 * objp)
 {
-    if (!xdr_uint32(xdrs, &objp->seconds))
+    if (!xdr_uint32_t(xdrs, &objp->seconds))
 	return FALSE;
-    if (!xdr_uint32(xdrs, &objp->nseconds))
+    if (!xdr_uint32_t(xdrs, &objp->nseconds))
 	return FALSE;
     return TRUE;
 }
@@ -378,7 +282,7 @@ bool_t xdr_fattr3(XDR * xdrs, fattr3 * objp)
 	return FALSE;
     if (!xdr_mode3(xdrs, &objp->mode))
 	return FALSE;
-    if (!xdr_uint32(xdrs, &objp->nlink))
+    if (!xdr_uint32_t(xdrs, &objp->nlink))
 	return FALSE;
     if (!xdr_uid3(xdrs, &objp->uid))
 	return FALSE;
@@ -390,7 +294,7 @@ bool_t xdr_fattr3(XDR * xdrs, fattr3 * objp)
 	return FALSE;
     if (!xdr_specdata3(xdrs, &objp->rdev))
 	return FALSE;
-    if (!xdr_uint64(xdrs, &objp->fsid))
+    if (!xdr_uint64_t(xdrs, &objp->fsid))
 	return FALSE;
     if (!xdr_fileid3(xdrs, &objp->fileid))
 	return FALSE;
@@ -731,7 +635,7 @@ bool_t xdr_ACCESS3args(XDR * xdrs, ACCESS3args * objp)
 {
     if (!xdr_nfs_fh3(xdrs, &objp->object))
 	return FALSE;
-    if (!xdr_uint32(xdrs, &objp->access))
+    if (!xdr_uint32_t(xdrs, &objp->access))
 	return FALSE;
     return TRUE;
 }
@@ -740,7 +644,7 @@ bool_t xdr_ACCESS3resok(XDR * xdrs, ACCESS3resok * objp)
 {
     if (!xdr_post_op_attr(xdrs, &objp->obj_attributes))
 	return FALSE;
-    if (!xdr_uint32(xdrs, &objp->access))
+    if (!xdr_uint32_t(xdrs, &objp->access))
 	return FALSE;
     return TRUE;
 }
@@ -1504,7 +1408,7 @@ bool_t xdr_FSSTAT3resok(XDR * xdrs, FSSTAT3resok * objp)
 	return FALSE;
     if (!xdr_size3(xdrs, &objp->afiles))
 	return FALSE;
-    if (!xdr_uint32(xdrs, &objp->invarsec))
+    if (!xdr_uint32_t(xdrs, &objp->invarsec))
 	return FALSE;
     return TRUE;
 }
@@ -1544,25 +1448,25 @@ bool_t xdr_FSINFO3resok(XDR * xdrs, FSINFO3resok * objp)
 {
     if (!xdr_post_op_attr(xdrs, &objp->obj_attributes))
 	return FALSE;
-    if (!xdr_uint32(xdrs, &objp->rtmax))
+    if (!xdr_uint32_t(xdrs, &objp->rtmax))
 	return FALSE;
-    if (!xdr_uint32(xdrs, &objp->rtpref))
+    if (!xdr_uint32_t(xdrs, &objp->rtpref))
 	return FALSE;
-    if (!xdr_uint32(xdrs, &objp->rtmult))
+    if (!xdr_uint32_t(xdrs, &objp->rtmult))
 	return FALSE;
-    if (!xdr_uint32(xdrs, &objp->wtmax))
+    if (!xdr_uint32_t(xdrs, &objp->wtmax))
 	return FALSE;
-    if (!xdr_uint32(xdrs, &objp->wtpref))
+    if (!xdr_uint32_t(xdrs, &objp->wtpref))
 	return FALSE;
-    if (!xdr_uint32(xdrs, &objp->wtmult))
+    if (!xdr_uint32_t(xdrs, &objp->wtmult))
 	return FALSE;
-    if (!xdr_uint32(xdrs, &objp->dtpref))
+    if (!xdr_uint32_t(xdrs, &objp->dtpref))
 	return FALSE;
     if (!xdr_size3(xdrs, &objp->maxfilesize))
 	return FALSE;
     if (!xdr_nfstime3(xdrs, &objp->time_delta))
 	return FALSE;
-    if (!xdr_uint32(xdrs, &objp->properties))
+    if (!xdr_uint32_t(xdrs, &objp->properties))
 	return FALSE;
     return TRUE;
 }
@@ -1602,9 +1506,9 @@ bool_t xdr_PATHCONF3resok(XDR * xdrs, PATHCONF3resok * objp)
 {
     if (!xdr_post_op_attr(xdrs, &objp->obj_attributes))
 	return FALSE;
-    if (!xdr_uint32(xdrs, &objp->linkmax))
+    if (!xdr_uint32_t(xdrs, &objp->linkmax))
 	return FALSE;
-    if (!xdr_uint32(xdrs, &objp->name_max))
+    if (!xdr_uint32_t(xdrs, &objp->name_max))
 	return FALSE;
     if (!xdr_bool(xdrs, &objp->no_trunc))
 	return FALSE;

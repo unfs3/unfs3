@@ -1,5 +1,5 @@
 CC = @CC@
-CFLAGS = @CFLAGS@ -I.. -I$(srcdir) -I$(top_srcdir)
+CFLAGS = @CFLAGS@ @TIRPC_CFLAGS@ -I.. -I$(srcdir) -I$(top_srcdir)
 AR = @AR@
 RM = rm -f
 LEX = @LEX@

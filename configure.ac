@@ -26,21 +26,28 @@ AC_CHECK_TYPES(uint32,,,[#include <sys/inttypes.h>])
 AC_CHECK_TYPES(int64,,,[#include <sys/inttypes.h>])
 AC_CHECK_TYPES(uint64,,,[#include <sys/inttypes.h>])
 AC_CHECK_MEMBERS([struct stat.st_gen],,,[#include <sys/stat.h>])
-AC_CHECK_MEMBERS([struct __rpc_svcxprt.xp_fd],,,[#include <rpc/rpc.h>])
-AC_CHECK_FUNCS(xdr_int xdr_u_int)
-AC_CHECK_FUNCS(xdr_int32 xdr_int32_t)
-AC_CHECK_FUNCS(xdr_uint32 xdr_uint32_t xdr_u_int32_t)
-AC_CHECK_FUNCS(xdr_uint64 xdr_uint64_t xdr_u_int64_t)
-AC_CHECK_FUNCS(svc_getreq_poll)
 AC_CHECK_FUNCS(statvfs)
 AC_CHECK_FUNCS(seteuid setegid)
 AC_CHECK_FUNCS(setresuid setresgid)
 AC_CHECK_FUNCS(vsyslog)
 AC_CHECK_FUNCS(lchown)
 AC_CHECK_FUNCS(setgroups)
-UNFS3_SOLARIS_RPC
 UNFS3_PORTMAP_DEFINE
 UNFS3_COMPILE_WARNINGS
+
+PKG_CHECK_MODULES([TIRPC], [libtirpc])
+AC_SUBST(TIRPC_CFLAGS)
+AC_SUBST(TIRPC_LIBS)
+
+saved_CPPFLAGS="$CPPFLAGS"
+saved_LIBS="$LIBS"
+CPPFLAGS="$CPPFLAGS $TIRPC_CFLAGS"
+LIBS="$LIBS $TIRPC_LIBS"
+AC_CHECK_FUNCS(svc_getreq_poll)
+# Old libtirpc has not implement poll() fully
+AC_CHECK_DECLS(svc_pollfd,,,[#include <rpc/rpc.h>])
+CPPFLAGS="$saved_CPPFLAGS"
+LIBS="$saved_LIBS"
 
 AC_ARG_ENABLE(afs,
 	AS_HELP_STRING([--enable-afs], [include better support for exporting from AFS]),
