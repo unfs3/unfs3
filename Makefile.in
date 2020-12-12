@@ -29,7 +29,8 @@ DESTDIR =
 
 VPATH = $(srcdir)
 
-all: subdirs unfsd$(EXEEXT)
+all: subdirs
+	$(MAKE) unfsd$(EXEEXT)
 
 unfsd$(EXEEXT): $(OBJS) $(CONFOBJ) $(EXTRAOBJ)
 	$(CC) -o $@ $(OBJS) $(CONFOBJ) $(EXTRAOBJ) $(LDFLAGS)

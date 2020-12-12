@@ -691,6 +691,7 @@ SYMLINK3res *nfsproc3_symlink_3_svc(SYMLINK3args * argp,
 }
 
 #ifndef WIN32
+static char pathbuf_tmp[NFS_MAXPATHLEN + NFS_MAXNAMLEN + 1];
 
 /*
  * create Unix socket
@@ -699,17 +700,41 @@ static int mksocket(const char *path, mode_t mode)
 {
     int res, sock;
     struct sockaddr_un addr;
+    unsigned int len = strlen(path);
 
     sock = socket(PF_UNIX, SOCK_STREAM, 0);
-    addr.sun_family = AF_UNIX;
-    strcpy(addr.sun_path, path);
     res = sock;
     if (res != -1) {
+	addr.sun_family = AF_UNIX;
+	if (len < sizeof(addr.sun_path) -1) {
+	    strcpy(addr.sun_path, path);
+	} else {
+	    char *ptr;
+	    res = -1;
+	    if (len >= sizeof(path))
+		goto out;
+	    strcpy(pathbuf_tmp, path);
+	    ptr = strrchr(pathbuf_tmp,'/');
+	    if (ptr) {
+		*ptr = '\0';
+		ptr++;
+		if (chdir(pathbuf_tmp))
+		    goto out;
+	    } else {
+		ptr = pathbuf_tmp;
+	    }
+	    if (strlen(ptr) >= sizeof(addr.sun_path))
+		goto out;
+	    strcpy(addr.sun_path, ptr);
+	}
 	umask(~mode);
 	res =
 	    bind(sock, (struct sockaddr *) &addr,
 		 sizeof(addr.sun_family) + strlen(addr.sun_path));
 	umask(0);
+out:
+	if (chdir("/"))
+	    fprintf(stderr, "Internal failure to chdir /\n");
 	close(sock);
     }
     return res;
@@ -895,6 +920,8 @@ RENAME3res *nfsproc3_rename_3_svc(RENAME3args * argp, struct svc_req * rqstp)
 	    res = backend_rename(from_obj, to_obj);
 	    if (res == -1)
 		result.status = rename_err();
+	    /* Update the fh_cache with moved inode value */
+	    fh_cache_update(argp->to.dir, to_obj);
 	}
     }
 
