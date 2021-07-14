@@ -113,7 +113,7 @@ void logmsg(int prio, const char *fmt, ...)
  */
 struct in_addr get_remote(struct svc_req *rqstp)
 {
-    return (svc_getcaller(rqstp->rq_xprt))->sin_addr;
+    return ((struct sockaddr_in*)svc_getcaller(rqstp->rq_xprt))->sin_addr;
 }
 
 /*
@@ -121,7 +121,7 @@ struct in_addr get_remote(struct svc_req *rqstp)
  */
 short get_port(struct svc_req *rqstp)
 {
-    return (svc_getcaller(rqstp->rq_xprt))->sin_port;
+    return ((struct sockaddr_in*)svc_getcaller(rqstp->rq_xprt))->sin_port;
 }
 
 /*
@@ -789,6 +789,14 @@ static SVCXPRT *create_tcp_transport(unsigned int port)
 	    fprintf(stderr, "Couldn't bind to tcp port %d\n", port);
 	    exit(1);
 	}
+	/* libtirpc's svctcp_create does NOT call listen if the socket is bound */
+#ifdef HAVE_TIRPC
+	if (listen(sock, SOMAXCONN)) {
+		perror("listen");
+		fprintf(stderr, "Couldn't listen tcp port %d\n", port);
+		exit(1);
+	}
+#endif
     }
 
     transp = svctcp_create(sock, 0, 0);

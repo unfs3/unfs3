@@ -11,7 +11,17 @@ AS_IF([test "x$LEX" == "x:"], [
 AC_PROG_YACC
 AC_HEADER_STDC
 AC_SYS_LARGEFILE
-AC_SEARCH_LIBS(xdr_int, nsl)
+AC_ARG_WITH([libtirpc],
+	    [AS_HELP_STRING([--with-libtirpc], [Use libtirpc RPC implementation])])
+
+AS_IF([test "x$with_libtirpc" != "xno"],
+      [PKG_CHECK_MODULES(TIRPC, libtirpc)
+       LIBS="$LIBS $TIRPC_LIBS"
+       CFLAGS="$CFLAGS $TIRPC_CFLAGS"
+       AC_DEFINE(HAVE_TIRPC,,[define if using libtirpc SunRPC implementation])],
+      [AC_CHECK_HEADER(rpc/rpc.h, [], AC_MSG_ERROR([SunRPC headers can't be found]))
+       AC_SEARCH_LIBS(xdr_init, nsl, [], AC_MSG_ERROR([SunRPC library can't be found]))])
+
 AC_SEARCH_LIBS(socket, socket)
 AC_SEARCH_LIBS(inet_aton, resolv)
 AC_CHECK_HEADERS(mntent.h,,,[#include <stdio.h>])
