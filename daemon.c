@@ -847,6 +847,11 @@ static SVCXPRT *create_tcp_transport(unsigned int port)
 	    fprintf(stderr, "Couldn't bind to tcp port %d\n", port);
 	    exit(1);
 	}
+	if (listen(sock, SOMAXCONN)) {
+	    perror("listen");
+	    fprintf(stderr, "Couldn't listen on tcp socket\n");
+	    exit(1);
+	}
     }
 
     transp = svctcp_create(sock, 0, 0);
