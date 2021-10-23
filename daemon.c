@@ -357,12 +357,12 @@ void daemon_exit(int error)
 #endif				       /* WIN32 */
 
     if (opt_portmapper) {
-	svc_unregister(MOUNTPROG, MOUNTVERS1);
-	svc_unregister(MOUNTPROG, MOUNTVERS3);
+	svc_unreg(MOUNTPROG, MOUNTVERS1);
+	svc_unreg(MOUNTPROG, MOUNTVERS3);
     }
 
     if (opt_portmapper) {
-	svc_unregister(NFS3_PROGRAM, NFS_V3);
+	svc_unreg(NFS3_PROGRAM, NFS_V3);
     }
 
     if (error == SIGSEGV)
