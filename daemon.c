@@ -826,7 +826,7 @@ static SVCXPRT *create_udp_transport(unsigned int port)
 	     IN6_IS_ADDR_V4COMPAT(&opt_bind_addr))) {
 	    sin4.sin_family = AF_INET;
 	    sin4.sin_port = htons(port);
-	    sin4.sin_addr.s_addr = ((uint32_t*)&opt_bind_addr)[4];
+	    sin4.sin_addr.s_addr = ((uint32_t*)&opt_bind_addr)[3];
 
 	    sin = (const struct sockaddr*)&sin4;
 	    sin_len = sizeof(sin4);
@@ -888,7 +888,7 @@ static SVCXPRT *create_tcp_transport(unsigned int port)
 	     IN6_IS_ADDR_V4COMPAT(&opt_bind_addr))) {
 	    sin4.sin_family = AF_INET;
 	    sin4.sin_port = htons(port);
-	    sin4.sin_addr.s_addr = ((uint32_t*)&opt_bind_addr)[4];
+	    sin4.sin_addr.s_addr = ((uint32_t*)&opt_bind_addr)[3];
 
 	    sin = (const struct sockaddr*)&sin4;
 	    sin_len = sizeof(sin4);
