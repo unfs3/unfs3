@@ -111,11 +111,33 @@ void logmsg(int prio, const char *fmt, ...)
 }
 
 /*
- * return remote address from svc_req structure
+ * return remote address from svc_req structure in IPv6 format
+ * 
+ * IPv4 addresses are returned in so-called IPv4-mapped IPv6 address format.
+ *
+ * For AF_INET6 addresses, remote_buf is not used and a pointer to 
+ *	a field of netbuf (provided by svc_req) is returned.
+ *
+ * For AF_INET addresses, the address is stored into the remote_buf
+ *	and its address is returned.
  */
-const struct in6_addr *get_remote(struct svc_req *rqstp)
+const struct in6_addr *get_remote(struct svc_req *rqstp, struct in6_addr *remote_buf) 
 {
-    return &(svc_getcaller(rqstp->rq_xprt))->sin6_addr;
+    const struct sockaddr *saddr = (struct sockaddr *) svc_getrpccaller(rqstp->rq_xprt)->buf;
+    if (saddr->sa_family == AF_INET6) {
+	return &((struct sockaddr_in6 *) saddr)->sin6_addr;
+    } else if (saddr->sa_family == AF_INET) {
+	struct in_addr addr = ((struct sockaddr_in *) saddr)->sin_addr;
+
+	((uint32_t*)remote_buf)[0] = 0;
+	((uint32_t*)remote_buf)[1] = 0;
+	((uint32_t*)remote_buf)[2] = htonl(0xffff);
+	((uint32_t*)remote_buf)[3] = addr.s_addr;
+	return remote_buf;
+    } else {
+	logmsg(LOG_CRIT, "unable to determine remote address - unknown address family");
+	return NULL;
+    }
 }
 
 /*
@@ -123,7 +145,15 @@ const struct in6_addr *get_remote(struct svc_req *rqstp)
  */
 short get_port(struct svc_req *rqstp)
 {
-    return (svc_getcaller(rqstp->rq_xprt))->sin6_port;
+    const struct sockaddr *saddr = (struct sockaddr *) svc_getrpccaller(rqstp->rq_xprt)->buf;
+    if (saddr->sa_family == AF_INET6) {
+	return ((struct sockaddr_in6 *) saddr)->sin6_port;
+    } else if (saddr->sa_family == AF_INET) {
+	return ((struct sockaddr_in *) saddr)->sin_port;
+    } else {
+	logmsg(LOG_CRIT, "unable to determine remote port - unknown address family");
+	return 0;
+    }
 }
 
 /*

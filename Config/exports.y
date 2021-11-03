@@ -831,6 +831,7 @@ int exports_options(const char *path, struct svc_req *rqstp,
 		    char **password, uint32 *fsid)
 {
 	e_item *list;
+	struct in6_addr remote_buf;
 	const struct in6_addr *remote;
 	unsigned int last_len = 0;
 	
@@ -844,7 +845,7 @@ int exports_options(const char *path, struct svc_req *rqstp,
 	if (!path || strstr(path, "/../"))
 		return exports_opts;
 	
-	remote = get_remote(rqstp);
+	remote = get_remote(rqstp, &remote_buf);
 
 	/* protect against SIGHUP reloading the list */
 	exports_access = TRUE;
