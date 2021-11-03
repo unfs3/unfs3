@@ -71,6 +71,7 @@ char *opt_exports = "/etc/exports";
 int opt_cluster = FALSE;
 char *opt_cluster_path = "/";
 int opt_tcponly = FALSE;
+int opt_ipv4only = FALSE;
 unsigned int opt_nfs_port = NFS_PORT;	/* 0 means RPC_ANYSOCK */
 unsigned int opt_mount_port = NFS_PORT;
 int opt_singleuser = FALSE;
@@ -203,7 +204,7 @@ static void parse_options(int argc, char **argv)
 {
 
     int opt = 0;
-    char *optstring = "bcC:de:hl:m:n:prstTuwi:";
+    char *optstring = "bcC:de:hl:m:n:prstTuwi:4";
 
     while (opt != -1) {
 	opt = getopt(argc, argv, optstring);
@@ -250,6 +251,7 @@ static void parse_options(int argc, char **argv)
 		printf("\t-m <port>   port to use for MOUNT service\n");
 		printf
 		    ("\t-t          TCP only, do not listen on UDP ports\n");
+		printf("\t-4          use IPv4-only sockets\n");
 		printf("\t-p          do not register with the portmapper\n");
 		printf("\t-s          single user mode\n");
 		printf("\t-b          enable brute force file searching\n");
@@ -308,6 +310,9 @@ static void parse_options(int argc, char **argv)
 		break;
 	    case 't':
 		opt_tcponly = TRUE;
+		break;
+	    case '4':
+		opt_ipv4only = TRUE;
 		break;
 	    case 'T':
 		opt_testconfig = TRUE;
@@ -703,7 +708,7 @@ static void register_nfs_service(SVCXPRT * udptransp, SVCXPRT * tcptransp)
 	    daemon_exit(0);
 	}
 
-	if (opt_portmapper) {
+	if (opt_portmapper && !opt_ipv4only) {
 	    /* Register NFS service for UDP6 */
 	    register_service(udptransp, NFS3_PROGRAM, NFS_V3, nfs3_program_3,
 		"udp6", "(NFS3_PROGRAM, NFS_V3, udp6)");
@@ -720,7 +725,7 @@ static void register_nfs_service(SVCXPRT * udptransp, SVCXPRT * tcptransp)
 	    daemon_exit(0);
 	}
 
-	if (opt_portmapper) {
+	if (opt_portmapper && !opt_ipv4only) {
 	    /* Register NFS service for TCP6 */
 	    register_service(tcptransp, NFS3_PROGRAM, NFS_V3, nfs3_program_3,
 		"tcp6", "(NFS3_PROGRAM, NFS_V3, tcp6)");
@@ -754,7 +759,7 @@ static void register_mount_service(SVCXPRT * udptransp, SVCXPRT * tcptransp)
 	    daemon_exit(0);
 	}
 
-	if (opt_portmapper) {
+	if (opt_portmapper && !opt_ipv4only) {
 	    /* Register MOUNT service (v1) for UDP6 */
 	    register_service(udptransp, MOUNTPROG, MOUNTVERS1, mountprog_3,
 		"udp6", "(MOUNTPROG, MOUNTVERS1, udp6)");
@@ -784,7 +789,7 @@ static void register_mount_service(SVCXPRT * udptransp, SVCXPRT * tcptransp)
 	    daemon_exit(0);
 	}
 
-	if (opt_portmapper) {
+	if (opt_portmapper && !opt_ipv4only) {
 	    /* Register MOUNT service (v1) for TCP */
 	    register_service(tcptransp, MOUNTPROG, MOUNTVERS1, mountprog_3,
 		"tcp6", "(MOUNTPROG, MOUNTVERS1, tcp6)");
@@ -806,24 +811,39 @@ static SVCXPRT *create_udp_transport(unsigned int port)
     int sock;
     const int on = 1;
 
-    /* Make sure we null the entire sockaddr_in6 structure */
-    memset(&sin6, 0, sizeof(struct sockaddr_in6));
-
     if (port == 0)
 	sock = RPC_ANYSOCK;
     else {
-	sin6.sin6_family = AF_INET6;
-	sin6.sin6_port = htons(port);
-	sin6.sin6_addr = opt_bind_addr;
+	if (!opt_ipv4only) {
+	    /* Make sure we null the entire sockaddr_in6 structure */
+	    memset(&sin6, 0, sizeof(struct sockaddr_in6));
 
-	sin = (const struct sockaddr*)&sin6;
-	sin_len = sizeof(sin6);
+	    sin6.sin6_family = AF_INET6;
+	    sin6.sin6_port = htons(port);
+	    sin6.sin6_addr = opt_bind_addr;
 
-	sock = socket(PF_INET6, SOCK_DGRAM, 0);
+	    sin = (const struct sockaddr*)&sin6;
+	    sin_len = sizeof(sin6);
 
-	if ((sock == -1) && (errno == EAFNOSUPPORT) && \
-	    (IN6_IS_ADDR_V4MAPPED(&opt_bind_addr) || \
-	     IN6_IS_ADDR_V4COMPAT(&opt_bind_addr))) {
+	    sock = socket(PF_INET6, SOCK_DGRAM, 0);
+	}
+
+	if (opt_ipv4only || \
+	    ((sock == -1) && (errno == EAFNOSUPPORT))) {
+	    if (!IN6_IS_ADDR_V4MAPPED(&opt_bind_addr) && \
+		!IN6_IS_ADDR_V4COMPAT(&opt_bind_addr) && \
+		!IN6_IS_ADDR_UNSPECIFIED(&opt_bind_addr)) {
+		char address_str[INET6_ADDRSTRLEN];
+
+		fprintf(stderr, "Couldn't translate address '%s' to IPv4\n",
+		    inet_ntop(AF_INET6, &opt_bind_addr,
+			address_str, sizeof(address_str)));
+		exit(1);
+	    }
+
+	    /* Make sure we null the entire sockaddr_in structure */
+	    memset(&sin4, 0, sizeof(struct sockaddr_in));
+
 	    sin4.sin_family = AF_INET;
 	    sin4.sin_port = htons(port);
 	    sin4.sin_addr.s_addr = ((uint32_t*)&opt_bind_addr)[3];
@@ -868,24 +888,39 @@ static SVCXPRT *create_tcp_transport(unsigned int port)
     int sock;
     const int on = 1;
 
-    /* Make sure we null the entire sockaddr_in6 structure */
-    memset(&sin6, 0, sizeof(struct sockaddr_in6));
-
     if (port == 0)
 	sock = RPC_ANYSOCK;
     else {
-	sin6.sin6_family = AF_INET6;
-	sin6.sin6_port = htons(port);
-	sin6.sin6_addr = opt_bind_addr;
+	if (!opt_ipv4only) {
+	    /* Make sure we null the entire sockaddr_in6 structure */
+	    memset(&sin6, 0, sizeof(struct sockaddr_in6));
+	
+	    sin6.sin6_family = AF_INET6;
+	    sin6.sin6_port = htons(port);
+	    sin6.sin6_addr = opt_bind_addr;
 
-	sin = (const struct sockaddr*)&sin6;
-	sin_len = sizeof(sin6);
+	    sin = (const struct sockaddr*)&sin6;
+	    sin_len = sizeof(sin6);
 
-	sock = socket(PF_INET6, SOCK_STREAM, 0);
+	    sock = socket(PF_INET6, SOCK_STREAM, 0);
+	}
 
-	if ((sock == -1) && (errno == EAFNOSUPPORT) && \
-	    (IN6_IS_ADDR_V4MAPPED(&opt_bind_addr) || \
-	     IN6_IS_ADDR_V4COMPAT(&opt_bind_addr))) {
+	if (opt_ipv4only || \
+	    ((sock == -1) && (errno == EAFNOSUPPORT))) {
+	    if (!IN6_IS_ADDR_V4MAPPED(&opt_bind_addr) && \
+		!IN6_IS_ADDR_V4COMPAT(&opt_bind_addr) && \
+		!IN6_IS_ADDR_UNSPECIFIED(&opt_bind_addr)) {
+		char address_str[INET6_ADDRSTRLEN];
+
+		fprintf(stderr, "Couldn't translate address '%s' to IPv4\n",
+		    inet_ntop(AF_INET6, &opt_bind_addr,
+			address_str, sizeof(address_str)));
+		exit(1);
+	    }
+
+	    /* Make sure we null the entire sockaddr_in structure */
+	    memset(&sin4, 0, sizeof(struct sockaddr_in));
+
 	    sin4.sin_family = AF_INET;
 	    sin4.sin_port = htons(port);
 	    sin4.sin_addr.s_addr = ((uint32_t*)&opt_bind_addr)[3];

@@ -110,6 +110,14 @@ provides its services to clients using either UDP or TCP as communications
 protocol. When this option is present, only TCP connections are
 serviced.
 .TP
+.B \-4
+IPv4 only operation. By default,
+.B unfsd
+provides its services to clients using either IPv4 or IPv6. When this option
+is present,
+.B unfsd
+listens on IPv4-only sockets.
+.TP
 .B \-p
 Do not register with the portmapper. This will prevent other hosts from
 finding out the port numbers used for the MOUNT and NFS services by
