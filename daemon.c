@@ -13,6 +13,7 @@
 #include <sys/stat.h>
 #include <rpc/rpc.h>
 #include <rpc/pmap_clnt.h>
+#include <netconfig.h>
 
 #ifndef WIN32
 #include <sys/socket.h>
@@ -658,6 +659,34 @@ static void mountprog_3(struct svc_req *rqstp, register SVCXPRT * transp)
     return;
 }
 
+static void register_service(SVCXPRT *transp, rpcprog_t prog, rpcvers_t vers,
+			     void (*dispatch)(struct svc_req *, SVCXPRT*),
+			     char *netid, char *logmsg) {
+    struct netconfig* nconf = NULL;
+    int free_nconf = FALSE;
+    if (netid != NULL) {
+	/* Returns a pointer to nconf corresponding to NETCONF */
+	if ((nconf = getnetconfigent(netid)) != NULL) {
+	    free_nconf = TRUE;
+	} else {
+	    fprintf(stderr, 
+		"Cannot get netconfig entry for %s while registering %s, "
+		"rpcbind entry will not be created.\n",
+		netid, logmsg);
+	}
+    }
+
+    /* If nconf is NULL, the service is not registered with the rpcbind service. */
+    if (!svc_reg(transp, prog, vers, dispatch, nconf)) {
+	fprintf(stderr, "unable to register %s.\n", logmsg);
+	daemon_exit(0);
+    }
+
+    if (free_nconf) {
+	freenetconfigent(nconf);
+    }
+}
+
 static void register_nfs_service(SVCXPRT * udptransp, SVCXPRT * tcptransp)
 {
     if (opt_portmapper) {
@@ -673,6 +702,12 @@ static void register_nfs_service(SVCXPRT * udptransp, SVCXPRT * tcptransp)
 		    "unable to register (NFS3_PROGRAM, NFS_V3, udp).");
 	    daemon_exit(0);
 	}
+
+	if (opt_portmapper) {
+	    /* Register NFS service for UDP6 */
+	    register_service(udptransp, NFS3_PROGRAM, NFS_V3, nfs3_program_3,
+		"udp6", "(NFS3_PROGRAM, NFS_V3, udp6)");
+	}
     }
 
     if (tcptransp != NULL) {
@@ -683,6 +718,12 @@ static void register_nfs_service(SVCXPRT * udptransp, SVCXPRT * tcptransp)
 	    fprintf(stderr, "%s\n",
 		    "unable to register (NFS3_PROGRAM, NFS_V3, tcp).");
 	    daemon_exit(0);
+	}
+
+	if (opt_portmapper) {
+	    /* Register NFS service for TCP6 */
+	    register_service(tcptransp, NFS3_PROGRAM, NFS_V3, nfs3_program_3,
+		"tcp6", "(NFS3_PROGRAM, NFS_V3, tcp6)");
 	}
     }
 }
@@ -712,6 +753,16 @@ static void register_mount_service(SVCXPRT * udptransp, SVCXPRT * tcptransp)
 		    "unable to register (MOUNTPROG, MOUNTVERS3, udp).");
 	    daemon_exit(0);
 	}
+
+	if (opt_portmapper) {
+	    /* Register MOUNT service (v1) for UDP6 */
+	    register_service(udptransp, MOUNTPROG, MOUNTVERS1, mountprog_3,
+		"udp6", "(MOUNTPROG, MOUNTVERS1, udp6)");
+
+	    /* Register MOUNT service (v3) for UDP6 */
+	    register_service(udptransp, MOUNTPROG, MOUNTVERS3, mountprog_3,
+		"udp6", "(MOUNTPROG, MOUNTVERS3, udp6)");
+	}
     }
 
     if (tcptransp != NULL) {
@@ -731,6 +782,16 @@ static void register_mount_service(SVCXPRT * udptransp, SVCXPRT * tcptransp)
 	    fprintf(stderr, "%s\n",
 		    "unable to register (MOUNTPROG, MOUNTVERS3, tcp).");
 	    daemon_exit(0);
+	}
+
+	if (opt_portmapper) {
+	    /* Register MOUNT service (v1) for TCP */
+	    register_service(tcptransp, MOUNTPROG, MOUNTVERS1, mountprog_3,
+		"tcp6", "(MOUNTPROG, MOUNTVERS1, tcp6)");
+
+	    /* Register MOUNT service (v3) for TCP */
+	    register_service(tcptransp, MOUNTPROG, MOUNTVERS3, mountprog_3,
+		"tcp6", "(MOUNTPROG, MOUNTVERS3, tcp6)");
 	}
     }
 }
