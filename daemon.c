@@ -841,9 +841,18 @@ static SVCXPRT *create_udp_transport(unsigned int port)
     int sock;
     const int on = 1;
 
-    if (port == 0)
-	sock = RPC_ANYSOCK;
-    else {
+    if (port == 0) {
+	if (opt_ipv4only) {
+	    sock = RPC_ANYSOCK;
+	} else {
+	    sock = socket(PF_INET6, SOCK_DGRAM, 0);
+	    if (sock == -1) {
+		perror("socket");
+		fprintf(stderr, "Couldn't create a listening udp socket\n");
+		exit(1);
+	    }
+	}
+    } else {
 	if (!opt_ipv4only) {
 	    /* Make sure we null the entire sockaddr_in6 structure */
 	    memset(&sin6, 0, sizeof(struct sockaddr_in6));
@@ -918,9 +927,18 @@ static SVCXPRT *create_tcp_transport(unsigned int port)
     int sock;
     const int on = 1;
 
-    if (port == 0)
-	sock = RPC_ANYSOCK;
-    else {
+    if (port == 0) {
+	if (opt_ipv4only) {
+	    sock = RPC_ANYSOCK;
+	} else {
+	    sock = socket(PF_INET6, SOCK_DGRAM, 0);
+	    if (sock == -1) {
+		perror("socket");
+		fprintf(stderr, "Couldn't create a listening tcp socket\n");
+		exit(1);
+	    }
+	}
+    } else {
 	if (!opt_ipv4only) {
 	    /* Make sure we null the entire sockaddr_in6 structure */
 	    memset(&sin6, 0, sizeof(struct sockaddr_in6));
