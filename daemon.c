@@ -931,7 +931,7 @@ static SVCXPRT *create_tcp_transport(unsigned int port)
 	if (opt_ipv4only) {
 	    sock = RPC_ANYSOCK;
 	} else {
-	    sock = socket(PF_INET6, SOCK_DGRAM, 0);
+	    sock = socket(PF_INET6, SOCK_STREAM, 0);
 	    if (sock == -1) {
 		perror("socket");
 		fprintf(stderr, "Couldn't create a listening tcp socket\n");
