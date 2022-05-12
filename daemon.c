@@ -684,7 +684,7 @@ static void _register_service(SVCXPRT *transp,
 			      const char *versname,
 			      void (*dispatch)(struct svc_req *, SVCXPRT *))
 {
-    int type;
+    int type, domain;
     socklen_t len;
     const char *netid;
     struct netconfig *nconf = NULL;
@@ -708,6 +708,40 @@ static void _register_service(SVCXPRT *transp,
 	    fprintf(stderr, "unable to get netconfig entry \"%s\"\n", netid);
 	    daemon_exit(0);
 	}
+    }
+
+    if (!svc_reg(transp, prognum, versnum, dispatch, nconf)) {
+	fprintf(stderr, "unable to register (%s, %s, %s).\n",
+		progname, versname, netid);
+	daemon_exit(0);
+    }
+
+    if (nconf != NULL)
+	freenetconfigent(nconf);
+
+    if (nconf == NULL)
+	return;
+
+    len = sizeof(domain);
+    if (getsockopt(transp->xp_fd, SOL_SOCKET, SO_DOMAIN, &domain, &len)) {
+	perror("getsockopt");
+	fprintf(stderr, "unable to register (%s, %s).\n",
+		progname, versname);
+	daemon_exit(0);
+    }
+
+    if (domain != PF_INET6)
+	return;
+
+    if (type == SOCK_STREAM)
+	netid = "tcp6";
+    else
+	netid = "udp6";
+
+    nconf = getnetconfigent(netid);
+    if (nconf == NULL) {
+	fprintf(stderr, "unable to get netconfig entry \"%s\"\n", netid);
+	daemon_exit(0);
     }
 
     if (!svc_reg(transp, prognum, versnum, dispatch, nconf)) {
