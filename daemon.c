@@ -814,60 +814,58 @@ static SVCXPRT *create_udp_transport(unsigned int port)
 	exit(1);
     }
 
-    if (port != 0) {
-	int domain;
-	socklen_t len;
-	const int on = 1;
+    int domain;
+    socklen_t len;
+    const int on = 1;
 
-	const struct sockaddr *sin;
-	size_t sin_len;
-	struct sockaddr_in sin4;
-	struct sockaddr_in6 sin6;
+    const struct sockaddr *sin;
+    size_t sin_len;
+    struct sockaddr_in sin4;
+    struct sockaddr_in6 sin6;
 
-	len = sizeof(domain);
-	if (getsockopt(sock, SOL_SOCKET, SO_DOMAIN, &domain, &len)) {
-	    perror("getsockopt");
-	    fprintf(stderr, "Couldn't create a listening udp socket\n");
-	    exit(1);
-	}
+    len = sizeof(domain);
+    if (getsockopt(sock, SOL_SOCKET, SO_DOMAIN, &domain, &len)) {
+	perror("getsockopt");
+	fprintf(stderr, "Couldn't create a listening udp socket\n");
+	exit(1);
+    }
 
-	if (domain == PF_INET6) {
-	    /* Make sure we null the entire sockaddr_in6 structure */
-	    memset(&sin6, 0, sizeof(struct sockaddr_in6));
+    if (domain == PF_INET6) {
+	/* Make sure we null the entire sockaddr_in6 structure */
+	memset(&sin6, 0, sizeof(struct sockaddr_in6));
 
-	    sin6.sin6_family = AF_INET6;
-	    sin6.sin6_port = htons(port);
-	    sin6.sin6_addr = opt_bind_addr;
+	sin6.sin6_family = AF_INET6;
+	sin6.sin6_port = htons(port);
+	sin6.sin6_addr = opt_bind_addr;
 
-	    sin = (const struct sockaddr*)&sin6;
-	    sin_len = sizeof(sin6);
+	sin = (const struct sockaddr*)&sin6;
+	sin_len = sizeof(sin6);
+    } else {
+	/* Make sure we null the entire sockaddr_in structure */
+	memset(&sin4, 0, sizeof(struct sockaddr_in));
+
+	sin4.sin_family = AF_INET;
+	sin4.sin_port = htons(port);
+
+	if (IN6_IS_ADDR_UNSPECIFIED(&opt_bind_addr)) {
+	    sin4.sin_addr.s_addr = INADDR_ANY;
+	} else if (IN6_IS_ADDR_V4MAPPED(&opt_bind_addr) ||
+		   IN6_IS_ADDR_V4COMPAT(&opt_bind_addr)) {
+	    sin4.sin_addr.s_addr = ((uint32_t*)&opt_bind_addr)[3];
 	} else {
-	    /* Make sure we null the entire sockaddr_in structure */
-	    memset(&sin4, 0, sizeof(struct sockaddr_in));
-
-	    sin4.sin_family = AF_INET;
-	    sin4.sin_port = htons(port);
-
-	    if (IN6_IS_ADDR_UNSPECIFIED(&opt_bind_addr)) {
-		sin4.sin_addr.s_addr = INADDR_ANY;
-	    } else if (IN6_IS_ADDR_V4MAPPED(&opt_bind_addr) ||
-		       IN6_IS_ADDR_V4COMPAT(&opt_bind_addr)) {
-		sin4.sin_addr.s_addr = ((uint32_t*)&opt_bind_addr)[3];
-	    } else {
-		fprintf(stderr, "Invalid bind address specified\n");
-		exit(1);
-	    }
-
-	    sin = (const struct sockaddr*)&sin4;
-	    sin_len = sizeof(sin4);
-	}
-
-	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (const char *) &on, sizeof(on));
-	if (bind(sock, sin, sin_len)) {
-	    perror("bind");
-	    fprintf(stderr, "Couldn't bind to udp port %d\n", port);
+	    fprintf(stderr, "Invalid bind address specified\n");
 	    exit(1);
 	}
+
+	sin = (const struct sockaddr*)&sin4;
+	sin_len = sizeof(sin4);
+    }
+
+    setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (const char *) &on, sizeof(on));
+    if (bind(sock, sin, sin_len)) {
+	perror("bind");
+	fprintf(stderr, "Couldn't bind to udp port %d\n", port);
+	exit(1);
     }
 
     transp = svc_dg_create(sock, 0, 0);
@@ -896,66 +894,64 @@ static SVCXPRT *create_tcp_transport(unsigned int port)
 	exit(1);
     }
 
-    if (port != 0) {
-	int domain;
-	socklen_t len;
-	const int on = 1;
+    int domain;
+    socklen_t len;
+    const int on = 1;
 
-	const struct sockaddr *sin;
-	size_t sin_len;
-	struct sockaddr_in sin4;
-	struct sockaddr_in6 sin6;
+    const struct sockaddr *sin;
+    size_t sin_len;
+    struct sockaddr_in sin4;
+    struct sockaddr_in6 sin6;
 
-	len = sizeof(domain);
-	if (getsockopt(sock, SOL_SOCKET, SO_DOMAIN, &domain, &len)) {
-	    perror("getsockopt");
-	    fprintf(stderr, "Couldn't create a listening tcp socket\n");
-	    exit(1);
-	}
+    len = sizeof(domain);
+    if (getsockopt(sock, SOL_SOCKET, SO_DOMAIN, &domain, &len)) {
+	perror("getsockopt");
+	fprintf(stderr, "Couldn't create a listening tcp socket\n");
+	exit(1);
+    }
 
-	if (domain == PF_INET6) {
-	    /* Make sure we null the entire sockaddr_in6 structure */
-	    memset(&sin6, 0, sizeof(struct sockaddr_in6));
+    if (domain == PF_INET6) {
+	/* Make sure we null the entire sockaddr_in6 structure */
+	memset(&sin6, 0, sizeof(struct sockaddr_in6));
 
-	    sin6.sin6_family = AF_INET6;
-	    sin6.sin6_port = htons(port);
-	    sin6.sin6_addr = opt_bind_addr;
+	sin6.sin6_family = AF_INET6;
+	sin6.sin6_port = htons(port);
+	sin6.sin6_addr = opt_bind_addr;
 
-	    sin = (const struct sockaddr*)&sin6;
-	    sin_len = sizeof(sin6);
+	sin = (const struct sockaddr*)&sin6;
+	sin_len = sizeof(sin6);
+    } else {
+	/* Make sure we null the entire sockaddr_in structure */
+	memset(&sin4, 0, sizeof(struct sockaddr_in));
+
+	sin4.sin_family = AF_INET;
+	sin4.sin_port = htons(port);
+
+	if (IN6_IS_ADDR_UNSPECIFIED(&opt_bind_addr)) {
+	    sin4.sin_addr.s_addr = INADDR_ANY;
+	} else if (IN6_IS_ADDR_V4MAPPED(&opt_bind_addr) ||
+		   IN6_IS_ADDR_V4COMPAT(&opt_bind_addr)) {
+	    sin4.sin_addr.s_addr = ((uint32_t*)&opt_bind_addr)[3];
 	} else {
-	    /* Make sure we null the entire sockaddr_in structure */
-	    memset(&sin4, 0, sizeof(struct sockaddr_in));
-
-	    sin4.sin_family = AF_INET;
-	    sin4.sin_port = htons(port);
-
-	    if (IN6_IS_ADDR_UNSPECIFIED(&opt_bind_addr)) {
-		sin4.sin_addr.s_addr = INADDR_ANY;
-	    } else if (IN6_IS_ADDR_V4MAPPED(&opt_bind_addr) ||
-		       IN6_IS_ADDR_V4COMPAT(&opt_bind_addr)) {
-		sin4.sin_addr.s_addr = ((uint32_t*)&opt_bind_addr)[3];
-	    } else {
-		fprintf(stderr, "Invalid bind address specified\n");
-		exit(1);
-	    }
-
-	    sin = (const struct sockaddr*)&sin4;
-	    sin_len = sizeof(sin4);
-	}
-
-	setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (const char *) &on, sizeof(on));
-	if (bind(sock, sin, sin_len)) {
-	    perror("bind");
-	    fprintf(stderr, "Couldn't bind to tcp port %d\n", port);
+	    fprintf(stderr, "Invalid bind address specified\n");
 	    exit(1);
 	}
 
-	if (listen(sock, SOMAXCONN)) {
-	    perror("listen");
-	    fprintf(stderr, "Couldn't listen on tcp socket\n");
-	    exit(1);
-	}
+	sin = (const struct sockaddr*)&sin4;
+	sin_len = sizeof(sin4);
+    }
+
+    setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (const char *) &on, sizeof(on));
+    if (bind(sock, sin, sin_len)) {
+	perror("bind");
+	fprintf(stderr, "Couldn't bind to tcp port %d\n", port);
+	exit(1);
+    }
+
+    if (listen(sock, SOMAXCONN)) {
+	perror("listen");
+	fprintf(stderr, "Couldn't listen on tcp socket\n");
+	exit(1);
     }
 
     transp = svc_vc_create(sock, 0, 0);
