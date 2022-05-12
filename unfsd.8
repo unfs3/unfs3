@@ -111,11 +111,10 @@ protocol. When this option is present, only TCP connections are
 serviced.
 .TP
 .B \-p
-Do not register with the portmapper. This will prevent other hosts from
+Do not register with portmap/rpcbind. This will prevent other hosts from
 finding out the port numbers used for the MOUNT and NFS services by
-querying the portmap daemon. Clients
-will need to manually specify the port numbers to use (on Linux clients,
-use the
+querying the portmap or rpcbind daemon. Clients will need to manually
+specify the port numbers to use (on Linux clients, use the
 .BR mountport " and " port
 mount options).
 .TP
