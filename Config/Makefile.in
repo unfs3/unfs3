@@ -15,8 +15,9 @@ all: lib.a
 lib.a: $(OBJS)
 	$(AR) crs lib.a $(OBJS)
 
-y.tab.h y.tab.c: $(srcdir)/exports.y
+y.tab.c: $(srcdir)/exports.y
 	$(YACC) -d $(srcdir)/exports.y
+y.tab.h: y.tab.c
 
 y.tab.o: y.tab.c $(srcdir)/exports.h $(top_srcdir)/nfs.h $(top_srcdir)/mount.h $(top_srcdir)/daemon.h
 
