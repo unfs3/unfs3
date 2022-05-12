@@ -42,7 +42,7 @@ $(CONFOBJ): FORCE
 $(EXTRAOBJ): FORCE
 	$(MAKE) -C $(@D)
 
-install: unfsd$(EXEEXT)
+install:
 	$(INSTALL) -d $(DESTDIR)$(sbindir)
 	$(INSTALL) -d $(DESTDIR)$(mandir)/man7
 	$(INSTALL) -d $(DESTDIR)$(mandir)/man8
@@ -51,7 +51,7 @@ install: unfsd$(EXEEXT)
 	$(INSTALL_DATA) $(srcdir)/unfsd.8       $(DESTDIR)$(mandir)/man8/unfsd.8
 
 # Not installed by default, since it installs files outside prefix
-install-init: unfsd.init
+install-init:
 	$(INSTALL) -d $(DESTDIR)/etc/init.d
 	$(INSTALL) $(srcdir)/unfsd.init $(DESTDIR)/etc/init.d/unfsd
 
