@@ -29,13 +29,18 @@ DESTDIR =
 
 VPATH = $(srcdir)
 
-all: subdirs unfsd$(EXEEXT)
+.PHONY: FORCE
+
+all: unfsd$(EXEEXT)
 
 unfsd$(EXEEXT): $(OBJS) $(CONFOBJ) $(EXTRAOBJ)
 	$(CC) -o $@ $(OBJS) $(CONFOBJ) $(EXTRAOBJ) $(LDFLAGS)
 
-subdirs:
-	for i in $(SUBDIRS); do (cd $$i && $(MAKE) all) || exit; done
+$(CONFOBJ): FORCE
+	$(MAKE) -C $(@D)
+
+$(EXTRAOBJ): FORCE
+	$(MAKE) -C $(@D)
 
 install: unfsd$(EXEEXT)
 	$(INSTALL) -d $(DESTDIR)$(sbindir)
