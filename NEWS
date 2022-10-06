@@ -22,6 +22,10 @@ Version 0.9.23
   - include AFS support for better serving of files from AFS filesystems
   - use svc_getreq_poll() when available
   - fix serving files larger than 4GB from Windows
+  - better support for 64-bit systems
+  - fixes for macOS and Windows support
+  - fixes when cross compiling
+  - better support for exporting FAT filesystems
 
 Version 0.9.22
 
