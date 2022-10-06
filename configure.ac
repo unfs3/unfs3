@@ -1,4 +1,4 @@
-AC_INIT([unfs3],[0.9.23])
+AC_INIT([unfs3],[0.10.0])
 AC_CONFIG_MACRO_DIRS([m4])
 AC_CONFIG_HEADER(config.h)
 AC_PROG_INSTALL
