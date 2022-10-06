@@ -95,7 +95,7 @@ unfs3-$(VERSION).tar.gz:
 	 unfs3-$(VERSION)/md5.h \
 	 unfs3-$(VERSION)/xdr.h \
 	 unfs3-$(VERSION)/attr.c \
-	 unfs3-$(VERSION)/README \
+	 unfs3-$(VERSION)/README.md \
 	 unfs3-$(VERSION)/backend.h \
 	 unfs3-$(VERSION)/password.c \
 	 unfs3-$(VERSION)/README.nfsroot \
