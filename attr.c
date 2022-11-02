@@ -18,6 +18,8 @@
 #include <utime.h>
 #include <errno.h>
 #include <dirent.h>
+#include <stdlib.h>
+#include <string.h>
 
 #include "backend.h"
 #include "nfs.h"
