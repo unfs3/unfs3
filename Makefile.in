@@ -138,7 +138,6 @@ unfs3-$(VERSION).tar.gz:
 	 unfs3-$(VERSION)/daemon.c \
 	 unfs3-$(VERSION)/error.h \
 	 unfs3-$(VERSION)/contrib/nfsotpclient/README \
-	 unfs3-$(VERSION)/contrib/nfsotpclient/mountclient \
 	 unfs3-$(VERSION)/contrib/nfsotpclient/mountclient/__init__.py \
 	 unfs3-$(VERSION)/contrib/nfsotpclient/mountclient/mountpacker.py \
 	 unfs3-$(VERSION)/contrib/nfsotpclient/mountclient/mountconstants.py \
