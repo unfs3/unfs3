@@ -90,6 +90,11 @@ unfs3-$(VERSION).tar.gz:
 	rm -rf unfs3-$(VERSION)
 	ln -sf `cd $(srcdir) && /bin/pwd` unfs3-$(VERSION)
 
+	# Get a rough first draft with:
+	#
+	#   git ls-tree -r HEAD --name-only | sed 's@^.*$@  unfs3-$(VERSION)/\0 \\@'"
+	#
+	#
 	tar zcf unfs3-$(VERSION).tar.gz \
 	 unfs3-$(VERSION)/BRANCHES \
 	 unfs3-$(VERSION)/CREDITS \
@@ -115,6 +120,7 @@ unfs3-$(VERSION).tar.gz:
 	 unfs3-$(VERSION)/backend.h \
 	 unfs3-$(VERSION)/backend_unix.h \
 	 unfs3-$(VERSION)/backend_win32.h \
+	 unfs3-$(VERSION)/bootstrap \
 	 unfs3-$(VERSION)/config.h.in \
 	 unfs3-$(VERSION)/configure \
 	 unfs3-$(VERSION)/configure.ac \
@@ -144,6 +150,7 @@ unfs3-$(VERSION).tar.gz:
 	 unfs3-$(VERSION)/install-sh \
 	 unfs3-$(VERSION)/locate.c \
 	 unfs3-$(VERSION)/locate.h \
+	 unfs3-$(VERSION)/m4/unfs3-compile-warnings.m4 \
 	 unfs3-$(VERSION)/md5.c \
 	 unfs3-$(VERSION)/md5.h \
 	 unfs3-$(VERSION)/mount.c \
