@@ -91,79 +91,79 @@ unfs3-$(VERSION).tar.gz:
 	ln -sf `cd $(srcdir) && /bin/pwd` unfs3-$(VERSION)
 
 	tar zcf unfs3-$(VERSION).tar.gz \
-	 unfs3-$(VERSION)/fd_cache.c \
-	 unfs3-$(VERSION)/md5.h \
-	 unfs3-$(VERSION)/xdr.h \
-	 unfs3-$(VERSION)/attr.c \
-	 unfs3-$(VERSION)/README.md \
-	 unfs3-$(VERSION)/backend.h \
-	 unfs3-$(VERSION)/password.c \
-	 unfs3-$(VERSION)/README.nfsroot \
-	 unfs3-$(VERSION)/error.c \
-	 unfs3-$(VERSION)/winsupport.c \
-	 unfs3-$(VERSION)/fh_cache.h \
-	 unfs3-$(VERSION)/user.c \
-	 unfs3-$(VERSION)/unfs3.spec \
-	 unfs3-$(VERSION)/winsupport.h \
-	 unfs3-$(VERSION)/winerrno.h \
-	 unfs3-$(VERSION)/readdir.h \
-	 unfs3-$(VERSION)/nfs.c \
-	 unfs3-$(VERSION)/configure \
-	 unfs3-$(VERSION)/xdr.c \
-	 unfs3-$(VERSION)/install-sh \
-	 unfs3-$(VERSION)/mount.c \
-	 unfs3-$(VERSION)/password.h \
+	 unfs3-$(VERSION)/BRANCHES \
+	 unfs3-$(VERSION)/CREDITS \
+	 unfs3-$(VERSION)/Config/Makefile.in \
+	 unfs3-$(VERSION)/Config/exports.h \
+	 unfs3-$(VERSION)/Config/exports.l \
+	 unfs3-$(VERSION)/Config/exports.y \
 	 unfs3-$(VERSION)/Extras/Makefile.in \
 	 unfs3-$(VERSION)/Extras/cluster.c \
-	 unfs3-$(VERSION)/Extras/tags.7 \
 	 unfs3-$(VERSION)/Extras/cluster.h \
-	 unfs3-$(VERSION)/NEWS \
-	 unfs3-$(VERSION)/CREDITS \
-	 unfs3-$(VERSION)/aclocal.m4 \
-	 unfs3-$(VERSION)/daemon.h \
-	 unfs3-$(VERSION)/doc/TODO \
-	 unfs3-$(VERSION)/doc/README.win \
-	 unfs3-$(VERSION)/doc/kirch1.txt \
-	 unfs3-$(VERSION)/doc/passwords.txt \
-	 unfs3-$(VERSION)/unfsd.8 \
+	 unfs3-$(VERSION)/Extras/tags.7 \
+	 unfs3-$(VERSION)/LICENSE \
 	 unfs3-$(VERSION)/Makefile.in \
-	 unfs3-$(VERSION)/unfsd.init \
-	 unfs3-$(VERSION)/backend_win32.h \
-	 unfs3-$(VERSION)/indent-all \
+	 unfs3-$(VERSION)/NEWS \
+	 unfs3-$(VERSION)/README.md \
+	 unfs3-$(VERSION)/README.nfsroot \
+	 unfs3-$(VERSION)/aclocal.m4 \
+	 unfs3-$(VERSION)/afsgettimes.c \
+	 unfs3-$(VERSION)/afssupport.c \
+	 unfs3-$(VERSION)/afssupport.h \
+	 unfs3-$(VERSION)/attr.c \
+	 unfs3-$(VERSION)/attr.h \
+	 unfs3-$(VERSION)/backend.h \
 	 unfs3-$(VERSION)/backend_unix.h \
-	 unfs3-$(VERSION)/nfs.h \
-	 unfs3-$(VERSION)/locate.c \
-	 unfs3-$(VERSION)/BRANCHES \
-	 unfs3-$(VERSION)/fd_cache.h \
-	 unfs3-$(VERSION)/daemon.c \
-	 unfs3-$(VERSION)/error.h \
+	 unfs3-$(VERSION)/backend_win32.h \
+	 unfs3-$(VERSION)/config.h.in \
+	 unfs3-$(VERSION)/configure \
+	 unfs3-$(VERSION)/configure.ac \
 	 unfs3-$(VERSION)/contrib/nfsotpclient/README \
 	 unfs3-$(VERSION)/contrib/nfsotpclient/mountclient/__init__.py \
-	 unfs3-$(VERSION)/contrib/nfsotpclient/mountclient/mountpacker.py \
 	 unfs3-$(VERSION)/contrib/nfsotpclient/mountclient/mountconstants.py \
+	 unfs3-$(VERSION)/contrib/nfsotpclient/mountclient/mountpacker.py \
 	 unfs3-$(VERSION)/contrib/nfsotpclient/mountclient/mounttypes.py \
 	 unfs3-$(VERSION)/contrib/nfsotpclient/nfsotpclient.py \
 	 unfs3-$(VERSION)/contrib/nfsotpclient/rpc.py \
 	 unfs3-$(VERSION)/contrib/rpcproxy/rpcproxy \
-	 unfs3-$(VERSION)/LICENSE \
-	 unfs3-$(VERSION)/fh.h \
+	 unfs3-$(VERSION)/daemon.c \
+	 unfs3-$(VERSION)/daemon.h \
+	 unfs3-$(VERSION)/doc/README.win \
+	 unfs3-$(VERSION)/doc/TODO \
+	 unfs3-$(VERSION)/doc/kirch1.txt \
+	 unfs3-$(VERSION)/doc/passwords.txt \
+	 unfs3-$(VERSION)/error.c \
+	 unfs3-$(VERSION)/error.h \
+	 unfs3-$(VERSION)/fd_cache.c \
+	 unfs3-$(VERSION)/fd_cache.h \
 	 unfs3-$(VERSION)/fh.c \
-	 unfs3-$(VERSION)/Config/exports.y \
-	 unfs3-$(VERSION)/Config/exports.l \
-	 unfs3-$(VERSION)/Config/exports.h \
-	 unfs3-$(VERSION)/Config/Makefile.in \
+	 unfs3-$(VERSION)/fh.h \
+	 unfs3-$(VERSION)/fh_cache.c \
+	 unfs3-$(VERSION)/fh_cache.h \
+	 unfs3-$(VERSION)/indent-all \
+	 unfs3-$(VERSION)/install-sh \
+	 unfs3-$(VERSION)/locate.c \
 	 unfs3-$(VERSION)/locate.h \
 	 unfs3-$(VERSION)/md5.c \
-	 unfs3-$(VERSION)/fh_cache.c \
-	 unfs3-$(VERSION)/config.h.in \
-	 unfs3-$(VERSION)/attr.h \
-	 unfs3-$(VERSION)/configure.ac \
+	 unfs3-$(VERSION)/md5.h \
+	 unfs3-$(VERSION)/mount.c \
 	 unfs3-$(VERSION)/mount.h \
+	 unfs3-$(VERSION)/nfs.c \
+	 unfs3-$(VERSION)/nfs.h \
+	 unfs3-$(VERSION)/password.c \
+	 unfs3-$(VERSION)/password.h \
 	 unfs3-$(VERSION)/readdir.c \
+	 unfs3-$(VERSION)/readdir.h \
+	 unfs3-$(VERSION)/unfs3.spec \
+	 unfs3-$(VERSION)/unfsd.8 \
+	 unfs3-$(VERSION)/unfsd.init \
+	 unfs3-$(VERSION)/user.c \
 	 unfs3-$(VERSION)/user.h \
-	 unfs3-$(VERSION)/afsgettimes.c \
-	 unfs3-$(VERSION)/afssupport.h \
-	 unfs3-$(VERSION)/afssupport.c
+	 unfs3-$(VERSION)/winerrno.h \
+	 unfs3-$(VERSION)/winsupport.c \
+	 unfs3-$(VERSION)/winsupport.h \
+	 unfs3-$(VERSION)/xdr.c \
+	 unfs3-$(VERSION)/xdr.h
 
 	rm -f unfs3-$(VERSION)
 
