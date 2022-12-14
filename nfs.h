@@ -62,7 +62,7 @@ typedef int32_t int32;
 #endif
 
 #ifndef HAVE_OFF64_T
-#ifdef __APPLE__
+#if defined(__APPLE__) || defined(__linux__)
 typedef off_t off64_t;
 #endif
 #endif
