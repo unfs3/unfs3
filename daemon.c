@@ -1052,6 +1052,8 @@ int main(int argc, char **argv)
 #endif				       /* WIN32 */
     int res;
 
+    int pipefd[2];
+
     /* flush stdout after each newline */
     setvbuf(stdout, NULL, _IOLBF, 0);
 
@@ -1117,11 +1119,24 @@ int main(int argc, char **argv)
 
 #ifndef WIN32
     if (opt_detach) {
+        if (pipe(pipefd) == -1) {
+            fprintf(stderr, "could not create a pipe\n");
+            exit(1);
+        }
+
 	pid = fork();
 	if (pid == -1) {
 	    fprintf(stderr, "could not fork into background\n");
 	    daemon_exit(0);
 	}
+        if (pid > 0) {
+            char buf;
+            close(pipefd[1]);
+            while (read(pipefd[0], &buf, 1) > 0) {
+                // do nothing until pipe closes
+            }
+            close(pipefd[0]);
+        }
     }
 #endif				       /* WIN32 */
 
@@ -1169,6 +1184,12 @@ int main(int argc, char **argv)
 	fd_cache_init();
 	get_squash_ids();
 	exports_parse();
+
+	if (opt_detach) {
+           close(pipefd[0]);
+           write(pipefd[1], "1", 1);
+           close(pipefd[1]);
+        }
 
 	unfs3_svc_run();
 	exit(1);
