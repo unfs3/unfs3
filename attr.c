@@ -312,7 +312,12 @@ static nfsstat3 set_time(const char *path, backend_statstruct buf, sattr3 new)
 	stamps[1].tv_sec = new_mtime;
 	stamps[1].tv_usec = 0;
 
+#if HAVE_LUTIMES
+	res = backend_lutimes(path, stamps);
+#else
 	res = backend_utimes(path, stamps);
+#endif
+
 	if (res == -1)
 	    return setattr_err();
     }
