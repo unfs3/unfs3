@@ -970,6 +970,8 @@ static void unfs3_svc_run(void)
 {
 #if defined(HAVE_SVC_GETREQ_POLL) && HAVE_DECL_SVC_POLLFD
     int r;
+    struct pollfd *pollfds = NULL;
+    int pollfds_len = 0;
 #else
     fd_set readfds;
     struct timeval tv;
@@ -979,7 +981,22 @@ static void unfs3_svc_run(void)
 	fd_cache_close_inactive();
 
 #if defined(HAVE_SVC_GETREQ_POLL) && HAVE_DECL_SVC_POLLFD
-	r = poll(svc_pollfd, svc_max_pollfd, 2*1000);
+	if (pollfds_len != svc_max_pollfd) {
+		pollfds = realloc(pollfds, sizeof(struct pollfd) * svc_max_pollfd);
+		if (pollfds == NULL) {
+			perror("unfs3_svc_run: realloc failed");
+			return;
+		}
+		pollfds_len = svc_max_pollfd;
+	}
+
+	for (int i = 0;i < svc_max_pollfd;i++) {
+		pollfds[i].fd = svc_pollfd[i].fd;
+		pollfds[i].events = svc_pollfd[i].events;
+		pollfds[i].revents = 0;
+	}
+
+	r = poll(pollfds, svc_max_pollfd, 2*1000);
 	if (r < 0) {
 		if (errno == EINTR) {
 		    continue;
@@ -988,7 +1005,7 @@ static void unfs3_svc_run(void)
 		return;
 	}
 	else if (r)
-		svc_getreq_poll(svc_pollfd, r);
+		svc_getreq_poll(pollfds, r);
 
 #else
 	readfds = svc_fdset;
@@ -1014,6 +1031,10 @@ static void unfs3_svc_run(void)
 	}
 #endif
     }
+
+#if defined(HAVE_SVC_GETREQ_POLL) && HAVE_DECL_SVC_POLLFD
+    free(pollfds);
+#endif
 }
 
 /*
