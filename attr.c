@@ -285,7 +285,7 @@ post_op_attr get_post_cached(struct svc_req * req)
 static nfsstat3 set_time(const char *path, backend_statstruct buf, sattr3 new)
 {
     time_t new_atime, new_mtime;
-    struct utimbuf utim;
+    struct timeval stamps[2];
     int res;
 
     /* set atime and mtime */
@@ -307,10 +307,17 @@ static nfsstat3 set_time(const char *path, backend_statstruct buf, sattr3 new)
 	else			       /* DONT_CHANGE */
 	    new_mtime = buf.st_mtime;
 
-	utim.actime = new_atime;
-	utim.modtime = new_mtime;
+	stamps[0].tv_sec = new_atime;
+	stamps[0].tv_usec = 0;
+	stamps[1].tv_sec = new_mtime;
+	stamps[1].tv_usec = 0;
 
-	res = backend_utime(path, &utim);
+#if HAVE_LUTIMES
+	res = backend_lutimes(path, stamps);
+#else
+	res = backend_utimes(path, stamps);
+#endif
+
 	if (res == -1)
 	    return setattr_err();
     }

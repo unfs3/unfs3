@@ -32,6 +32,7 @@ AC_CHECK_FUNCS(setresuid setresgid)
 AC_CHECK_FUNCS(vsyslog)
 AC_CHECK_FUNCS(lchown)
 AC_CHECK_FUNCS(setgroups)
+AC_CHECK_FUNCS(lutimes)
 UNFS3_COMPILE_WARNINGS
 
 PKG_CHECK_MODULES([TIRPC], [libtirpc])
