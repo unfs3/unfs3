@@ -438,7 +438,7 @@ static int store_create_verifier(char *obj, createverf3 verf)
 {
     char hashbuf[9];
     uint32 hash;
-    struct utimbuf ubuf;
+    struct timeval stamps[2];
 
     /* FAT has a very limited number of bits for file times, so we hash
        the verifier down to 32 bits to be able to fit it in. This
@@ -457,16 +457,19 @@ static int store_create_verifier(char *obj, createverf3 verf)
        poor resolution of 1 day. So we need to spread things out. */
 
     /* 29 bits in WriteTime */
-    ubuf.modtime = ((hash & 0x1fffffff) * 2) + FT80SEC;
+    stamps[1].tv_sec = ((hash & 0x1fffffff) * 2) + FT80SEC;
+    stamps[1].tv_usec = 0;
+
     /* And the remaining 3 bits in AccessTime. Things get hairy here as
        Windows stores time stamps in local time on FAT. But since we only
        have a resolution of a whole day, the conversion between UTC and
        local time might shift us over to the wrong day. To handle this
        we sacrifice a few bits and shift the value up enough that we can
        mask off any conversion noise when we compare later. */
-    ubuf.actime = (((((hash >> 29) * 24) << 6) | 0x20) * 3600) + FT80SEC;
+    stamps[0].tv_sec = (((((hash >> 29) * 24) << 6) | 0x20) * 3600) + FT80SEC;
+    stamps[0].tv_usec = 0;
 
-    return backend_utime(obj, &ubuf);
+    return backend_utimes(obj, stamps);
 }
 
 /*

@@ -909,7 +909,7 @@ int win_chmod(const char *path, mode_t mode)
     return ret;
 }
 
-int win_utime(const char *path, const struct utimbuf *times)
+int win_utimes(const char *path, const struct timeval times[2])
 {
     wchar_t *winpath;
     int ret = 0;
@@ -929,12 +929,12 @@ int win_utime(const char *path, const struct utimbuf *times)
 	return -1;
     }
 
-    /* Unfortunately, we cannot use utime(), since it doesn't support
-       directories. */
-    fti = ((unsigned long long)times->actime + FT70SEC) * 10000000;
+    fti = ((unsigned long long)times[0].tv_sec + FT70SEC) * 10000000;
+    fti += ((unsigned long long)times[0].tv_usec) * 10;
     atime.dwHighDateTime = (fti >> 32) & 0xffffffff;
     atime.dwLowDateTime = fti & 0xffffffff;
-    fti = ((unsigned long long)times->modtime + FT70SEC) * 10000000;
+    fti = ((unsigned long long)times[1].tv_sec + FT70SEC) * 10000000;
+    fti += ((unsigned long long)times[1].tv_usec) * 10;
     mtime.dwHighDateTime = (fti >> 32) & 0xffffffff;
     mtime.dwLowDateTime = fti & 0xffffffff;
 

@@ -119,7 +119,7 @@ int win_link(const char *oldpath, const char *newpath);
 int win_statvfs(const char *path, backend_statvfsstruct *buf);
 int win_remove(const char *pathname);
 int win_chmod(const char *path, mode_t mode);
-int win_utime(const char *path, const struct utimbuf *times);
+int win_utimes(const char *path, const struct timeval times[2]);
 int win_rmdir(const char *path);
 int win_rename(const char *oldpath, const char *newpath);
 int win_gen_nonce(char *nonce);

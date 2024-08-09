@@ -62,7 +62,7 @@
 #define backend_statvfs win_statvfs
 #define backend_symlink win_symlink
 #define backend_truncate win_truncate
-#define backend_utime win_utime
+#define backend_utimes win_utimes
 #define backend_init win_init
 #define backend_dirstream UNFS3_WIN_DIR
 #define backend_fsinfo_properties FSF3_HOMOGENEOUS | FSF3_CANSETTIME;
