@@ -148,12 +148,15 @@ READDIR3res read_dir(const char *path, cookie3 cookie, cookieverf3 verf,
 
 	    strcpy(&obj[i * NFS_MAXPATHLEN], this->d_name);
 
-#if defined(WIN32) || defined(AFS_SUPPORT)
-	    /* See comment in attr.c:get_post_buf */
-	    entry[i].fileid = (buf.st_ino >> 32) ^ (buf.st_ino & 0xffffffff);
-#else
-	    entry[i].fileid = buf.st_ino;
-#endif
+            if(opt_32_bit_truncate) {
+                /* See comment in attr.c:get_post_buf */
+                entry[i].fileid =
+                    (buf.st_ino >> 32) ^ (buf.st_ino & 0xffffffff);
+            }
+            else {
+                entry[i].fileid = buf.st_ino;
+            }
+
 	    entry[i].name = &obj[i * NFS_MAXPATHLEN];
 	    entry[i].cookie = (cookie + 1 + i) | rcookie;
 	    entry[i].nextentry = NULL;

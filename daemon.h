@@ -45,5 +45,6 @@ extern char	*opt_cluster_path;
 extern int	opt_singleuser;
 extern int	opt_brute_force;
 extern int	opt_readable_executables;
+extern int      opt_32_bit_truncate;
 
 #endif

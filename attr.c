@@ -199,17 +199,19 @@ post_op_attr get_post_buf(backend_statstruct buf, struct svc_req * req)
        dev_t is signed, such as 32-bit OS X. */
     result.post_op_attr_u.attributes.fsid &= 0xFFFFFFFF;
 
-#if defined(WIN32) || defined(AFS_SUPPORT)
-    /* Recent Linux kernels (2.6.24 and newer) expose large fileids even to
-       non-LFS 32-bit applications, unless kernel parameter
-       nfs.enable_ino64=0. This means that applications will fail with
-       EOVERFLOW. On Windows, we always have large st_ino:s. To avoid
-       trouble, we truncate to 32 bits */
-    result.post_op_attr_u.attributes.fileid =
-	(buf.st_ino >> 32) ^ (buf.st_ino & 0xffffffff);
-#else
-    result.post_op_attr_u.attributes.fileid = buf.st_ino;
-#endif
+    if(opt_32_bit_truncate) {
+     /* Recent Linux kernels (2.6.24 and newer) expose large fileids even to
+        non-LFS 32-bit applications, unless kernel parameter
+        nfs.enable_ino64=0. This means that applications will fail with
+        EOVERFLOW. On Windows, we always have large st_ino:s. To avoid
+        trouble, we truncate to 32 bits */
+      result.post_op_attr_u.attributes.fileid =
+        (buf.st_ino >> 32) ^ (buf.st_ino & 0xffffffff);
+    }
+    else {
+      result.post_op_attr_u.attributes.fileid = buf.st_ino;
+    }
+
     result.post_op_attr_u.attributes.atime.seconds = buf.st_atime;
     result.post_op_attr_u.attributes.atime.nseconds = 0;
     result.post_op_attr_u.attributes.mtime.seconds = buf.st_mtime;
