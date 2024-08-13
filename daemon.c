@@ -1062,9 +1062,17 @@ void regenerate_write_verifier(void)
  */
 void change_readdir_cookie(void)
 {
-    rcookie = rcookie >> 32;
-    ++rcookie;
-    rcookie = rcookie << 32;
+    if(opt_32_bit_truncate) {
+        rcookie = rcookie >> 20;
+        ++rcookie;
+        rcookie &= 0xFFF;
+        rcookie = rcookie << 20;
+    }
+    else {
+        rcookie = rcookie >> 32;
+        ++rcookie;
+        rcookie = rcookie << 32;
+    }
 }
 
 /*

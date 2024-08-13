@@ -77,12 +77,22 @@ READDIR3res read_dir(const char *path, cookie3 cookie, cookieverf3 verf,
     char scratch[NFS_MAXPATHLEN];
 
     /* check upper part of cookie */
-    upper = cookie & 0xFFFFFFFF00000000ULL;
+    if(opt_32_bit_truncate) {
+      upper = cookie & 0xFFF00000ULL;
+    }
+    else {
+      upper = cookie & 0xFFFFFFFF00000000ULL;
+    }
     if (cookie != 0 && upper != rcookie) {
       /* ignore cookie if unexpected so we restart from the beginning */
       cookie = 0;
     }
-    cookie &= 0xFFFFFFFFULL;
+    if(opt_32_bit_truncate) {
+      cookie &= 0xFFFFFULL;
+    }
+    else {
+      cookie &= 0xFFFFFFFFULL;
+    }
 
     /* we refuse to return more than 4k from READDIR */
     if (count > 4096)
