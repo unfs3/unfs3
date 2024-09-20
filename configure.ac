@@ -35,9 +35,17 @@ AC_CHECK_FUNCS(setgroups)
 AC_CHECK_FUNCS(lutimes)
 UNFS3_COMPILE_WARNINGS
 
-PKG_CHECK_MODULES([TIRPC], [libtirpc])
+PKG_CHECK_MODULES([TIRPC], [libtirpc], [HAVE_TIRPC=yes], [HAVE_TIRPC=no])
 AC_SUBST(TIRPC_CFLAGS)
 AC_SUBST(TIRPC_LIBS)
+if test "x$HAVE_TIRPC" = xyes; then
+  AC_DEFINE(HAVE_TIRPC, 1, [Define if you have libtirpc])
+fi
+
+if test "x$HAVE_TIRPC" != xyes; then
+	# FIXME: check for rpc
+	:
+fi
 
 saved_CPPFLAGS="$CPPFLAGS"
 saved_LIBS="$LIBS"
