@@ -389,12 +389,21 @@ void daemon_exit(int error)
 #endif				       /* WIN32 */
 
     if (opt_portmapper) {
+#ifdef HAVE_SVC_REG
 	svc_unreg(MOUNTPROG, MOUNTVERS1);
 	svc_unreg(MOUNTPROG, MOUNTVERS3);
+#else
+	svc_unregister(MOUNTPROG, MOUNTVERS1);
+	svc_unregister(MOUNTPROG, MOUNTVERS3);
+#endif
     }
 
     if (opt_portmapper) {
+#ifdef HAVE_SVC_REG
 	svc_unreg(NFS3_PROGRAM, NFS_V3);
+#else
+	svc_unregister(NFS3_PROGRAM, NFS_V3);
+#endif
     }
 
     if (error == SIGSEGV)
@@ -712,6 +721,11 @@ static int get_address_family(int fd)
     return addr.ss_family;
 }
 
+#ifndef HAVE_SVC_REG
+typedef unsigned long rpcprog_t;
+typedef unsigned long rpcvers_t;
+#endif
+
 static void _register_service(SVCXPRT *transp,
 			      const rpcprog_t prognum,
 			      const char *progname,
@@ -719,10 +733,16 @@ static void _register_service(SVCXPRT *transp,
 			      const char *versname,
 			      void (*dispatch)(struct svc_req *, SVCXPRT *))
 {
-    int type, family;
+    int type;
     socklen_t len;
+
+#ifdef HAVE_SVC_REG
+    int family;
     const char *netid;
     struct netconfig *nconf = NULL;
+#else
+    unsigned long proto;
+#endif
 
     len = sizeof(type);
     if (getsockopt(transp->xp_sock, SOL_SOCKET, SO_TYPE, &type, &len)) {
@@ -732,6 +752,7 @@ static void _register_service(SVCXPRT *transp,
 	daemon_exit(0);
     }
 
+#ifdef HAVE_SVC_REG
     if (type == SOCK_STREAM)
 	netid = "tcp";
     else
@@ -786,6 +807,22 @@ static void _register_service(SVCXPRT *transp,
 
     if (nconf != NULL)
 	freenetconfigent(nconf);
+#else
+    if (type == SOCK_STREAM)
+	proto = IPPROTO_TCP;
+    else
+	proto = IPPROTO_UDP;
+
+    if (!opt_portmapper)
+	proto = 0;
+
+    if (!svc_register(transp, prognum, versnum, dispatch, proto)) {
+	fprintf(stderr, "unable to register (%s, %s, %s).\n",
+		progname, versname,
+		(proto == IPPROTO_TCP) ? "tcp" : "udp");
+	daemon_exit(0);
+    }
+#endif
 }
 
 #define register_service(t, p, v, d) \
@@ -794,7 +831,11 @@ static void _register_service(SVCXPRT *transp,
 static void register_nfs_service(SVCXPRT * udptransp, SVCXPRT * tcptransp)
 {
     if (opt_portmapper) {
+#ifdef HAVE_SVC_REG
 	svc_unreg(NFS3_PROGRAM, NFS_V3);
+#else
+	svc_unregister(NFS3_PROGRAM, NFS_V3);
+#endif
     }
 
     if (udptransp != NULL) {
@@ -811,8 +852,13 @@ static void register_nfs_service(SVCXPRT * udptransp, SVCXPRT * tcptransp)
 static void register_mount_service(SVCXPRT * udptransp, SVCXPRT * tcptransp)
 {
     if (opt_portmapper) {
+#ifdef HAVE_SVC_REG
 	svc_unreg(MOUNTPROG, MOUNTVERS1);
 	svc_unreg(MOUNTPROG, MOUNTVERS3);
+#else
+	svc_unregister(MOUNTPROG, MOUNTVERS1);
+	svc_unregister(MOUNTPROG, MOUNTVERS3);
+#endif
     }
 
     if (udptransp != NULL) {

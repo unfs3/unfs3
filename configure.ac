@@ -53,6 +53,7 @@ CPPFLAGS="$CPPFLAGS $TIRPC_CFLAGS"
 LIBS="$LIBS $TIRPC_LIBS"
 
 AC_CHECK_FUNCS(svc_getreq_poll)
+AC_CHECK_FUNCS(svc_reg)
 
 # Old libtirpc has not implement poll() fully
 AC_CHECK_DECLS(svc_pollfd,,,[#include <rpc/rpc.h>])
