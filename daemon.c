@@ -677,6 +677,22 @@ static void mountprog_3(struct svc_req *rqstp, register SVCXPRT * transp)
     return;
 }
 
+static int get_address_family(int fd)
+{
+    struct sockaddr_storage addr;
+    socklen_t len = sizeof(addr);
+    int res;
+
+    /* SO_DOMAIN is only Linux, so we have to use getsockname() */
+    res = getsockname(fd, (struct sockaddr*)&addr, &len);
+    if (res < 0) {
+        perror("getsockname");
+	return -1;
+    }
+
+    return addr.ss_family;
+}
+
 static void _register_service(SVCXPRT *transp,
 			      const rpcprog_t prognum,
 			      const char *progname,
@@ -684,7 +700,7 @@ static void _register_service(SVCXPRT *transp,
 			      const char *versname,
 			      void (*dispatch)(struct svc_req *, SVCXPRT *))
 {
-    int type, domain;
+    int type, family;
     socklen_t len;
     const char *netid;
     struct netconfig *nconf = NULL;
@@ -722,15 +738,14 @@ static void _register_service(SVCXPRT *transp,
     if (nconf == NULL)
 	return;
 
-    len = sizeof(domain);
-    if (getsockopt(transp->xp_fd, SOL_SOCKET, SO_DOMAIN, &domain, &len)) {
-	perror("getsockopt");
+    family = get_address_family(transp->xp_fd);
+    if (family == -1) {
 	fprintf(stderr, "unable to register (%s, %s).\n",
 		progname, versname);
 	daemon_exit(0);
     }
 
-    if (domain != PF_INET6)
+    if (family != AF_INET6)
 	return;
 
     if (type == SOCK_STREAM)
@@ -814,8 +829,7 @@ static SVCXPRT *create_udp_transport(unsigned int port)
 	exit(1);
     }
 
-    int domain;
-    socklen_t len;
+    int family;
     const int on = 1;
 
     const struct sockaddr *sin;
@@ -823,14 +837,13 @@ static SVCXPRT *create_udp_transport(unsigned int port)
     struct sockaddr_in sin4;
     struct sockaddr_in6 sin6;
 
-    len = sizeof(domain);
-    if (getsockopt(sock, SOL_SOCKET, SO_DOMAIN, &domain, &len)) {
-	perror("getsockopt");
+    family = get_address_family(sock);
+    if (family == -1) {
 	fprintf(stderr, "Couldn't create a listening udp socket\n");
 	exit(1);
     }
 
-    if (domain == PF_INET6) {
+    if (family == AF_INET6) {
 	/* Make sure we null the entire sockaddr_in6 structure */
 	memset(&sin6, 0, sizeof(struct sockaddr_in6));
 
@@ -894,8 +907,7 @@ static SVCXPRT *create_tcp_transport(unsigned int port)
 	exit(1);
     }
 
-    int domain;
-    socklen_t len;
+    int family;
     const int on = 1;
 
     const struct sockaddr *sin;
@@ -903,14 +915,13 @@ static SVCXPRT *create_tcp_transport(unsigned int port)
     struct sockaddr_in sin4;
     struct sockaddr_in6 sin6;
 
-    len = sizeof(domain);
-    if (getsockopt(sock, SOL_SOCKET, SO_DOMAIN, &domain, &len)) {
-	perror("getsockopt");
+    family = get_address_family(sock);
+    if (family == -1) {
 	fprintf(stderr, "Couldn't create a listening tcp socket\n");
 	exit(1);
     }
 
-    if (domain == PF_INET6) {
+    if (family == AF_INET6) {
 	/* Make sure we null the entire sockaddr_in6 structure */
 	memset(&sin6, 0, sizeof(struct sockaddr_in6));
 
