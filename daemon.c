@@ -116,7 +116,11 @@ int get_remote(struct svc_req *rqstp, struct in6_addr *addr6)
 
     memset(addr6, 0, sizeof(struct in6_addr));
 
+#ifdef svc_getrpccaller
     saddr = (const struct sockaddr *) svc_getrpccaller(rqstp->rq_xprt)->buf;
+#else
+    saddr = (const struct sockaddr *) svc_getcaller(rqstp->rq_xprt);
+#endif
 
     if (saddr->sa_family == AF_INET6) {
 	memcpy(addr6, &((const struct sockaddr_in6*)saddr)->sin6_addr, sizeof(struct in6_addr));
@@ -142,7 +146,11 @@ short get_port(struct svc_req *rqstp)
 {
     const struct sockaddr *saddr;
 
+#ifdef svc_getrpccaller
     saddr = (const struct sockaddr *) svc_getrpccaller(rqstp->rq_xprt)->buf;
+#else
+    saddr = (const struct sockaddr *) svc_getcaller(rqstp->rq_xprt);
+#endif
 
     if (saddr->sa_family == AF_INET6)
         return ((const struct sockaddr_in6*)saddr)->sin6_port;
