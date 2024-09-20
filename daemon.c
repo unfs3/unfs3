@@ -172,7 +172,7 @@ int get_socket_type(struct svc_req *rqstp)
 
     l = sizeof(v);
 
-    res = getsockopt(rqstp->rq_xprt->xp_fd, SOL_SOCKET, SO_TYPE, &v, &l);
+    res = getsockopt(rqstp->rq_xprt->xp_sock, SOL_SOCKET, SO_TYPE, &v, &l);
 
     if (res < 0) {
 	logmsg(LOG_CRIT, "unable to determine socket type");
@@ -725,7 +725,7 @@ static void _register_service(SVCXPRT *transp,
     struct netconfig *nconf = NULL;
 
     len = sizeof(type);
-    if (getsockopt(transp->xp_fd, SOL_SOCKET, SO_TYPE, &type, &len)) {
+    if (getsockopt(transp->xp_sock, SOL_SOCKET, SO_TYPE, &type, &len)) {
 	perror("getsockopt");
 	fprintf(stderr, "unable to register (%s, %s).\n",
 		progname, versname);
@@ -757,7 +757,7 @@ static void _register_service(SVCXPRT *transp,
     if (nconf == NULL)
 	return;
 
-    family = get_address_family(transp->xp_fd);
+    family = get_address_family(transp->xp_sock);
     if (family == -1) {
 	fprintf(stderr, "unable to register (%s, %s).\n",
 		progname, versname);
