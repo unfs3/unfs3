@@ -140,7 +140,18 @@ int get_remote(struct svc_req *rqstp, struct in6_addr *addr6)
  */
 short get_port(struct svc_req *rqstp)
 {
-    return (svc_getcaller(rqstp->rq_xprt))->sin6_port;
+    const struct sockaddr *saddr;
+
+    saddr = (const struct sockaddr *) svc_getrpccaller(rqstp->rq_xprt)->buf;
+
+    if (saddr->sa_family == AF_INET6)
+        return ((const struct sockaddr_in6*)saddr)->sin6_port;
+
+    if (saddr->sa_family == AF_INET)
+        return ((const struct sockaddr_in*)saddr)->sin_port;
+
+    errno = EAFNOSUPPORT;
+    return -1;
 }
 
 /*
