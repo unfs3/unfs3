@@ -946,7 +946,11 @@ static SVCXPRT *create_udp_transport(unsigned int port)
 	exit(1);
     }
 
+#ifdef HAVE_SVC_DG_CREATE
     transp = svc_dg_create(sock, 0, 0);
+#else
+    transp = svcudp_bufcreate(sock, NFS_MAX_UDP_PACKET, NFS_MAX_UDP_PACKET);
+#endif
 
     if (transp == NULL) {
 	fprintf(stderr, "%s\n", "cannot create udp service.");
@@ -1030,7 +1034,11 @@ static SVCXPRT *create_tcp_transport(unsigned int port)
 	exit(1);
     }
 
+#ifdef HAVE_SVC_VC_CREATE
     transp = svc_vc_create(sock, 0, 0);
+#else
+    transp = svctcp_create(sock, 0, 0);
+#endif
 
     if (transp == NULL) {
 	fprintf(stderr, "%s\n", "cannot create tcp service.");

@@ -53,6 +53,8 @@ LIBS="$LIBS $TIRPC_LIBS"
 
 AC_CHECK_FUNCS(svc_getreq_poll)
 AC_CHECK_FUNCS(svc_reg)
+AC_CHECK_FUNCS(svc_dg_create)
+AC_CHECK_FUNCS(svc_vc_create)
 
 # Old libtirpc has not implement poll() fully
 AC_CHECK_DECLS(svc_pollfd,,,[#include <rpc/rpc.h>])
