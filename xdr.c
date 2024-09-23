@@ -15,6 +15,20 @@
 #include "nfs.h"
 #include "xdr.h"
 
+#ifndef HAVE_XDR_UINT32_T
+static bool_t xdr_uint32_t(XDR * xdrs, uint32_t * objp)
+{
+	return xdr_u_int32_t(xdrs, objp);
+}
+#endif
+
+#ifndef HAVE_XDR_UINT64_T
+static bool_t xdr_uint64_t(XDR * xdrs, uint64_t * objp)
+{
+	return xdr_u_int64_t(xdrs, objp);
+}
+#endif
+
 bool_t xdr_fhandle3(XDR * xdrs, fhandle3 * objp)
 {
     if (!xdr_bytes
