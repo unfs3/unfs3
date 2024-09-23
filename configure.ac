@@ -1,15 +1,14 @@
 AC_INIT([unfs3],[0.10.0])
 AC_CONFIG_MACRO_DIRS([m4])
-AC_CONFIG_HEADER(config.h)
+AC_CONFIG_HEADERS([config.h])
 AC_PROG_INSTALL
 AC_PROG_CC([gcc egcs kgcc cc])
 AC_CHECK_TOOL([AR], [ar])
-AC_PROG_LEX
+AC_PROG_LEX([noyywrap])
 AS_IF([test "x$LEX" == "x:"], [
   AC_MSG_ERROR([flex or lex missing.])
 ])
 AC_PROG_YACC
-AC_HEADER_STDC
 AC_SYS_LARGEFILE
 AC_SEARCH_LIBS(xdr_int, nsl)
 AC_SEARCH_LIBS(socket, socket)
