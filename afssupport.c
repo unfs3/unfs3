@@ -91,23 +91,23 @@ static int get_afs_fid(const char *path, int follow_or_fd, int32 *cell, uint32 *
     if (path == NULL)
     {
 #ifdef __linux__
-	/*
-	 * "Note that while there is no interface to obtain the FID of an
-	 * open file descriptor, in Linux you can cheat by calling the
-	 * pioctl on /proc/self/fd/N"  --Jeffrey Hutzelman
-	 *
-	 * http://www.openafs.org/pipermail/openafs-info/2005-December/020498.html
-	 */
-	sprintf(fdname, "/proc/self/fd/%d", follow_or_fd);
-	path = fdname;
-	follow = 1;	/* Necessary, or else the pioctl() returns EINVAL */
+        /*
+         * "Note that while there is no interface to obtain the FID of an
+         * open file descriptor, in Linux you can cheat by calling the
+         * pioctl on /proc/self/fd/N"  --Jeffrey Hutzelman
+         *
+         * http://www.openafs.org/pipermail/openafs-info/2005-December/020498.html
+         */
+        sprintf(fdname, "/proc/self/fd/%d", follow_or_fd);
+        path = fdname;
+        follow = 1;	/* Necessary, or else the pioctl() returns EINVAL */
 #else
-	errno = ENOSYS	/* Function not implemented */
-	return 1;
+        errno = ENOSYS	/* Function not implemented */
+        return 1;
 #endif
     }
     else
-	follow = follow_or_fd;
+        follow = follow_or_fd;
 
     vioc.in_size = 0;
     vioc.out_size = sizeof(struct VenusFid);
@@ -117,10 +117,10 @@ static int get_afs_fid(const char *path, int follow_or_fd, int32 *cell, uint32 *
 
     if (ret == 0)
     {
-	if (cell)   *cell   = vfid.Cell;
-	if (volume) *volume = vfid.Fid.Volume;
-	if (vnode)  *vnode  = vfid.Fid.Vnode;
-	if (unique) *unique = vfid.Fid.Unique;
+        if (cell)   *cell   = vfid.Cell;
+        if (volume) *volume = vfid.Fid.Volume;
+        if (vnode)  *vnode  = vfid.Fid.Vnode;
+        if (unique) *unique = vfid.Fid.Unique;
     }
 
     return ret;
@@ -129,7 +129,7 @@ static int get_afs_fid(const char *path, int follow_or_fd, int32 *cell, uint32 *
 uint32 afs_get_gen(struct stat_plus_afs obuf, int fd, const char *path)
 {
     if (obuf.afs_valid)
-	return obuf.afs_unique;
+        return obuf.afs_unique;
 
     return get_gen(obuf, fd, path);
 }
@@ -168,14 +168,14 @@ int afs_stat(const char *path, struct stat_plus_afs *buf)
     ret = stat(path, &sys_buf);
 
     if (ret != 0)
-	return ret;
+        return ret;
 
     ASSIGN_STAT_FIELDS(buf, sys_buf);
 
     buf->afs_valid = 0 == get_afs_fid(path, 1, &buf->afs_cell, &buf->afs_volume, &buf->afs_vnode, &buf->afs_unique);
 
     if (buf->afs_valid)
-	buf->st_ino = MAKE_INODE_NUMBER(buf->afs_volume, buf->afs_vnode);
+        buf->st_ino = MAKE_INODE_NUMBER(buf->afs_volume, buf->afs_vnode);
 
     return 0;
 }
@@ -188,14 +188,14 @@ int afs_fstat(int fd, struct stat_plus_afs *buf)
     ret = fstat(fd, &sys_buf);
 
     if (ret != 0)
-	return ret;
+        return ret;
 
     ASSIGN_STAT_FIELDS(buf, sys_buf);
 
     buf->afs_valid = 0 == get_afs_fid(NULL, fd, &buf->afs_cell, &buf->afs_volume, &buf->afs_vnode, &buf->afs_unique);
 
     if (buf->afs_valid)
-	buf->st_ino = MAKE_INODE_NUMBER(buf->afs_volume, buf->afs_vnode);
+        buf->st_ino = MAKE_INODE_NUMBER(buf->afs_volume, buf->afs_vnode);
 
     return 0;
 }
@@ -208,14 +208,14 @@ int afs_lstat(const char *path, struct stat_plus_afs *buf)
     ret = lstat(path, &sys_buf);
 
     if (ret != 0)
-	return ret;
+        return ret;
 
     ASSIGN_STAT_FIELDS(buf, sys_buf);
 
     buf->afs_valid = 0 == get_afs_fid(path, 0, &buf->afs_cell, &buf->afs_volume, &buf->afs_vnode, &buf->afs_unique);
 
     if (buf->afs_valid)
-	buf->st_ino = MAKE_INODE_NUMBER(buf->afs_volume, buf->afs_vnode);
+        buf->st_ino = MAKE_INODE_NUMBER(buf->afs_volume, buf->afs_vnode);
 
     return 0;
 }

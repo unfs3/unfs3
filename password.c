@@ -36,11 +36,11 @@ int gen_nonce(char *nonce)
     int bytes_read, fd;
 
     if (((fd = open("/dev/urandom", O_RDONLY)) != -1)
-	|| ((fd = open("/dev/random", O_RDONLY)) != -1)) {
-	bytes_read = read(fd, nonce, 32);
-	close(fd);
-	if (bytes_read == 32)
-	    return 0;
+        || ((fd = open("/dev/random", O_RDONLY)) != -1)) {
+        bytes_read = read(fd, nonce, 32);
+        close(fd);
+        if (bytes_read == 32)
+            return 0;
     }
 
     /* No /dev/random; do it by hand */
@@ -64,7 +64,7 @@ int gen_nonce(char *nonce)
 static char nibble_as_hexchar(unsigned char c)
 {
     if (c <= 9)
-	return c + '0';
+        return c + '0';
 
     return c - 10 + 'a';
 }
@@ -74,14 +74,14 @@ static void hexify(md5_byte_t digest[16], char hexdigest[32])
     int i, j;
 
     for (i = j = 0; i < 16; i++) {
-	char c;
+        char c;
 
-	/* The first four bits */
-	c = (digest[i] >> 4) & 0xf;
-	hexdigest[j++] = nibble_as_hexchar(c);
-	/* The next four bits */
-	c = (digest[i] & 0xf);
-	hexdigest[j++] = nibble_as_hexchar(c);
+        /* The first four bits */
+        c = (digest[i] >> 4) & 0xf;
+        hexdigest[j++] = nibble_as_hexchar(c);
+        /* The next four bits */
+        c = (digest[i] & 0xf);
+        hexdigest[j++] = nibble_as_hexchar(c);
     }
 }
 
@@ -99,7 +99,7 @@ void mnt_cmd_argument(char **dpath, const char *cmd, char *arg, size_t maxlen)
 
     slash = strchr(arg, '/');
     if (slash != NULL)
-	*slash = '\0';
+        *slash = '\0';
 
     *dpath += strlen(arg);
 }

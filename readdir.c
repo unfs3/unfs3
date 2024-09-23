@@ -62,7 +62,7 @@
  * fh_decomp must be called directly before to fill the stat cache
  */
 READDIR3res read_dir(const char *path, cookie3 cookie, cookieverf3 verf,
-		     count3 count)
+                     count3 count)
 {
     READDIR3res result;
     READDIR3resok resok;
@@ -96,7 +96,7 @@ READDIR3res read_dir(const char *path, cookie3 cookie, cookieverf3 verf,
 
     /* we refuse to return more than 4k from READDIR */
     if (count > 4096)
-	count = 4096;
+        count = 4096;
 
     /* account for size of information heading resok structure */
     real_count = RESOK_SIZE;
@@ -114,49 +114,49 @@ READDIR3res read_dir(const char *path, cookie3 cookie, cookieverf3 verf,
 
     search = backend_opendir(path);
     if (!search) {
-	if ((exports_opts & OPT_REMOVABLE) && (export_point(path))) {
-	    /* Removable media export point; probably no media inserted.
-	       Return empty directory. */
-	    memset(resok.cookieverf, 0, NFS3_COOKIEVERFSIZE);
-	    resok.reply.entries = NULL;
-	    resok.reply.eof = TRUE;
-	    result.status = NFS3_OK;
-	    result.READDIR3res_u.resok = resok;
-	    return result;
-	} else {
-	    result.status = readdir_err();
-	    return result;
-	}
+        if ((exports_opts & OPT_REMOVABLE) && (export_point(path))) {
+            /* Removable media export point; probably no media inserted.
+               Return empty directory. */
+            memset(resok.cookieverf, 0, NFS3_COOKIEVERFSIZE);
+            resok.reply.entries = NULL;
+            resok.reply.eof = TRUE;
+            result.status = NFS3_OK;
+            result.READDIR3res_u.resok = resok;
+            return result;
+        } else {
+            result.status = readdir_err();
+            return result;
+        }
     }
 
     this = backend_readdir(search);
     /* We cannot use telldir()/seekdir(), since the value from telldir() is
        not valid after closedir(). */
     for (i = 0; i < cookie; i++)
-	if (this)
-	    this = backend_readdir(search);
+        if (this)
+            this = backend_readdir(search);
 
     i = 0;
     entry[0].name = NULL;
     while (this && real_count < count && i < MAX_ENTRIES) {
-	if (i > 0)
-	    entry[i - 1].nextentry = &entry[i];
+        if (i > 0)
+            entry[i - 1].nextentry = &entry[i];
 
-	if (strlen(path) + strlen(this->d_name) + 1 < NFS_MAXPATHLEN) {
+        if (strlen(path) + strlen(this->d_name) + 1 < NFS_MAXPATHLEN) {
 
-	    if (strcmp(path, "/") == 0)
-		sprintf(scratch, "/%s", this->d_name);
-	    else
-		sprintf(scratch, "%s/%s", path, this->d_name);
+            if (strcmp(path, "/") == 0)
+                sprintf(scratch, "/%s", this->d_name);
+            else
+                sprintf(scratch, "%s/%s", path, this->d_name);
 
-	    res = backend_lstat(scratch, &buf);
-	    if (res == -1) {
-		result.status = readdir_err();
-		backend_closedir(search);
-		return result;
-	    }
+            res = backend_lstat(scratch, &buf);
+            if (res == -1) {
+                result.status = readdir_err();
+                backend_closedir(search);
+                return result;
+            }
 
-	    strcpy(&obj[i * NFS_MAXPATHLEN], this->d_name);
+            strcpy(&obj[i * NFS_MAXPATHLEN], this->d_name);
 
             if(opt_32_bit_truncate) {
                 /* See comment in attr.c:get_post_buf */
@@ -167,39 +167,39 @@ READDIR3res read_dir(const char *path, cookie3 cookie, cookieverf3 verf,
                 entry[i].fileid = buf.st_ino;
             }
 
-	    entry[i].name = &obj[i * NFS_MAXPATHLEN];
-	    entry[i].cookie = (cookie + 1 + i) | rcookie;
-	    entry[i].nextentry = NULL;
+            entry[i].name = &obj[i * NFS_MAXPATHLEN];
+            entry[i].cookie = (cookie + 1 + i) | rcookie;
+            entry[i].nextentry = NULL;
 
-	    /* account for entry size */
-	    real_count += ENTRY_SIZE + NAME_SIZE(this->d_name);
+            /* account for entry size */
+            real_count += ENTRY_SIZE + NAME_SIZE(this->d_name);
 
-	    /* whoops, overflowed the maximum size */
-	    if (real_count > count && i > 0)
-		entry[i - 1].nextentry = NULL;
-	    else {
-		/* advance to next entry */
-		this = backend_readdir(search);
-	    }
+            /* whoops, overflowed the maximum size */
+            if (real_count > count && i > 0)
+                entry[i - 1].nextentry = NULL;
+            else {
+                /* advance to next entry */
+                this = backend_readdir(search);
+            }
 
-	    i++;
-	} else {
-	    result.status = NFS3ERR_IO;
-	    backend_closedir(search);
-	    return result;
-	}
+            i++;
+        } else {
+            result.status = NFS3ERR_IO;
+            backend_closedir(search);
+            return result;
+        }
     }
     backend_closedir(search);
 
     if (entry[0].name)
-	resok.reply.entries = &entry[0];
+        resok.reply.entries = &entry[0];
     else
-	resok.reply.entries = NULL;
+        resok.reply.entries = NULL;
 
     if (this)
-	resok.reply.eof = FALSE;
+        resok.reply.eof = FALSE;
     else
-	resok.reply.eof = TRUE;
+        resok.reply.eof = TRUE;
 
     memcpy(resok.cookieverf, verf, NFS3_COOKIEVERFSIZE);
 

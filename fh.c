@@ -79,7 +79,7 @@ uint32 get_gen(backend_statstruct obuf, U(int fd), U(const char *path))
     gid_t egid;
 
     if (!S_ISREG(obuf.st_mode) && !S_ISDIR(obuf.st_mode))
-	return 0;
+        return 0;
 
     euid = backend_geteuid();
     egid = backend_getegid();
@@ -87,28 +87,28 @@ uint32 get_gen(backend_statstruct obuf, U(int fd), U(const char *path))
     backend_seteuid(0);
 
     if (fd != FD_NONE) {
-	res = ioctl(fd, EXT2_IOC_GETVERSION, &gen);
-	if (res == -1)
-	    gen = 0;
+        res = ioctl(fd, EXT2_IOC_GETVERSION, &gen);
+        if (res == -1)
+            gen = 0;
     } else {
-	newfd = backend_open(path, O_RDONLY);
-	if (newfd == -1)
-	    gen = 0;
-	else {
-	    res = ioctl(newfd, EXT2_IOC_GETVERSION, &gen);
-	    close(newfd);
+        newfd = backend_open(path, O_RDONLY);
+        if (newfd == -1)
+            gen = 0;
+        else {
+            res = ioctl(newfd, EXT2_IOC_GETVERSION, &gen);
+            close(newfd);
 
-	    if (res == -1)
-		gen = 0;
-	}
+            if (res == -1)
+                gen = 0;
+        }
     }
 
     backend_setegid(egid);
     backend_seteuid(euid);
 
     if (backend_geteuid() != euid || backend_getegid() != egid) {
-	logmsg(LOG_EMERG, "euid/egid switching failed, aborting");
-	daemon_exit(CRISIS);
+        logmsg(LOG_EMERG, "euid/egid switching failed, aborting");
+        daemon_exit(CRISIS);
     }
 
     return gen;
@@ -134,11 +134,11 @@ int nfh_valid(nfs_fh3 fh)
 
     /* too small? */
     if (fh.data.data_len < FH_MINLEN)
-	return FALSE;
+        return FALSE;
 
     /* encoded length different from real length? */
     if (fh.data.data_len != fh_length(&obj))
-	return FALSE;
+        return FALSE;
 
     return TRUE;
 }
@@ -157,7 +157,7 @@ int fh_valid(unfs3_fh_t fh)
  */
 #ifdef __GNUC__
 static const unfs3_fh_t invalid_fh = {.dev = 0,.ino = 0,.gen = 0,.len =
-	0,.inos = {0}
+        0,.inos = {0}
 };
 #else
 static const unfs3_fh_t invalid_fh = { 0, 0, 0, 0, 0, {0} };
@@ -183,40 +183,40 @@ unfs3_fh_t fh_comp_raw(const char *path, struct svc_req *rqstp, int need_dir)
     /* special case for removable device export point: return preset fsid and 
        inod 1. */
     if (rqstp && export_point(path)) {
-	uint32 fsid;
+        uint32 fsid;
 
-	if (exports_options(path, rqstp, NULL, &fsid) == -1) {
-	    /* Shouldn't happen, unless the exports file changed after the
-	       call to export_point() */
-	    return invalid_fh;
-	}
-	if (exports_opts & OPT_REMOVABLE) {
-	    fh.dev = fsid;
-	    /* There's a small risk that the file system contains other file
-	       objects with st_ino = 1. This should be fairly uncommon,
-	       though. The FreeBSD fs(5) man page says:
+        if (exports_options(path, rqstp, NULL, &fsid) == -1) {
+            /* Shouldn't happen, unless the exports file changed after the
+               call to export_point() */
+            return invalid_fh;
+        }
+        if (exports_opts & OPT_REMOVABLE) {
+            fh.dev = fsid;
+            /* There's a small risk that the file system contains other file
+               objects with st_ino = 1. This should be fairly uncommon,
+               though. The FreeBSD fs(5) man page says:
 
-	       "The root inode is the root of the file system.  Inode 0
-	       cannot be used for normal purposes and historically bad blocks 
-	       were linked to inode 1, thus the root inode is 2 (inode 1 is
-	       no longer used for this purpose, however numerous dump tapes
-	       make this assumption, so we are stuck with it)."
+               "The root inode is the root of the file system.  Inode 0
+               cannot be used for normal purposes and historically bad blocks
+               were linked to inode 1, thus the root inode is 2 (inode 1 is
+               no longer used for this purpose, however numerous dump tapes
+               make this assumption, so we are stuck with it)."
 
-	       In Windows, there's also a small risk that the hash ends up
-	       being exactly 1. */
-	    fh.ino = 0x1;
-	    fh.gen = 0;
-	    return fh;
-	}
+               In Windows, there's also a small risk that the hash ends up
+               being exactly 1. */
+            fh.ino = 0x1;
+            fh.gen = 0;
+            return fh;
+        }
     }
 
     res = backend_lstat(path, &buf);
     if (res == -1)
-	return invalid_fh;
+        return invalid_fh;
 
     /* check for dir if need_dir is set */
     if (need_dir != 0 && !S_ISDIR(buf.st_mode))
-	return invalid_fh;
+        return invalid_fh;
 
     fh.dev = buf.st_dev;
     fh.ino = buf.st_ino;
@@ -224,30 +224,30 @@ unfs3_fh_t fh_comp_raw(const char *path, struct svc_req *rqstp, int need_dir)
 
     /* special case for root directory */
     if (strcmp(path, "/") == 0)
-	return fh;
+        return fh;
 
     strcpy(work, path);
     last = work;
 
     do {
-	*last = '/';
-	last = strchr(last + 1, '/');
-	if (last != NULL)
-	    *last = 0;
+        *last = '/';
+        last = strchr(last + 1, '/');
+        if (last != NULL)
+            *last = 0;
 
-	res = backend_lstat(work, &buf);
-	if (res == -1) {
-	    return invalid_fh;
-	}
+        res = backend_lstat(work, &buf);
+        if (res == -1) {
+            return invalid_fh;
+        }
 
-	/* store 8 bit hash of the component's inode */
-	fh.inos[pos] = FH_HASH(buf.st_ino);
-	pos++;
+        /* store 8 bit hash of the component's inode */
+        fh.inos[pos] = FH_HASH(buf.st_ino);
+        pos++;
 
     } while (last && pos < FH_MAXLEN);
 
     if (last)			       /* path too deep for filehandle */
-	return invalid_fh;
+        return invalid_fh;
 
     fh.len = pos;
 
@@ -260,7 +260,7 @@ unfs3_fh_t fh_comp_raw(const char *path, struct svc_req *rqstp, int need_dir)
 u_int fh_length(const unfs3_fh_t * fh)
 {
     return fh->len + sizeof(fh->len) + sizeof(fh->dev) + sizeof(fh->ino) +
-	sizeof(fh->gen) + sizeof(fh->pwhash);
+        sizeof(fh->gen) + sizeof(fh->pwhash);
 }
 
 /*
@@ -273,21 +273,21 @@ unfs3_fh_t *fh_extend(nfs_fh3 nfh, uint32 dev, uint64 ino, uint32 gen)
     new = fh_decode(&nfh);
 
     if (new.len == 0) {
-	char *path;
+        char *path;
 
-	path = export_point_from_fsid(new.dev);
-	if (path != NULL) {
-	    /* Our FH to extend refers to a removable device export point,
-	       which lacks .inos. We need to construct a real FH to extend,
-	       which can be done by passing rqstp=NULL to fh_comp_raw. */
-	    new = fh_comp_raw(path, NULL, FH_ANY);
-	    if (!fh_valid(new))
-		return NULL;
-	}
+        path = export_point_from_fsid(new.dev);
+        if (path != NULL) {
+            /* Our FH to extend refers to a removable device export point,
+               which lacks .inos. We need to construct a real FH to extend,
+               which can be done by passing rqstp=NULL to fh_comp_raw. */
+            new = fh_comp_raw(path, NULL, FH_ANY);
+            if (!fh_valid(new))
+                return NULL;
+        }
     }
 
     if (new.len == FH_MAXLEN)
-	return NULL;
+        return NULL;
 
     new.dev = dev;
     new.ino = ino;
@@ -311,10 +311,10 @@ post_op_fh3 fh_extend_post(nfs_fh3 fh, uint32 dev, uint64 ino, uint32 gen)
     new = fh_extend(fh, dev, ino, gen);
 
     if (new) {
-	post.handle_follows = TRUE;
-	post.post_op_fh3_u.handle = fh_encode(new, buffer);
+        post.handle_follows = TRUE;
+        post.post_op_fh3_u.handle = fh_encode(new, buffer);
     } else
-	post.handle_follows = FALSE;
+        post.handle_follows = FALSE;
 
     return post;
 }
@@ -330,9 +330,9 @@ post_op_fh3 fh_extend_type(nfs_fh3 fh, const char *path, unsigned int type)
 
     res = backend_lstat(path, &buf);
     if (res == -1 || (buf.st_mode & type) != type) {
-	st_cache_valid = FALSE;
-	result.handle_follows = FALSE;
-	return result;
+        st_cache_valid = FALSE;
+        result.handle_follows = FALSE;
+        return result;
     }
 
     fix_dir_times(path, &buf);
@@ -341,7 +341,7 @@ post_op_fh3 fh_extend_type(nfs_fh3 fh, const char *path, unsigned int type)
     st_cache = buf;
 
     return fh_extend_post(fh, buf.st_dev, buf.st_ino,
-			  backend_get_gen(buf, FD_NONE, path));
+                          backend_get_gen(buf, FD_NONE, path));
 }
 
 /*
@@ -373,7 +373,7 @@ post_op_fh3 fh_extend_type(nfs_fh3 fh, const char *path, unsigned int type)
  * result: where to store path if seach is complete
  */
 static int fh_rec(const unfs3_fh_t * fh, int pos, const char *lead,
-		  char *result)
+                  char *result)
 {
     backend_dirstream *search;
     struct dirent *entry;
@@ -387,67 +387,67 @@ static int fh_rec(const unfs3_fh_t * fh, int pos, const char *lead,
 
     /* went in too deep? */
     if (pos == fh->len)
-	return FALSE;
+        return FALSE;
 
     search = backend_opendir(lead);
     if (!search)
-	return FALSE;
+        return FALSE;
 
     entry = backend_readdir(search);
 
     while (entry) {
-	if (strlen(lead) + strlen(entry->d_name) + 1 < NFS_MAXPATHLEN) {
+        if (strlen(lead) + strlen(entry->d_name) + 1 < NFS_MAXPATHLEN) {
 
-	    sprintf(obj, "%s/%s", lead, entry->d_name);
+            sprintf(obj, "%s/%s", lead, entry->d_name);
 
-	    res = backend_lstat(obj, &buf);
-	    if (res == -1) {
-		buf.st_dev = 0;
-		buf.st_ino = 0;
-	    }
+            res = backend_lstat(obj, &buf);
+            if (res == -1) {
+                buf.st_dev = 0;
+                buf.st_ino = 0;
+            }
 
-	    if (buf.st_dev == fh->dev && buf.st_ino == fh->ino) {
-		/* found the object */
-		sprintf(result, "%s/%s", lead + 1, entry->d_name);
-		/* update stat cache */
-		fix_dir_times(result, &buf);
-		st_cache_valid = TRUE;
-		st_cache = buf;
-		matches++;
+            if (buf.st_dev == fh->dev && buf.st_ino == fh->ino) {
+                /* found the object */
+                sprintf(result, "%s/%s", lead + 1, entry->d_name);
+                /* update stat cache */
+                fix_dir_times(result, &buf);
+                st_cache_valid = TRUE;
+                st_cache = buf;
+                matches++;
 #ifndef WIN32
-		break;
+                break;
 #endif
-	    }
+            }
 
-	    if (strcmp(entry->d_name, "..") != 0 &&
-		strcmp(entry->d_name, ".") != 0 &&
-		FH_HASH(buf.st_ino) == fh->inos[pos]) {
-		/* 
-		 * might be directory we're looking for,
-		 * try descending into it
-		 */
-		rec = fh_rec(fh, pos + 1, obj, result);
-		if (rec) {
-		    /* object was found in dir */
-		    backend_closedir(search);
-		    return TRUE;
-		}
-	    }
-	}
-	entry = backend_readdir(search);
+            if (strcmp(entry->d_name, "..") != 0 &&
+                strcmp(entry->d_name, ".") != 0 &&
+                FH_HASH(buf.st_ino) == fh->inos[pos]) {
+                /*
+                 * might be directory we're looking for,
+                 * try descending into it
+                 */
+                rec = fh_rec(fh, pos + 1, obj, result);
+                if (rec) {
+                    /* object was found in dir */
+                    backend_closedir(search);
+                    return TRUE;
+                }
+            }
+        }
+        entry = backend_readdir(search);
     }
 
     backend_closedir(search);
     switch (matches) {
-	case 0:
-	    return FALSE;
-	case 1:
-	    return TRUE;
-	default:
+        case 0:
+            return FALSE;
+        case 1:
+            return TRUE;
+        default:
 #ifdef WIN32
-	    logmsg(LOG_CRIT, "Hash collision detected for file %s!", result);
+            logmsg(LOG_CRIT, "Hash collision detected for file %s!", result);
 #endif
-	    return FALSE;
+            return FALSE;
     }
 }
 
@@ -461,16 +461,16 @@ char *fh_decomp_raw(const unfs3_fh_t * fh)
 
     /* valid fh? */
     if (!fh)
-	return NULL;
+        return NULL;
 
     /* special case for root directory */
     if (fh->len == 0)
-	return "/";
+        return "/";
 
     rec = fh_rec(fh, 0, "/", result);
 
     if (rec)
-	return result;
+        return result;
 
     /* could not find object */
     return NULL;
