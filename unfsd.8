@@ -175,6 +175,10 @@ requests for unreadable executables are always allowed, if
 .B unfsd 
 is running as root, regardless of this option.
 .TP
+.B \-3
+Truncate fileid and cookie to 32 bits, this might be required by some 32 bit
+applications on older NFS clients which otherwise might fail with EOVERFLOW.
+.TP
 .B \-T
 Test exports file and exit. When this option is given,
 .B unfsd

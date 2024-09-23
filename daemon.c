@@ -77,6 +77,7 @@ int opt_testconfig = FALSE;
 struct in6_addr opt_bind_addr;
 int opt_readable_executables = FALSE;
 char *opt_pid_file = NULL;
+int opt_32_bit_truncate = FALSE;
 
 /* Register with portmapper? */
 int opt_portmapper = TRUE;
@@ -219,13 +220,20 @@ static void remove_pid_file(void)
  */
 static void parse_options(int argc, char **argv)
 {
-
     int opt = 0;
-    char *optstring = "bcC:de:hl:m:n:prstTuwi:";
+    char *optstring = "3bcC:de:hl:m:n:prstTuwi:";
+
+#if defined(WIN32) || defined(AFS_SUPPORT)
+     /* Allways truncate to 32 bits in these cases */
+    opt_32_bit_truncate = TRUE;
+#endif
 
     while (opt != -1) {
 	opt = getopt(argc, argv, optstring);
 	switch (opt) {
+	    case '3':
+		opt_32_bit_truncate = TRUE;
+		break;
 	    case 'b':
 		opt_brute_force = TRUE;
 		break;
@@ -275,6 +283,8 @@ static void parse_options(int argc, char **argv)
 		    ("\t-l <addr>   bind to interface with specified address\n");
 		printf
 		    ("\t-r          report unreadable executables as readable\n");
+		printf
+		    ("\t-3          truncate fileid and cookie to 32 bits\n");
 		printf("\t-T          test exports file and exit\n");
 		exit(0);
 		break;
@@ -1052,9 +1062,17 @@ void regenerate_write_verifier(void)
  */
 void change_readdir_cookie(void)
 {
-    rcookie = rcookie >> 32;
-    ++rcookie;
-    rcookie = rcookie << 32;
+    if(opt_32_bit_truncate) {
+        rcookie = rcookie >> 20;
+        ++rcookie;
+        rcookie &= 0xFFF;
+        rcookie = rcookie << 20;
+    }
+    else {
+        rcookie = rcookie >> 32;
+        ++rcookie;
+        rcookie = rcookie << 32;
+    }
 }
 
 /*
