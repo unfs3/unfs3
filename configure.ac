@@ -14,6 +14,7 @@ AC_SYS_LARGEFILE
 AC_SEARCH_LIBS(xdr_int, nsl)
 AC_SEARCH_LIBS(socket, socket)
 AC_SEARCH_LIBS(inet_aton, resolv)
+AC_CHECK_HEADERS(libproc.h,,,[#include <stdio.h>])
 AC_CHECK_HEADERS(mntent.h,,,[#include <stdio.h>])
 AC_CHECK_HEADERS(stdint.h,,,[#include <stdio.h>])
 AC_CHECK_HEADERS(sys/mnttab.h,,,[#include <stdio.h>])
