@@ -200,16 +200,15 @@ post_op_attr get_post_buf(backend_statstruct buf, struct svc_req * req)
     result.post_op_attr_u.attributes.fsid &= 0xFFFFFFFF;
 
     if(opt_32_bit_truncate) {
-     /* Recent Linux kernels (2.6.24 and newer) expose large fileids even to
-        non-LFS 32-bit applications, unless kernel parameter
-        nfs.enable_ino64=0. This means that applications will fail with
-        EOVERFLOW. On Windows, we always have large st_ino:s. To avoid
-        trouble, we truncate to 32 bits */
-      result.post_op_attr_u.attributes.fileid =
-        (buf.st_ino >> 32) ^ (buf.st_ino & 0xffffffff);
-    }
-    else {
-      result.post_op_attr_u.attributes.fileid = buf.st_ino;
+        /* Recent Linux kernels (2.6.24 and newer) expose large fileids even to
+           non-LFS 32-bit applications, unless kernel parameter
+           nfs.enable_ino64=0. This means that applications will fail with
+           EOVERFLOW. On Windows, we always have large st_ino:s. To avoid
+           trouble, we truncate to 32 bits */
+        result.post_op_attr_u.attributes.fileid =
+            (buf.st_ino >> 32) ^ (buf.st_ino & 0xffffffff);
+    } else {
+        result.post_op_attr_u.attributes.fileid = buf.st_ino;
     }
 
     result.post_op_attr_u.attributes.atime.seconds = buf.st_atime;
@@ -397,7 +396,7 @@ nfsstat3 set_attr(const char *path, nfs_fh3 nfh, sattr3 new)
     if (res != 0)
         return NFS3ERR_STALE;
 
-    /* 
+    /*
      * don't open(2) device nodes, it could trigger
      * module loading on the server
      */
@@ -405,7 +404,7 @@ nfsstat3 set_attr(const char *path, nfs_fh3 nfh, sattr3 new)
         return set_attr_unsafe(path, nfh, new);
 
 #ifdef S_ISLNK
-    /* 
+    /*
      * opening a symlink would open the underlying file,
      * don't try to do that
      */
@@ -413,7 +412,7 @@ nfsstat3 set_attr(const char *path, nfs_fh3 nfh, sattr3 new)
         return set_attr_unsafe(path, nfh, new);
 #endif
 
-    /* 
+    /*
      * open object for atomic setting of attributes
      */
     fd = backend_open(path, O_WRONLY | O_NONBLOCK);
@@ -495,7 +494,7 @@ mode_t create_mode(sattr3 new)
         return new.mode.set_mode3_u.mode;
     else
         return S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IWGRP | S_IXGRP |
-            S_IROTH | S_IXOTH;
+               S_IROTH | S_IXOTH;
 }
 
 /*
@@ -558,7 +557,7 @@ static struct bad_dir_entry* get_free_bad_dir_entry(void)
     int best;
 
     best = 0;
-    for (int i = 0;i < BAD_DIR_CACHE_SIZE;i++) {
+    for (int i = 0; i < BAD_DIR_CACHE_SIZE; i++) {
         if (bad_dir_cache[i].path == NULL) {
             best = i;
             break;
@@ -581,7 +580,7 @@ static struct bad_dir_entry* find_bad_dir_entry(const char *path)
 {
     struct bad_dir_entry *new_entry;
 
-    for (int i = 0;i < BAD_DIR_CACHE_SIZE;i++) {
+    for (int i = 0; i < BAD_DIR_CACHE_SIZE; i++) {
         if (bad_dir_cache[i].path == NULL)
             continue;
 

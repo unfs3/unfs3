@@ -87,7 +87,7 @@ static void hexify(md5_byte_t digest[16], char hexdigest[32])
 
 /* Handle mount commands:
  * Advance dpath to first slash
- * Copy command arguments to arg. 
+ * Copy command arguments to arg.
 */
 void mnt_cmd_argument(char **dpath, const char *cmd, char *arg, size_t maxlen)
 {

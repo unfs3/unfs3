@@ -78,20 +78,18 @@ READDIR3res read_dir(const char *path, cookie3 cookie, cookieverf3 verf,
 
     /* check upper part of cookie */
     if(opt_32_bit_truncate) {
-      upper = cookie & 0xFFF00000ULL;
-    }
-    else {
-      upper = cookie & 0xFFFFFFFF00000000ULL;
+        upper = cookie & 0xFFF00000ULL;
+    } else {
+        upper = cookie & 0xFFFFFFFF00000000ULL;
     }
     if (cookie != 0 && upper != rcookie) {
-      /* ignore cookie if unexpected so we restart from the beginning */
-      cookie = 0;
+        /* ignore cookie if unexpected so we restart from the beginning */
+        cookie = 0;
     }
     if(opt_32_bit_truncate) {
-      cookie &= 0xFFFFFULL;
-    }
-    else {
-      cookie &= 0xFFFFFFFFULL;
+        cookie &= 0xFFFFFULL;
+    } else {
+        cookie &= 0xFFFFFFFFULL;
     }
 
     /* we refuse to return more than 4k from READDIR */
@@ -101,7 +99,7 @@ READDIR3res read_dir(const char *path, cookie3 cookie, cookieverf3 verf,
     /* account for size of information heading resok structure */
     real_count = RESOK_SIZE;
 
-    /* We are always returning zero as a cookie verifier. One reason for this 
+    /* We are always returning zero as a cookie verifier. One reason for this
        is that stat() on Windows seems to return cached st_mtime values,
        which gives spurious NFS3ERR_BAD_COOKIEs. Btw, here's what Peter
        Staubach has to say about cookie verifiers:
@@ -162,8 +160,7 @@ READDIR3res read_dir(const char *path, cookie3 cookie, cookieverf3 verf,
                 /* See comment in attr.c:get_post_buf */
                 entry[i].fileid =
                     (buf.st_ino >> 32) ^ (buf.st_ino & 0xffffffff);
-            }
-            else {
+            } else {
                 entry[i].fileid = buf.st_ino;
             }
 

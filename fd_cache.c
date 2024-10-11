@@ -36,12 +36,12 @@
  *
  * for WRITE operations, the intent is to open() the file on the first
  * UNSTABLE access and to close() it when COMMIT is called or after
- * two seconds of inactivity. 
- * 
+ * two seconds of inactivity.
+ *
  * There are three states of an entry:
- * 1) Unused. use == 0. 
- * 2) Open fd. use != 0, fd != -1. 
- * 3) Pending fsync/close error, to be reported in next COMMIT or WRITE. use != 0, fd == -1. 
+ * 1) Unused. use == 0.
+ * 2) Open fd. use != 0, fd != -1.
+ * 3) Pending fsync/close error, to be reported in next COMMIT or WRITE. use != 0, fd == -1.
  *
  * Handling fsync/close errors 100% correctly is very difficult for a
  * user space server. Although rare, fsync/close might fail, for
@@ -129,7 +129,7 @@ static int fd_cache_unused(void)
  * indicates if the entry should be kept in the cache upon
  * fsync/close failures. It should be set to TRUE when fd_cache_del is
  * called from a code path which cannot report an IO error back to the
- * client through WRITE or COMMIT. 
+ * client through WRITE or COMMIT.
  */
 static int fd_cache_del(int idx, int keep_on_error)
 {

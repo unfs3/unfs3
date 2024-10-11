@@ -224,7 +224,7 @@ static void parse_options(int argc, char **argv)
     char *optstring = "3bcC:de:hl:m:n:prstTuwi:";
 
 #if defined(WIN32) || defined(AFS_SUPPORT)
-     /* Allways truncate to 32 bits in these cases */
+    /* Allways truncate to 32 bits in these cases */
     opt_32_bit_truncate = TRUE;
 #endif
 
@@ -275,16 +275,16 @@ static void parse_options(int argc, char **argv)
                 printf("\t-n <port>   port to use for NFS service\n");
                 printf("\t-m <port>   port to use for MOUNT service\n");
                 printf
-                    ("\t-t          TCP only, do not listen on UDP ports\n");
+                ("\t-t          TCP only, do not listen on UDP ports\n");
                 printf("\t-p          do not register with portmap/rpcbind\n");
                 printf("\t-s          single user mode\n");
                 printf("\t-b          enable brute force file searching\n");
                 printf
-                    ("\t-l <addr>   bind to interface with specified address\n");
+                ("\t-l <addr>   bind to interface with specified address\n");
                 printf
-                    ("\t-r          report unreadable executables as readable\n");
+                ("\t-r          report unreadable executables as readable\n");
                 printf
-                    ("\t-3          truncate fileid and cookie to 32 bits\n");
+                ("\t-3          truncate fileid and cookie to 32 bits\n");
                 printf("\t-T          test exports file and exit\n");
                 exit(0);
                 break;
@@ -556,7 +556,7 @@ static void nfs3_program_3(struct svc_req *rqstp, register SVCXPRT * transp)
             _xdr_argument = (xdrproc_t) xdr_READDIRPLUS3args;
             _xdr_result = (xdrproc_t) xdr_READDIRPLUS3res;
             local = (char *(*)(char *, struct svc_req *))
-                nfsproc3_readdirplus_3_svc;
+                    nfsproc3_readdirplus_3_svc;
             break;
 
         case NFSPROC3_FSSTAT:
@@ -992,30 +992,29 @@ static void unfs3_svc_run(void)
 
 #if defined(HAVE_SVC_GETREQ_POLL) && HAVE_DECL_SVC_POLLFD
         if (pollfds_len != svc_max_pollfd) {
-                pollfds = realloc(pollfds, sizeof(struct pollfd) * svc_max_pollfd);
-                if (pollfds == NULL) {
-                        perror("unfs3_svc_run: realloc failed");
-                        return;
-                }
-                pollfds_len = svc_max_pollfd;
+            pollfds = realloc(pollfds, sizeof(struct pollfd) * svc_max_pollfd);
+            if (pollfds == NULL) {
+                perror("unfs3_svc_run: realloc failed");
+                return;
+            }
+            pollfds_len = svc_max_pollfd;
         }
 
-        for (int i = 0;i < svc_max_pollfd;i++) {
-                pollfds[i].fd = svc_pollfd[i].fd;
-                pollfds[i].events = svc_pollfd[i].events;
-                pollfds[i].revents = 0;
+        for (int i = 0; i < svc_max_pollfd; i++) {
+            pollfds[i].fd = svc_pollfd[i].fd;
+            pollfds[i].events = svc_pollfd[i].events;
+            pollfds[i].revents = 0;
         }
 
         r = poll(pollfds, svc_max_pollfd, 2*1000);
         if (r < 0) {
-                if (errno == EINTR) {
-                    continue;
-                }
-                perror("unfs3_svc_run: poll failed");
-                return;
-        }
-        else if (r)
-                svc_getreq_poll(pollfds, r);
+            if (errno == EINTR) {
+                continue;
+            }
+            perror("unfs3_svc_run: poll failed");
+            return;
+        } else if (r)
+            svc_getreq_poll(pollfds, r);
 
 #else
         readfds = svc_fdset;
@@ -1067,8 +1066,7 @@ void change_readdir_cookie(void)
         ++rcookie;
         rcookie &= 0xFFF;
         rcookie = rcookie << 20;
-    }
-    else {
+    } else {
         rcookie = rcookie >> 32;
         ++rcookie;
         rcookie = rcookie << 32;
@@ -1146,7 +1144,7 @@ int main(int argc, char **argv)
 
     register_nfs_service(udptransp, tcptransp);
 
-    /* MOUNT transports. If ports are equal, then the MOUNT service can reuse 
+    /* MOUNT transports. If ports are equal, then the MOUNT service can reuse
        the NFS transports. */
     if (opt_mount_port != opt_nfs_port) {
         if (!opt_tcponly)
@@ -1225,9 +1223,9 @@ int main(int argc, char **argv)
         exports_parse();
 
         if (opt_detach) {
-           close(pipefd[0]);
-           write(pipefd[1], "1", 1);
-           close(pipefd[1]);
+            close(pipefd[0]);
+            write(pipefd[1], "1", 1);
+            close(pipefd[1]);
         }
 
         unfs3_svc_run();

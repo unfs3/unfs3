@@ -208,7 +208,7 @@ void cluster_scandir(const char *path)
 
     strcpy(prefix, cluster_basename(path));
 
-    /* 
+    /*
      * need to read directory as root, temporarily switch back
      */
     euid = backend_geteuid();
@@ -327,8 +327,8 @@ int cluster_lookup_lowlevel(char *path, struct svc_req *rqstp)
     remote = inet_ntoa(raddr);	       /* remote IP address string */
     hname = get_host(raddr);	       /* remote hostname */
 
-    /* 
-     * traversal in reverse alphanumerical order, so that 
+    /*
+     * traversal in reverse alphanumerical order, so that
      *  IP is encountered before HOST, HOST before CLIENT,
      *  CLIENT before ALWAYS, and also subnets are encountered
      *  in the right order
@@ -400,7 +400,7 @@ int cluster_lookup_lowlevel(char *path, struct svc_req *rqstp)
         res = CLU_MASTER;
     }
 
-    /* 
+    /*
      * dirent array not freed here since cluster_create may need
      * to look at it afterwards
      */

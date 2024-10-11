@@ -124,7 +124,7 @@ char *locate_file(U(uint32 dev), U(uint64 ino))
     if (!mtab)
         return NULL;
 
-    /* 
+    /*
      * look for mtab entry with matching device
      */
     while ((ent = getmntent(mtab))) {
@@ -148,7 +148,7 @@ char *locate_file(U(uint32 dev), U(uint64 ino))
     if (!mtab)
         return NULL;
 
-    /* 
+    /*
      * look for mnttab entry with matching device
      */
     while (getmntent(mtab, &ent) == 0) {

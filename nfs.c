@@ -98,7 +98,7 @@ nfsstat3 cat_name(const char *path, const char *name, char *result)
         return NFS3_OK;
     }
 
-    /* 
+    /*
      * Irix clients do lookups for .. and then use the
      * resulting filehandle for more lookups, causing them
      * to get filehandles that fh_decomp_raw will refuse to
@@ -432,7 +432,7 @@ WRITE3res *nfsproc3_write_3_svc(WRITE3args * argp, struct svc_req * rqstp)
 static const unsigned FT80SEC = 315532800;
 
 /*
- * store verifier in atime and mtime 
+ * store verifier in atime and mtime
  */
 static int store_create_verifier(char *obj, createverf3 verf)
 {
@@ -737,7 +737,7 @@ static nfsstat3 mknod_args(mknoddata3 what, const char *obj, mode_t * mode,
         case NF3SOCK:
             if (strlen(obj) + 1 > UNIX_PATH_MAX)
                 return NFS3ERR_NAMETOOLONG;
-            /* fall thru */
+        /* fall thru */
         case NF3FIFO:
             attr = what.mknoddata3_u.pipe_attributes;
             break;
@@ -745,7 +745,7 @@ static nfsstat3 mknod_args(mknoddata3 what, const char *obj, mode_t * mode,
         case NF3CHR:
             attr = what.mknoddata3_u.device.dev_attributes;
             *dev = (what.mknoddata3_u.device.spec.specdata1 << 8)
-                + what.mknoddata3_u.device.spec.specdata2;
+                   + what.mknoddata3_u.device.spec.specdata2;
             break;
     }
 
@@ -967,11 +967,11 @@ READDIR3res *nfsproc3_readdir_3_svc(READDIR3args * argp,
 }
 
 READDIRPLUS3res *nfsproc3_readdirplus_3_svc(U(READDIRPLUS3args * argp),
-                                            U(struct svc_req * rqstp))
+        U(struct svc_req * rqstp))
 {
     static READDIRPLUS3res result;
 
-    /* 
+    /*
      * we don't do READDIRPLUS since it involves filehandle and
      * attribute getting which is impossible to do atomically
      * from user-space

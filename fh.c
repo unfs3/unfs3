@@ -158,7 +158,7 @@ int fh_valid(unfs3_fh_t fh)
 #ifdef __GNUC__
 static const unfs3_fh_t invalid_fh = {.dev = 0,.ino = 0,.gen = 0,.len =
         0,.inos = {0}
-};
+                                     };
 #else
 static const unfs3_fh_t invalid_fh = { 0, 0, 0, 0, 0, {0} };
 #endif
@@ -180,7 +180,7 @@ unfs3_fh_t fh_comp_raw(const char *path, struct svc_req *rqstp, int need_dir)
 
     fh.len = 0;
 
-    /* special case for removable device export point: return preset fsid and 
+    /* special case for removable device export point: return preset fsid and
        inod 1. */
     if (rqstp && export_point(path)) {
         uint32 fsid;
@@ -260,7 +260,7 @@ unfs3_fh_t fh_comp_raw(const char *path, struct svc_req *rqstp, int need_dir)
 u_int fh_length(const unfs3_fh_t * fh)
 {
     return fh->len + sizeof(fh->len) + sizeof(fh->dev) + sizeof(fh->ino) +
-        sizeof(fh->gen) + sizeof(fh->pwhash);
+           sizeof(fh->gen) + sizeof(fh->pwhash);
 }
 
 /*

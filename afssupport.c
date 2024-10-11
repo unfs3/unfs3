@@ -88,8 +88,7 @@ static int get_afs_fid(const char *path, int follow_or_fd, int32 *cell, uint32 *
     struct VenusFid vfid;
     int ret;
 
-    if (path == NULL)
-    {
+    if (path == NULL) {
 #ifdef __linux__
         /*
          * "Note that while there is no interface to obtain the FID of an
@@ -105,8 +104,7 @@ static int get_afs_fid(const char *path, int follow_or_fd, int32 *cell, uint32 *
         errno = ENOSYS;	/* Function not implemented */
         return 1;
 #endif
-    }
-    else
+    } else
         follow = follow_or_fd;
 
     vioc.in_size = 0;
@@ -115,8 +113,7 @@ static int get_afs_fid(const char *path, int follow_or_fd, int32 *cell, uint32 *
 
     ret = pioctl(path, VIOCGETFID, &vioc, follow);
 
-    if (ret == 0)
-    {
+    if (ret == 0) {
         if (cell)   *cell   = vfid.Cell;
         if (volume) *volume = vfid.Fid.Volume;
         if (vnode)  *vnode  = vfid.Fid.Vnode;

@@ -88,16 +88,16 @@ static void remove_fdname(int fd)
     }
 }
 
-/* 
+/*
  * The following UTF-8 validation is borrowed from
  * ftp://ftp.unicode.org/Public/PROGRAMS/CVTUTF/ConvertUTF.c.
  */
 
 /*
  * Copyright 2001-2004 Unicode, Inc.
- * 
+ *
  * Disclaimer
- * 
+ *
  * This source code is provided as is by Unicode, Inc. No claims are
  * made as to fitness for any particular purpose. No warranties of any
  * kind are expressed or implied. The recipient agrees to determine
@@ -105,9 +105,9 @@ static void remove_fdname(int fd)
  * purchased on magnetic or optical media from Unicode, Inc., the
  * sole remedy for any claim will be exchange of defective media
  * within 90 days of receipt.
- * 
+ *
  * Limitations on Rights to Redistribute This Code
- * 
+ *
  * Unicode, Inc. hereby grants the right to freely use the information
  * supplied in this file in the creation of products supporting the
  * Unicode Standard, and to make copies of this file in any form
@@ -160,7 +160,7 @@ static int isLegalUTF8(const unsigned char *source, int length)
     switch (length) {
         default:
             return 0;
-            /* Everything else falls through when "1"... */
+        /* Everything else falls through when "1"... */
         case 4:
             if ((a = (*--srcptr)) < 0x80 || a > 0xBF)
                 return 0;
@@ -172,7 +172,7 @@ static int isLegalUTF8(const unsigned char *source, int length)
                 return 0;
 
             switch (*source) {
-                    /* no fall-through in this inner switch */
+                /* no fall-through in this inner switch */
                 case 0xE0:
                     if (a < 0xA0)
                         return 0;
@@ -279,7 +279,7 @@ static wchar_t *intpath2winpath(const char *intpath)
             case '\0':
                 winpath[2] = '/';
                 winpath[3] = '\0';
-                /* fall through */
+            /* fall through */
 
             case '/':
                 winpath[0] = winpath[1];
@@ -351,7 +351,7 @@ int win_fchmod(int fildes, mode_t mode)
     return ret;
 }
 
-/* 
+/*
    If you need a good laugh, take a look at the "Suggested Interix
    replacement" at:
    http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dnucmg/html/UCMGch10.asp
@@ -361,11 +361,10 @@ ssize_t pread(int fd, void *buf, size_t count, off64_t offset)
     ssize_t size;
     __int64 ret;
 
-    if ((ret = _lseeki64(fd, (__int64)offset, SEEK_SET)) < 0)
-    {
-                fprintf(stderr, "Seeking for offset %I64d failed when reading.\n", offset);
+    if ((ret = _lseeki64(fd, (__int64)offset, SEEK_SET)) < 0) {
+        fprintf(stderr, "Seeking for offset %I64d failed when reading.\n", offset);
         return -1;
-        }
+    }
 
     size = read(fd, buf, count);
     return size;
@@ -376,11 +375,10 @@ ssize_t pwrite(int fd, const void *buf, size_t count, off64_t offset)
     ssize_t size;
     __int64 ret;
 
-    if ((ret = _lseeki64(fd, (__int64)offset, SEEK_SET)) < 0)
-        {
-                fprintf(stderr, "Seeking for offset %I64d failed when writing.\n", offset);
-                return -1;
-        }
+    if ((ret = _lseeki64(fd, (__int64)offset, SEEK_SET)) < 0) {
+        fprintf(stderr, "Seeking for offset %I64d failed when writing.\n", offset);
+        return -1;
+    }
     size = write(fd, buf, count);
 
     return size;
@@ -439,7 +437,7 @@ void win_shutdown()
    st_dev and st_ino. These are calculated as follows:
 
    st_dev is set to the drive number (0=A 1=B ...). Our virtual root
-   "/" gets a st_dev of 0xff. 
+   "/" gets a st_dev of 0xff.
 
    st_ino is hashed from the full file path. Each half produces a 32
    bit hash. These are concatenated to a 64 bit value. The risk that
@@ -449,7 +447,7 @@ void win_shutdown()
    enhancement.
 
    pigeon() can be calculated in Python with:
-   
+
    def pigeon(m, n):
        res = 1.0
        for i in range(m - n + 1, m):
@@ -666,7 +664,7 @@ int win_fstat(int fd, backend_statstruct * buf)
 
 /*
   opendir implementation which emulates a virtual root with the drive
-  letters presented as directories. 
+  letters presented as directories.
 */
 UNFS3_WIN_DIR *win_opendir(const char *name)
 {
