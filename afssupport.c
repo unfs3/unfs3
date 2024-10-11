@@ -102,7 +102,7 @@ static int get_afs_fid(const char *path, int follow_or_fd, int32 *cell, uint32 *
         path = fdname;
         follow = 1;	/* Necessary, or else the pioctl() returns EINVAL */
 #else
-        errno = ENOSYS	/* Function not implemented */
+        errno = ENOSYS;	/* Function not implemented */
         return 1;
 #endif
     }
