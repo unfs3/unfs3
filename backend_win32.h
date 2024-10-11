@@ -53,7 +53,7 @@
 #define backend_readlink win_readlink
 #define backend_realpath win_realpath
 #define backend_remove win_remove
-#define backend_rename win_rename 
+#define backend_rename win_rename
 #define backend_rmdir win_rmdir
 #define backend_setegid win_setegid
 #define backend_seteuid win_seteuid

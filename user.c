@@ -40,14 +40,14 @@ void get_squash_ids(void)
     backend_passwdstruct *passwd;
 
     if (can_switch) {
-	passwd = backend_getpwnam("nobody");
-	if (passwd) {
-	    squash_uid = passwd->pw_uid;
-	    squash_gid = passwd->pw_gid;
-	} else {
-	    squash_uid = 65534;
-	    squash_gid = 65534;
-	}
+        passwd = backend_getpwnam("nobody");
+        if (passwd) {
+            squash_uid = passwd->pw_uid;
+            squash_gid = passwd->pw_gid;
+        } else {
+            squash_uid = 65534;
+            squash_gid = 65534;
+        }
     }
 }
 
@@ -57,13 +57,13 @@ void get_squash_ids(void)
 static int mangle(int id, int squash)
 {
     if (!can_switch || (exports_opts & OPT_ALL_SQUASH))
-	return squash;
+        return squash;
     else if (exports_opts & OPT_NO_ROOT_SQUASH)
-	return id;
+        return id;
     else if (id == 0)
-	return squash;
+        return squash;
     else
-	return id;
+        return id;
 }
 
 /*
@@ -74,7 +74,7 @@ int mangle_uid(int id)
     int squash = squash_uid;
 
     if (exports_anonuid() != ANON_NOTSPECIAL)
-	squash = exports_anonuid();
+        squash = exports_anonuid();
 
     return mangle(id, squash);
 }
@@ -87,7 +87,7 @@ int mangle_gid(int id)
     int squash = squash_gid;
 
     if (exports_anongid() != ANON_NOTSPECIAL)
-	squash = exports_anongid();
+        squash = exports_anongid();
 
     return mangle(id, squash);
 }
@@ -101,12 +101,12 @@ int get_uid(struct svc_req *req)
     int squash = squash_uid;
 
     if (exports_anonuid() != ANON_NOTSPECIAL)
-	squash = exports_anonuid();
+        squash = exports_anonuid();
 
     if (req->rq_cred.oa_flavor == AUTH_UNIX)
-	return mangle(auth->aup_uid, squash);
+        return mangle(auth->aup_uid, squash);
     else
-	return squash;		       /* fallback if no uid given */
+        return squash;		       /* fallback if no uid given */
 }
 
 /*
@@ -118,12 +118,12 @@ static int get_gid(struct svc_req *req)
     int squash = squash_gid;
 
     if (exports_anongid() != ANON_NOTSPECIAL)
-	squash = exports_anongid();
+        squash = exports_anongid();
 
     if (req->rq_cred.oa_flavor == AUTH_UNIX)
-	return mangle(auth->aup_gid, squash);
+        return mangle(auth->aup_gid, squash);
     else
-	return squash;		       /* fallback if no gid given */
+        return squash;		       /* fallback if no gid given */
 }
 
 /*
@@ -143,13 +143,13 @@ int has_group(int group, struct svc_req *req)
     unsigned int i;
 
     if (req->rq_cred.oa_flavor == AUTH_UNIX) {
-	if (mangle(auth->aup_gid, squash_gid) == group)
-	    return TRUE;
+        if (mangle(auth->aup_gid, squash_gid) == group)
+            return TRUE;
 
-	/* search groups */
-	for (i = 0; i < auth->aup_len; i++)
-	    if (mangle(auth->aup_gids[i], squash_gid) == group)
-		return TRUE;
+        /* search groups */
+        for (i = 0; i < auth->aup_len; i++)
+            if (mangle(auth->aup_gids[i], squash_gid) == group)
+                return TRUE;
     }
 
     return FALSE;
@@ -161,7 +161,7 @@ int has_group(int group, struct svc_req *req)
 void switch_to_root(void)
 {
     if (!can_switch)
-	return;
+        return;
 
     backend_setegid(0);
     backend_seteuid(0);
@@ -178,7 +178,7 @@ static int switch_groups(struct svc_req *req)
     max = (auth->aup_len <= 32) ? auth->aup_len : 32;
 
     for (i = 0; i < max; ++i) {
-	auth->aup_gids[i] = mangle(auth->aup_gids[i], squash_gid);
+        auth->aup_gids[i] = mangle(auth->aup_gids[i], squash_gid);
     }
 
     return backend_setgroups(max, auth->aup_gids);
@@ -192,20 +192,20 @@ void switch_user(struct svc_req *req)
     int uid, gid, aid;
 
     if (!can_switch)
-	return;
+        return;
 
     if (opt_singleuser || (backend_getuid() != 0)) {
-	/* 
-	 * have uid/gid functions behave correctly by squashing
-	 * all user and group ids to the current values
-	 *
-	 * otherwise ACCESS would malfunction
-	 */
-	squash_uid = backend_getuid();
-	squash_gid = backend_getgid();
+        /*
+         * have uid/gid functions behave correctly by squashing
+         * all user and group ids to the current values
+         *
+         * otherwise ACCESS would malfunction
+         */
+        squash_uid = backend_getuid();
+        squash_gid = backend_getgid();
 
-	can_switch = FALSE;
-	return;
+        can_switch = FALSE;
+        return;
     }
 
     backend_setegid(0);
@@ -215,8 +215,8 @@ void switch_user(struct svc_req *req)
     uid = backend_seteuid(get_uid(req));
 
     if (uid == -1 || gid == -1 || aid == -1) {
-	logmsg(LOG_EMERG, "euid/egid switching failed, aborting");
-	daemon_exit(CRISIS);
+        logmsg(LOG_EMERG, "euid/egid switching failed, aborting");
+        daemon_exit(CRISIS);
     }
 }
 
@@ -228,19 +228,19 @@ void read_executable(struct svc_req *req, backend_statstruct buf)
     int have_exec = 0;
 
     if (is_owner(buf.st_uid, req)) {
-	if (!(buf.st_mode & S_IRUSR) && (buf.st_mode & S_IXUSR))
-	    have_exec = 1;
+        if (!(buf.st_mode & S_IRUSR) && (buf.st_mode & S_IXUSR))
+            have_exec = 1;
     } else if (has_group(buf.st_gid, req)) {
-	if (!(buf.st_mode & S_IRGRP) && (buf.st_mode & S_IXGRP))
-	    have_exec = 1;
+        if (!(buf.st_mode & S_IRGRP) && (buf.st_mode & S_IXGRP))
+            have_exec = 1;
     } else {
-	if (!(buf.st_mode & S_IROTH) && (buf.st_mode & S_IXOTH))
-	    have_exec = 1;
+        if (!(buf.st_mode & S_IROTH) && (buf.st_mode & S_IXOTH))
+            have_exec = 1;
     }
 
     if (have_exec) {
-	backend_setegid(0);
-	backend_seteuid(0);
+        backend_setegid(0);
+        backend_seteuid(0);
     }
 }
 
@@ -255,16 +255,16 @@ void read_by_owner(struct svc_req *req, backend_statstruct buf)
     have_owner = is_owner(buf.st_uid, req);
 
     if (have_owner && (buf.st_mode & S_IRUSR)) {
-	have_read = 1;
+        have_read = 1;
     } else if (has_group(buf.st_gid, req) && (buf.st_mode & S_IRGRP)) {
-	have_read = 1;
+        have_read = 1;
     } else if (buf.st_mode & S_IROTH) {
-	have_read = 1;
+        have_read = 1;
     }
 
     if (have_owner && !have_read) {
-	backend_setegid(0);
-	backend_seteuid(0);
+        backend_setegid(0);
+        backend_seteuid(0);
     }
 }
 
@@ -279,15 +279,15 @@ void write_by_owner(struct svc_req *req, backend_statstruct buf)
     have_owner = is_owner(buf.st_uid, req);
 
     if (have_owner && (buf.st_mode & S_IWUSR)) {
-	have_write = 1;
+        have_write = 1;
     } else if (has_group(buf.st_gid, req) && (buf.st_mode & S_IWGRP)) {
-	have_write = 1;
+        have_write = 1;
     } else if (buf.st_mode & S_IWOTH) {
-	have_write = 1;
+        have_write = 1;
     }
 
     if (have_owner && !have_write) {
-	backend_setegid(0);
-	backend_seteuid(0);
+        backend_setegid(0);
+        backend_seteuid(0);
     }
 }

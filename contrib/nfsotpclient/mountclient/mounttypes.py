@@ -14,22 +14,22 @@ def init_type_class(klass, ncl):
 
 def assert_not_none(klass, *args):
     for arg in args:
-	if arg == None:
-	    raise TypeError(repr(klass) + " has uninitialized data")
+        if arg == None:
+            raise TypeError(repr(klass) + " has uninitialized data")
 
 def pack_objarray(ncl, list):
     # FIXME: Support for length assertion. 
     ncl.packer.pack_uint(len(list))
     for item in list:
-	item.pack()
+        item.pack()
 
 def unpack_objarray(ncl, klass):
     n = ncl.unpacker.unpack_uint()
     list = []
     for i in range(n):
-	obj = klass(ncl)
-	obj.unpack()
-	list.append(obj)
+        obj = klass(ncl)
+        obj.unpack()
+        list.append(obj)
     return list
 
 

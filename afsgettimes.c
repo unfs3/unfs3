@@ -13,9 +13,18 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-time_t afs_get_system_st_atime(struct stat *buf) { return buf->st_atime; }
-time_t afs_get_system_st_mtime(struct stat *buf) { return buf->st_mtime; }
-time_t afs_get_system_st_ctime(struct stat *buf) { return buf->st_ctime; }
+time_t afs_get_system_st_atime(struct stat *buf)
+{
+    return buf->st_atime;
+}
+time_t afs_get_system_st_mtime(struct stat *buf)
+{
+    return buf->st_mtime;
+}
+time_t afs_get_system_st_ctime(struct stat *buf)
+{
+    return buf->st_ctime;
+}
 
 #endif /* AFS_SUPPORT */
 
