@@ -1,5 +1,6 @@
 #!/bin/sh
 astyle --suffix=none --style=kr \
        --indent-switches --min-conditional-indent=0 \
-       --ignore-exclude-errors --exclude=xdr.c \
-       "*.c," "Extras/*.c"
+       --ignore-exclude-errors --exclude=mount.h --exclude=nfs.h \
+       --exclude=xdr.c --exclude=xdr.h \
+       "*.c,*.h" "Config/*.c,*.h" "Extras/*.c,*.h"

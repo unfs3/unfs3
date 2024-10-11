@@ -19,12 +19,12 @@
 #define FH_MAXLEN (FH_MAXBUF - FH_MINLEN)
 
 typedef struct {
-        uint32			dev;
-        uint64			ino;
-        uint32			gen;
-        uint32                  pwhash;
-        unsigned char	len;
-        unsigned char	inos[FH_MAXLEN];
+    uint32			dev;
+    uint64			ino;
+    uint32			gen;
+    uint32                  pwhash;
+    unsigned char	len;
+    unsigned char	inos[FH_MAXLEN];
 } unfs3_fh_t;
 
 #define FH_ANY 0
