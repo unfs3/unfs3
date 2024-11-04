@@ -174,7 +174,7 @@ static void add_host(void)
         new = malloc(sizeof(e_host));
         ne_new = malloc(sizeof(struct groupnode));
         if (!new || !ne_new) {
-                logmsg(LOG_EMERG, "out of memory, aborting");
+                logmsg(LOG_EMERG, "Out of memory, aborting");
                 daemon_exit(CRISIS);
         }
 
@@ -253,7 +253,7 @@ static void add_item(const char *path)
         new = malloc(sizeof(e_item));
         ne_new = malloc(sizeof(struct exportnode));
         if (!new || !ne_new) {
-                logmsg(LOG_EMERG, "out of memory, aborting");
+                logmsg(LOG_EMERG, "Out of memory, aborting");
                 daemon_exit(CRISIS);
         }
 
@@ -279,7 +279,7 @@ static void add_item(const char *path)
         }
 
         if (strlen(buf) + 1 > NFS_MAXPATHLEN) {
-                logmsg(LOG_CRIT, "attempted to export too long path");
+                logmsg(LOG_CRIT, "Attempted to export too long path");
                 e_error = TRUE;
                 free(new);
                 free(ne_new);
@@ -328,7 +328,7 @@ static void set_hostname(const char *name)
         struct hostent *ent;
 
         if (strlen(name) + 1 > NFS_MAXPATHLEN) {
-                logmsg(LOG_CRIT, "hostname '%s' is too long", name);
+                logmsg(LOG_CRIT, "Hostname '%s' is too long", name);
                 e_error = TRUE;
                 return;
         }
@@ -346,7 +346,7 @@ static void set_hostname(const char *name)
 
                 cur_host.prefix = 128;
         } else {
-                logmsg(LOG_CRIT, "could not resolve hostname '%s'", name);
+                logmsg(LOG_CRIT, "Could not resolve hostname '%s'", name);
                 e_error = TRUE;
         }
 }	
@@ -361,7 +361,7 @@ static void set_ipv4addr(const char *addr)
         strcpy(cur_host.orig, addr);
 
         if (inet_pton(AF_INET, addr, &in4) != 1) {
-                logmsg(LOG_CRIT, "could not parse IPv4 address '%s'", addr);
+                logmsg(LOG_CRIT, "Could not parse IPv4 address '%s'", addr);
                 e_error = TRUE;
         }
 
@@ -377,7 +377,7 @@ static void set_ipv6addr(const char *addr)
         strcpy(cur_host.orig, addr);
 
         if (inet_pton(AF_INET6, addr, &cur_host.addr) != 1) {
-                logmsg(LOG_CRIT, "could not parse IPv6 address '%s'", addr);
+                logmsg(LOG_CRIT, "Could not parse IPv6 address '%s'", addr);
                 e_error = TRUE;
         }
 
@@ -400,7 +400,7 @@ static unsigned long make_prefix(const char *mask) {
         int i, prefix;
 
         if (!inet_pton(AF_INET, mask, &addr)) {
-                logmsg(LOG_CRIT, "could not parse IPv4 network mask '%s'", mask);
+                logmsg(LOG_CRIT, "Could not parse IPv4 network mask '%s'", mask);
                 e_error = TRUE;
                 return 0;
         }
@@ -417,7 +417,7 @@ static unsigned long make_prefix(const char *mask) {
 
         for (; i < 32; i++) {
                 if (!(haddr & (1<<i))) {
-                        logmsg(LOG_CRIT, "can not convert IPv4 network mask '%s' to a prefix", mask);
+                        logmsg(LOG_CRIT, "Can not convert IPv4 network mask '%s' to a prefix", mask);
                         e_error = TRUE;
                         break;
                 }
@@ -503,7 +503,7 @@ static void add_option(const char *opt)
         else if (strcmp(opt,"secure") == 0)
                 cur_host.options &= ~OPT_INSECURE;
         else
-                logmsg(LOG_WARNING, "Warning: unknown exports option `%s' ignored",
+                logmsg(LOG_WARNING, "Warning: Unknown exports option `%s' ignored",
                         opt);
 }
 
@@ -511,7 +511,7 @@ static void add_option_with_value(const char *opt, const char *val)
 {
     if (strcmp(opt,"password") == 0) {
         if (strlen(val) > PASSWORD_MAXLEN) {
-            logmsg(LOG_WARNING, "Warning: password for export %s truncated to 64 chars",
+            logmsg(LOG_WARNING, "Warning: Password for export %s truncated to 64 chars",
                    cur_item.orig);
         }
         strncpy(cur_host.password, val, sizeof(password));
@@ -523,7 +523,7 @@ static void add_option_with_value(const char *opt, const char *val)
     } else if (strcmp(opt,"anongid") == 0) {
         cur_host.anongid = atoi(val);
     } else {
-        logmsg(LOG_WARNING, "Warning: unknown exports option `%s' ignored",
+        logmsg(LOG_WARNING, "Warning: Unknown exports option `%s' ignored",
             opt);
     }
 }
@@ -533,7 +533,7 @@ static void add_option_with_value(const char *opt, const char *val)
  */
 void yyerror(U(char *s))
 {
-        logmsg(LOG_CRIT, "parser error: %s", s);
+        logmsg(LOG_CRIT, "Parser error: %s", s);
 
         e_error = TRUE;
         return;
@@ -725,13 +725,13 @@ int exports_parse(void)
          * may currently be accessing the list
          */
         if (exports_access) {
-                logmsg(LOG_CRIT, "export list is being traversed, no reload\n");
+                logmsg(LOG_CRIT, "Export list is being traversed, no reload\n");
                 return FALSE;
         }
 
         efile = fopen(opt_exports, "r");
         if (!efile) {
-                logmsg(LOG_CRIT, "could not open '%s', exporting nothing",
+                logmsg(LOG_CRIT, "Could not open '%s', exporting nothing",
                        opt_exports);
                 free_list(export_list);
                 free_nfslist(exports_nfslist);
@@ -746,7 +746,7 @@ int exports_parse(void)
         fclose(efile);
 
         if (e_error) {
-                logmsg(LOG_CRIT, "syntax error in '%s', exporting nothing",
+                logmsg(LOG_CRIT, "Syntax error in '%s', exporting nothing",
                        opt_exports);
                 free_list(export_list);
                 free_nfslist(exports_nfslist);

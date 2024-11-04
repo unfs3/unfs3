@@ -511,7 +511,7 @@ class RawUDPClient(Client):
         try:
             from select import select
         except ImportError:
-            print('WARNING: select not found, RPC may hang')
+            print('Warning: Select not found, RPC may hang')
             select = None
         BUFSIZE = 8192 # Max UDP buffer size
         timeout = 1
@@ -567,7 +567,7 @@ class RawBroadcastUDPClient(RawUDPClient):
         try:
             from select import select
         except ImportError:
-            print('WARNING: select not found, broadcast will hang')
+            print('Warning: Select not found, broadcast will hang')
             select = None
         BUFSIZE = 8192 # Max UDP buffer size (for reply)
         replies = []
@@ -917,7 +917,7 @@ class TCPServer(Server):
             except EOFError:
                 break
             except socket.error as msg:
-                print('socket error:', msg)
+                print('Socket error:', msg)
                 break
             reply = self.handle(call)
             if reply is not None:
@@ -1039,9 +1039,9 @@ def testclt():
                     self.packer.pack_string, \
                     self.unpacker.unpack_string)
     c = C(host, 0x20000000, 1)
-    print('making call...')
+    print('Making call...')
     reply = c.call_1('hello, world, ')
-    print('call returned', repr(reply))
+    print('Call returned', repr(reply))
 
 
 # Local variables:

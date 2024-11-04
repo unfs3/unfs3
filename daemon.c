@@ -174,7 +174,7 @@ int get_socket_type(struct svc_req *rqstp)
     res = getsockopt(rqstp->rq_xprt->xp_fd, SOL_SOCKET, SO_TYPE, &v, &l);
 
     if (res < 0) {
-        logmsg(LOG_CRIT, "unable to determine socket type");
+        logmsg(LOG_CRIT, "Unable to determine socket type");
         return -1;
     }
 
@@ -194,13 +194,13 @@ static void create_pid_file(void)
 
     fd = backend_open_create(opt_pid_file, O_RDWR | O_CREAT | O_TRUNC, 0644);
     if (fd == -1) {
-        logmsg(LOG_WARNING, "failed to create pid file `%s'", opt_pid_file);
+        logmsg(LOG_WARNING, "Failed to create pid file `%s'", opt_pid_file);
         return;
     }
 #if defined(LOCK_EX) && defined(LOCK_NB)
     res = backend_flock(fd, LOCK_EX | LOCK_NB);
     if (res == -1) {
-        logmsg(LOG_WARNING, "failed to lock pid file `%s'", opt_pid_file);
+        logmsg(LOG_WARNING, "Failed to lock pid file `%s'", opt_pid_file);
         backend_close(fd);
         return;
     }
@@ -212,7 +212,7 @@ static void create_pid_file(void)
     res = backend_pwrite(fd, buf, len, 0);
     backend_close(fd);
     if (res != len) {
-        logmsg(LOG_WARNING, "failed to write pid file `%s'", opt_pid_file);
+        logmsg(LOG_WARNING, "Failed to write pid file `%s'", opt_pid_file);
     }
 }
 
@@ -228,7 +228,7 @@ static void remove_pid_file(void)
 
     res = backend_remove(opt_pid_file);
     if (res == -1 && errno != ENOENT) {
-        logmsg(LOG_WARNING, "failed to remove pid file `%s'", opt_pid_file);
+        logmsg(LOG_WARNING, "Failed to remove pid file `%s'", opt_pid_file);
     }
 }
 
@@ -390,7 +390,7 @@ void daemon_exit(int error)
                    fh_cache_use - fh_cache_hit);
         else
             logmsg(LOG_INFO, "fh cache unused");
-        logmsg(LOG_INFO, "open file descriptors: read %i, write %i",
+        logmsg(LOG_INFO, "Open file descriptors: read %i, write %i",
                fd_cache_readers, fd_cache_writers);
         return;
     }
@@ -406,7 +406,7 @@ void daemon_exit(int error)
     }
 
     if (error == SIGSEGV)
-        logmsg(LOG_EMERG, "segmentation fault");
+        logmsg(LOG_EMERG, "Segmentation fault");
 
     fd_cache_purge();
 
@@ -617,11 +617,11 @@ static void nfs3_program_3(struct svc_req *rqstp, register SVCXPRT * transp)
     if (result != NULL &&
         !svc_sendreply(transp, (xdrproc_t) _xdr_result, result)) {
         svcerr_systemerr(transp);
-        logmsg(LOG_CRIT, "unable to send RPC reply");
+        logmsg(LOG_CRIT, "Unable to send RPC reply");
     }
     if (!svc_freeargs
         (transp, (xdrproc_t) _xdr_argument, (caddr_t) & argument)) {
-        logmsg(LOG_CRIT, "unable to free XDR arguments");
+        logmsg(LOG_CRIT, "Unable to free XDR arguments");
     }
     return;
 }
@@ -695,11 +695,11 @@ static void mountprog_3(struct svc_req *rqstp, register SVCXPRT * transp)
     if (result != NULL &&
         !svc_sendreply(transp, (xdrproc_t) _xdr_result, result)) {
         svcerr_systemerr(transp);
-        logmsg(LOG_CRIT, "unable to send RPC reply");
+        logmsg(LOG_CRIT, "Unable to send RPC reply");
     }
     if (!svc_freeargs
         (transp, (xdrproc_t) _xdr_argument, (caddr_t) & argument)) {
-        logmsg(LOG_CRIT, "unable to free XDR arguments");
+        logmsg(LOG_CRIT, "Unable to free XDR arguments");
     }
     return;
 }
@@ -754,7 +754,7 @@ static void _register_service(SVCXPRT *transp,
     len = sizeof(type);
     if (getsockopt(transp->xp_fd, SOL_SOCKET, SO_TYPE, &type, &len)) {
         perror("getsockopt");
-        fprintf(stderr, "unable to register (%s, %s).\n",
+        fprintf(stderr, "Unable to register (%s, %s).\n",
                 progname, versname);
         daemon_exit(0);
     }
@@ -767,13 +767,13 @@ static void _register_service(SVCXPRT *transp,
     if (opt_portmapper) {
         nconf = getnetconfigent(netid);
         if (nconf == NULL) {
-            fprintf(stderr, "unable to get netconfig entry \"%s\"\n", netid);
+            fprintf(stderr, "Unable to get netconfig entry \"%s\"\n", netid);
             daemon_exit(0);
         }
     }
 
     if (!svc_reg(transp, prognum, versnum, dispatch, nconf)) {
-        fprintf(stderr, "unable to register (%s, %s, %s).\n",
+        fprintf(stderr, "Unable to register (%s, %s, %s).\n",
                 progname, versname, netid);
         daemon_exit(0);
     }
@@ -787,7 +787,7 @@ static void _register_service(SVCXPRT *transp,
     domain = _socket_getdomain(transp->xp_fd);
     if (domain == -1) {
         perror("_socket_getdomain");
-        fprintf(stderr, "unable to register (%s, %s).\n",
+        fprintf(stderr, "Unable to register (%s, %s).\n",
                 progname, versname);
         daemon_exit(0);
     }
@@ -802,12 +802,12 @@ static void _register_service(SVCXPRT *transp,
 
     nconf = getnetconfigent(netid);
     if (nconf == NULL) {
-        fprintf(stderr, "unable to get netconfig entry \"%s\"\n", netid);
+        fprintf(stderr, "Unable to get netconfig entry \"%s\"\n", netid);
         daemon_exit(0);
     }
 
     if (!svc_reg(transp, prognum, versnum, dispatch, nconf)) {
-        fprintf(stderr, "unable to register (%s, %s, %s).\n",
+        fprintf(stderr, "Unable to register (%s, %s, %s).\n",
                 progname, versname, netid);
         daemon_exit(0);
     }
@@ -932,7 +932,7 @@ static SVCXPRT *create_udp_transport(unsigned int port)
     transp = svc_dg_create(sock, 0, 0);
 
     if (transp == NULL) {
-        fprintf(stderr, "%s\n", "cannot create udp service.");
+        fprintf(stderr, "Cannot create udp service.\n");
         daemon_exit(0);
     }
 
@@ -1017,7 +1017,7 @@ static SVCXPRT *create_tcp_transport(unsigned int port)
     transp = svc_vc_create(sock, 0, 0);
 
     if (transp == NULL) {
-        fprintf(stderr, "%s\n", "cannot create tcp service.");
+        fprintf(stderr, "Cannot create tcp service.\n");
         daemon_exit(0);
     }
 
@@ -1167,7 +1167,7 @@ int main(int argc, char **argv)
 
     res = backend_init();
     if (res == -1) {
-        fprintf(stderr, "backend initialization failed\n");
+        fprintf(stderr, "Backend initialization failed\n");
         daemon_exit(0);
     }
 
@@ -1207,13 +1207,13 @@ int main(int argc, char **argv)
 #ifndef WIN32
     if (opt_detach) {
         if (pipe(pipefd) == -1) {
-            fprintf(stderr, "could not create a pipe\n");
+            fprintf(stderr, "Could not create a pipe\n");
             exit(1);
         }
 
         pid = fork();
         if (pid == -1) {
-            fprintf(stderr, "could not fork into background\n");
+            fprintf(stderr, "Could not fork into background\n");
             daemon_exit(0);
         }
         if (pid > 0) {
@@ -1247,7 +1247,7 @@ int main(int argc, char **argv)
 
         /* don't make directory we started in busy */
         if(chdir("/") < 0) {
-            fprintf(stderr, "could not change working directory\n");
+            fprintf(stderr, "Could not change working directory\n");
             daemon_exit(0);
         }
 
