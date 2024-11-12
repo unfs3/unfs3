@@ -64,6 +64,7 @@
 #define backend_truncate win_truncate
 #define backend_utimes win_utimes
 #define backend_init win_init
+#define backend_dirent struct dirent
 #define backend_dirstream UNFS3_WIN_DIR
 #define backend_fsinfo_properties FSF3_HOMOGENEOUS | FSF3_CANSETTIME;
 /*

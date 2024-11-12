@@ -522,7 +522,7 @@ nfsstat3 atomic_attr(sattr3 attr)
 static uint32 directory_hash(const char *path)
 {
     backend_dirstream *search;
-    struct dirent *this;
+    backend_dirent *this;
     uint32 hval = 0;
 
     search = backend_opendir(path);

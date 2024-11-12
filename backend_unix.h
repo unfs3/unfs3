@@ -63,6 +63,7 @@
 #define backend_utimes utimes
 #define backend_lutimes lutimes
 #define backend_statstruct struct stat
+#define backend_dirent struct dirent
 #define backend_dirstream DIR
 #define backend_statvfsstruct struct statvfs
 #define backend_fsinfo_properties FSF3_LINK | FSF3_SYMLINK | FSF3_HOMOGENEOUS | FSF3_CANSETTIME;
