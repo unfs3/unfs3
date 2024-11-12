@@ -376,7 +376,7 @@ static int fh_rec(const unfs3_fh_t * fh, int pos, const char *lead,
 		  char *result)
 {
     backend_dirstream *search;
-    struct dirent *entry;
+    backend_dirent *entry;
     backend_statstruct buf;
     int res, rec;
     char obj[NFS_MAXPATHLEN];

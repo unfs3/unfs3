@@ -71,7 +71,7 @@ READDIR3res read_dir(const char *path, cookie3 cookie, cookieverf3 verf,
     backend_statstruct buf;
     int res;
     backend_dirstream *search;
-    struct dirent *this;
+    backend_dirent *this;
     count3 i, real_count;
     static char obj[NFS_MAXPATHLEN * MAX_ENTRIES];
     char scratch[NFS_MAXPATHLEN];
