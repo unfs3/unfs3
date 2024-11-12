@@ -68,13 +68,16 @@ READDIR3res read_dir(const char *path, cookie3 cookie, cookieverf3 verf,
     READDIR3resok resok;
     cookie3 upper;
     static entry3 entry[MAX_ENTRIES];
-    backend_statstruct buf;
     int res;
     backend_dirstream *search;
     backend_dirent *this;
     count3 i, real_count;
     static char obj[NFS_MAXPATHLEN * MAX_ENTRIES];
     char scratch[NFS_MAXPATHLEN];
+    uint64 ino;
+#ifdef AFS_SUPPORT
+    backend_statstruct buf;
+#endif
 
     /* check upper part of cookie */
     if(opt_32_bit_truncate) {
@@ -149,22 +152,27 @@ READDIR3res read_dir(const char *path, cookie3 cookie, cookieverf3 verf,
 	    else
 		sprintf(scratch, "%s/%s", path, this->d_name);
 
+#ifdef AFS_SUPPORT
 	    res = backend_lstat(scratch, &buf);
 	    if (res == -1) {
 		result.status = readdir_err();
 		backend_closedir(search);
 		return result;
 	    }
+	    ino = buf.st_ino;
+#else
+	    ino = this->d_ino;
+#endif
 
 	    strcpy(&obj[i * NFS_MAXPATHLEN], this->d_name);
 
             if(opt_32_bit_truncate) {
                 /* See comment in attr.c:get_post_buf */
                 entry[i].fileid =
-                    (buf.st_ino >> 32) ^ (buf.st_ino & 0xffffffff);
+                    (ino >> 32) ^ (ino & 0xffffffff);
             }
             else {
-                entry[i].fileid = buf.st_ino;
+                entry[i].fileid = ino;
             }
 
 	    entry[i].name = &obj[i * NFS_MAXPATHLEN];
