@@ -1,5 +1,6 @@
 #!/bin/sh
-indent -bad -bap -bbb -bli4 -br -brs -c40 -cbi4 -c40 -cdw -ce -ci4 -cli4 \
-       -cp40 -cs -d0 -di0 -fca -i4 -l78 -lc78 -lp -nbbo -nbc -nbfda -nhnl \
-       -npcs -nprs -npsl -pi0 -saf -sai -saw -sob -ss -ts8 -ut \
-       *.c Extras/*.c
+astyle --suffix=none --style=kr \
+       --indent-switches --min-conditional-indent=0 \
+       --ignore-exclude-errors --exclude=mount.h --exclude=nfs.h \
+       --exclude=xdr.c --exclude=xdr.h \
+       "*.c,*.h" "Config/*.c,*.h" "Extras/*.c,*.h"

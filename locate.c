@@ -55,37 +55,37 @@ static int locate_pfx(const char *pfx, uint32 dev, uint64 ino, char *result)
 
     search = opendir(pfx);
     if (!search)
-	return FALSE;
+        return FALSE;
 
     while ((ent = readdir(search))) {
-	if (strlen(pfx) + strlen(ent->d_name) + 2 >= NFS_MAXPATHLEN)
-	    continue;
+        if (strlen(pfx) + strlen(ent->d_name) + 2 >= NFS_MAXPATHLEN)
+            continue;
 
-	sprintf(path, "%s/%s", pfx, ent->d_name);
+        sprintf(path, "%s/%s", pfx, ent->d_name);
 
-	res = backend_lstat(path, &buf);
-	if (res != 0)
-	    continue;
+        res = backend_lstat(path, &buf);
+        if (res != 0)
+            continue;
 
-	/* check for matching object */
-	if (buf.st_dev == dev && buf.st_ino == ino) {
-	    strcpy(result, path);
-	    fix_dir_times(path, &buf);
-	    st_cache = buf;
-	    st_cache_valid = TRUE;
-	    closedir(search);
-	    return TRUE;
-	}
+        /* check for matching object */
+        if (buf.st_dev == dev && buf.st_ino == ino) {
+            strcpy(result, path);
+            fix_dir_times(path, &buf);
+            st_cache = buf;
+            st_cache_valid = TRUE;
+            closedir(search);
+            return TRUE;
+        }
 
-	/* descend into directories with same dev */
-	if (buf.st_dev == dev && S_ISDIR(buf.st_mode) &&
-	    strcmp(ent->d_name, ".") != 0 && strcmp(ent->d_name, "..") != 0) {
-	    res = locate_pfx(path, dev, ino, result);
-	    if (res == TRUE) {
-		closedir(search);
-		return TRUE;
-	    }
-	}
+        /* descend into directories with same dev */
+        if (buf.st_dev == dev && S_ISDIR(buf.st_mode) &&
+            strcmp(ent->d_name, ".") != 0 && strcmp(ent->d_name, "..") != 0) {
+            res = locate_pfx(path, dev, ino, result);
+            if (res == TRUE) {
+                closedir(search);
+                return TRUE;
+            }
+        }
     }
 
     closedir(search);
@@ -117,55 +117,55 @@ char *locate_file(U(uint32 dev), U(uint64 ino))
 #endif
 
     if (!opt_brute_force)
-	return NULL;
+        return NULL;
 
 #ifdef HAVE_MNTENT_H
     mtab = setmntent("/etc/mtab", "r");
     if (!mtab)
-	return NULL;
+        return NULL;
 
-    /* 
+    /*
      * look for mtab entry with matching device
      */
     while ((ent = getmntent(mtab))) {
-	res = lstat(ent->mnt_dir, &buf);
+        res = lstat(ent->mnt_dir, &buf);
 
-	if (res == 0 && buf.st_dev == dev)
-	    break;
+        if (res == 0 && buf.st_dev == dev)
+            break;
     }
     endmntent(mtab);
 
     /* found matching entry? */
     if (ent) {
-	res = locate_pfx(ent->mnt_dir, dev, ino, path);
-	if (res == TRUE)
-	    return path;
+        res = locate_pfx(ent->mnt_dir, dev, ino, path);
+        if (res == TRUE)
+            return path;
     }
 #endif
 
 #ifdef HAVE_SYS_MNTTAB_H
     mtab = fopen("/etc/mnttab", "r");
     if (!mtab)
-	return NULL;
+        return NULL;
 
-    /* 
+    /*
      * look for mnttab entry with matching device
      */
     while (getmntent(mtab, &ent) == 0) {
-	res = lstat(ent.mnt_mountp, &buf);
+        res = lstat(ent.mnt_mountp, &buf);
 
-	if (res == 0 && buf.st_dev == dev) {
-	    found = TRUE;
-	    break;
-	}
+        if (res == 0 && buf.st_dev == dev) {
+            found = TRUE;
+            break;
+        }
     }
     fclose(mtab);
 
     /* found matching entry? */
     if (found) {
-	res = locate_pfx(ent.mnt_mountp, dev, ino, path);
-	if (res == TRUE)
-	    return path;
+        res = locate_pfx(ent.mnt_mountp, dev, ino, path);
+        if (res == TRUE)
+            return path;
     }
 #endif
 

@@ -22,17 +22,17 @@ extern int e_error;
  */
 static void copy_text(const char *from, int leng)
 {
-	int len;
+        int len;
 
-	/* check length to prevent buffer overflow */	
-	if (leng + 1 > NFS_MAXPATHLEN) {
-		len = NFS_MAXPATHLEN - 1;
-		e_error = 1;
-	} else
-		len = leng;
+        /* check length to prevent buffer overflow */
+        if (leng + 1 > NFS_MAXPATHLEN) {
+                len = NFS_MAXPATHLEN - 1;
+                e_error = 1;
+        } else
+                len = leng;
 
-	memcpy(yylval.text, from, len);
-	yylval.text[len] = 0;
+        memcpy(yylval.text, from, len);
+        yylval.text[len] = 0;
 }
 %}
 

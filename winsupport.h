@@ -37,7 +37,7 @@
 #define S_IWGRP 0
 
 #define S_IRWXO 0
-#define S_IXOTH S_IROTH 
+#define S_IXOTH S_IROTH
 #define S_IROTH 0
 #define S_IWOTH 0
 
@@ -48,42 +48,38 @@ typedef int socklen_t;
 typedef uint32 uid_t;
 typedef uint32 gid_t;
 
-typedef struct _backend_statstruct
-{
-        uint32  st_dev;  
-        uint64  st_ino;  
-        _mode_t st_mode;
-        short   st_nlink;
-        uint32  st_uid;
-        uint32  st_gid;
-        _dev_t  st_rdev;
-        __int64 st_size;
-        short   st_blksize;
-        _off_t  st_blocks;
-        time_t  st_atime;
-        time_t  st_mtime;
-        time_t  st_ctime;
+typedef struct _backend_statstruct {
+    uint32  st_dev;
+    uint64  st_ino;
+    _mode_t st_mode;
+    short   st_nlink;
+    uint32  st_uid;
+    uint32  st_gid;
+    _dev_t  st_rdev;
+    __int64 st_size;
+    short   st_blksize;
+    _off_t  st_blocks;
+    time_t  st_atime;
+    time_t  st_mtime;
+    time_t  st_ctime;
 } backend_statstruct;
 
-typedef struct _backend_passwdstruct
-{
+typedef struct _backend_passwdstruct {
     uid_t   pw_uid;
     gid_t   pw_gid;
 } backend_passwdstruct;
 
 /* Only includes fields actually used by unfs3 */
-typedef struct _backend_statvfsstruct
-{
-        unsigned long  f_frsize;    /* file system block size */
-        uint64         f_blocks;   /* size of fs in f_frsize units */
-        uint64         f_bfree;    /* # free blocks */
-        uint64         f_bavail;   /* # free blocks for non-root */
-        uint64         f_files;    /* # inodes */
-        uint64         f_ffree;    /* # free inodes */
+typedef struct _backend_statvfsstruct {
+    unsigned long  f_frsize;    /* file system block size */
+    uint64         f_blocks;   /* size of fs in f_frsize units */
+    uint64         f_bfree;    /* # free blocks */
+    uint64         f_bavail;   /* # free blocks for non-root */
+    uint64         f_files;    /* # inodes */
+    uint64         f_ffree;    /* # free inodes */
 } backend_statvfsstruct;
 
-typedef struct _UNFS3_WIN_DIR
-{
+typedef struct _UNFS3_WIN_DIR {
     _WDIR *stream; /* Windows DIR stream. NULL means root emulation */
     uint32 currentdrive; /* Next drive to check/return */
     struct dirent de;

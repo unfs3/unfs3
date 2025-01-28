@@ -1,0 +1,17 @@
+name: Style
+
+on: [push, pull_request]
+
+jobs:
+  style:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y astyle
+      - name: Re-indent
+        run: ./indent-all
+      - name: Check for changes
+        run: git diff --exit-code

@@ -61,29 +61,29 @@ static void add_mount(const char *path, struct svc_req *rqstp)
 
     new = malloc(sizeof(struct mountbody));
     if (!new) {
-	logmsg(LOG_CRIT, "add_mount: Unable to allocate memory");
-	return;
+        logmsg(LOG_CRIT, "add_mount: Unable to allocate memory");
+        return;
     }
 
     if (get_remote(rqstp, &addr)) {
-	logmsg(LOG_CRIT, "add_mount: Cannot get client address");
-	return;
+        logmsg(LOG_CRIT, "add_mount: Cannot get client address");
+        return;
     }
 
     inet_ntop(AF_INET6, &addr, host, sizeof(host));
     new->ml_hostname = malloc(strlen(host) + 1);
     if (!new->ml_hostname) {
-	logmsg(LOG_CRIT, "add_mount: Unable to allocate memory");
-	free(new);
-	return;
+        logmsg(LOG_CRIT, "add_mount: Unable to allocate memory");
+        free(new);
+        return;
     }
 
     new->ml_directory = malloc(strlen(path) + 1);
     if (!new->ml_directory) {
-	logmsg(LOG_CRIT, "add_mount: Unable to allocate memory");
-	free(new->ml_hostname);
-	free(new);
-	return;
+        logmsg(LOG_CRIT, "add_mount: Unable to allocate memory");
+        free(new->ml_hostname);
+        free(new);
+        return;
     }
 
     /* initialize the new entry */
@@ -93,11 +93,11 @@ static void add_mount(const char *path, struct svc_req *rqstp)
 
     iter = mount_list;
     if (iter) {
-	while (iter->ml_next)
-	    iter = iter->ml_next;
-	iter->ml_next = new;
+        while (iter->ml_next)
+            iter = iter->ml_next;
+        iter->ml_next = new;
     } else
-	mount_list = new;
+        mount_list = new;
 
     mount_cnt++;
 }
@@ -112,36 +112,36 @@ static void remove_mount(const char *path, struct svc_req *rqstp)
     char host[INET6_ADDRSTRLEN];
 
     if (get_remote(rqstp, &addr)) {
-	logmsg(LOG_CRIT, "remove_mount: Cannot get client address");
-	return;
+        logmsg(LOG_CRIT, "remove_mount: Cannot get client address");
+        return;
     }
 
     inet_ntop(AF_INET6, &addr, host, sizeof(host));
 
     iter = mount_list;
     while (iter) {
-	if (strcmp(iter->ml_hostname, host) == 0 &&
-	    (!path || strcmp(iter->ml_directory, path) == 0)) {
-	    if (prev)
-		prev->ml_next = iter->ml_next;
-	    else
-		mount_list = iter->ml_next;
+        if (strcmp(iter->ml_hostname, host) == 0 &&
+            (!path || strcmp(iter->ml_directory, path) == 0)) {
+            if (prev)
+                prev->ml_next = iter->ml_next;
+            else
+                mount_list = iter->ml_next;
 
-	    next = iter->ml_next;
+            next = iter->ml_next;
 
-	    free(iter->ml_hostname);
-	    free(iter->ml_directory);
-	    free(iter);
+            free(iter->ml_hostname);
+            free(iter->ml_directory);
+            free(iter);
 
-	    iter = next;
+            iter = next;
 
-	    /* adjust mount count */
-	    if (mount_cnt > 0)
-		mount_cnt--;
-	} else {
-	    prev = iter;
-	    iter = iter->ml_next;
-	}
+            /* adjust mount count */
+            if (mount_cnt > 0)
+                mount_cnt--;
+        } else {
+            prev = iter;
+            iter = iter->ml_next;
+        }
     }
 }
 
@@ -170,92 +170,92 @@ mountres3 *mountproc_mnt_3_svc(dirpath * argp, struct svc_req * rqstp)
 
     /* error out if not version 3 */
     if (rqstp->rq_vers != 3) {
-	get_remote(rqstp, &addr);
-	logmsg(LOG_INFO,
-	       "%s attempted mount with unsupported protocol version",
-	       inet_ntop(AF_INET6, &addr, host, sizeof(host)));
-	result.fhs_status = MNT3ERR_INVAL;
-	return &result;
+        get_remote(rqstp, &addr);
+        logmsg(LOG_INFO,
+               "%s attempted mount with unsupported protocol version",
+               inet_ntop(AF_INET6, &addr, host, sizeof(host)));
+        result.fhs_status = MNT3ERR_INVAL;
+        return &result;
     }
 
     /* Check for "mount commands" */
     if (strncmp(dpath, "@getnonce", sizeof("@getnonce") - 1) == 0) {
-	if (backend_gen_nonce(nonce) < 0) {
-	    result.fhs_status = MNT3ERR_IO;
-	} else {
-	    result.fhs_status = MNT3_OK;
-	    result.mountres3_u.mountinfo.fhandle.fhandle3_len = 32;
-	    result.mountres3_u.mountinfo.fhandle.fhandle3_val = nonce;
-	    result.mountres3_u.mountinfo.auth_flavors.auth_flavors_len = 1;
-	    result.mountres3_u.mountinfo.auth_flavors.auth_flavors_val =
-		&auth;
-	}
-	return &result;
+        if (backend_gen_nonce(nonce) < 0) {
+            result.fhs_status = MNT3ERR_IO;
+        } else {
+            result.fhs_status = MNT3_OK;
+            result.mountres3_u.mountinfo.fhandle.fhandle3_len = 32;
+            result.mountres3_u.mountinfo.fhandle.fhandle3_val = nonce;
+            result.mountres3_u.mountinfo.auth_flavors.auth_flavors_len = 1;
+            result.mountres3_u.mountinfo.auth_flavors.auth_flavors_val =
+                &auth;
+        }
+        return &result;
     } else if (strncmp(dpath, "@password:", sizeof("@password:") - 1) == 0) {
-	char pw[PASSWORD_MAXLEN + 1];
+        char pw[PASSWORD_MAXLEN + 1];
 
-	mnt_cmd_argument(&dpath, "@password:", pw, PASSWORD_MAXLEN);
-	if (exports_options(dpath, rqstp, &password, NULL) != -1) {
-	    authenticated = !strcmp(password, pw);
-	}
-	/* else leave authenticated unchanged */
+        mnt_cmd_argument(&dpath, "@password:", pw, PASSWORD_MAXLEN);
+        if (exports_options(dpath, rqstp, &password, NULL) != -1) {
+            authenticated = !strcmp(password, pw);
+        }
+        /* else leave authenticated unchanged */
     } else if (strncmp(dpath, "@otp:", sizeof("@otp:") - 1) == 0) {
-	/* The otp from the client */
-	char otp[PASSWORD_MAXLEN + 1];
+        /* The otp from the client */
+        char otp[PASSWORD_MAXLEN + 1];
 
-	/* Our calculated otp */
-	char hexdigest[32];
+        /* Our calculated otp */
+        char hexdigest[32];
 
-	mnt_cmd_argument(&dpath, "@otp:", otp, PASSWORD_MAXLEN);
-	if (exports_options(dpath, rqstp, &password, NULL) != -1) {
-	    otp_digest(nonce, password, hexdigest);
+        mnt_cmd_argument(&dpath, "@otp:", otp, PASSWORD_MAXLEN);
+        if (exports_options(dpath, rqstp, &password, NULL) != -1) {
+            otp_digest(nonce, password, hexdigest);
 
-	    /* Compare our calculated digest with what the client submitted */
-	    authenticated = !strncmp(hexdigest, otp, 32);
+            /* Compare our calculated digest with what the client submitted */
+            authenticated = !strncmp(hexdigest, otp, 32);
 
-	    /* Change nonce */
-	    backend_gen_nonce(nonce);
-	}
-	/* else leave authenticated unchanged */
+            /* Change nonce */
+            backend_gen_nonce(nonce);
+        }
+        /* else leave authenticated unchanged */
     }
 
     if ((exports_opts & OPT_REMOVABLE) && export_point(dpath)) {
-	/* Removable media export point. Do not call realpath; simply copy
-	   path */
-	strncpy(buf, dpath, PATH_MAX);
+        /* Removable media export point. Do not call realpath; simply copy
+           path */
+        strncpy(buf, dpath, PATH_MAX);
     } else if (!backend_realpath(dpath, buf)) {
-	/* the given path does not exist */
-	result.fhs_status = MNT3ERR_NOENT;
-	return &result;
+        /* the given path does not exist */
+        result.fhs_status = MNT3ERR_NOENT;
+        return &result;
     }
 
     if (strlen(buf) + 1 > NFS_MAXPATHLEN) {
-	get_remote(rqstp, &addr);
-	logmsg(LOG_INFO, "%s attempted to mount jumbo path",
-	       inet_ntop(AF_INET6, &addr, host, sizeof(host)));
-	result.fhs_status = MNT3ERR_NAMETOOLONG;
-	return &result;
+        get_remote(rqstp, &addr);
+        logmsg(LOG_INFO, "%s attempted to mount jumbo path",
+               inet_ntop(AF_INET6, &addr, host, sizeof(host)));
+        result.fhs_status = MNT3ERR_NAMETOOLONG;
+        return &result;
     }
 
     if ((exports_options(buf, rqstp, &password, NULL) == -1)
-	|| (!authenticated && password[0])
-	|| (!(exports_opts & OPT_INSECURE) &&
-	    !IS_SECURE(ntohs(get_port(rqstp))))
-	) {
-	/* not exported to this host or at all, or a password defined and not 
-	   authenticated */
-	result.fhs_status = MNT3ERR_ACCES;
-	return &result;
+        || (!authenticated && password[0])
+        || (!(exports_opts & OPT_INSECURE) &&
+            !IS_SECURE(ntohs(get_port(rqstp))))
+       ) {
+        /* not exported to this host or at all, or a password defined and not
+           authenticated */
+        result.fhs_status = MNT3ERR_ACCES;
+        return &result;
     }
 
     fh = fh_comp(buf, rqstp, FH_DIR);
 
     if (!fh_valid(fh)) {
-	get_remote(rqstp, &addr);
-	logmsg(LOG_INFO, "%s attempted to mount non-directory",
-	       inet_ntop(AF_INET6, &addr, host, sizeof(host)));
-	result.fhs_status = MNT3ERR_NOTDIR;
-	return &result;
+        get_remote(rqstp, &addr);
+        logmsg(LOG_INFO, "%s attempted to mount non-directory",
+               inet_ntop(AF_INET6, &addr, host, sizeof(host)));
+        result.fhs_status = MNT3ERR_NOTDIR;
+        return &result;
     }
 
     add_mount(dpath, rqstp);
@@ -285,7 +285,7 @@ void *mountproc_umnt_3_svc(dirpath * argp, struct svc_req *rqstp)
 
     /* if no more mounts are active, flush all open file descriptors */
     if (mount_cnt == 0)
-	fd_cache_purge();
+        fd_cache_purge();
 
     return &result;
 }
@@ -299,7 +299,7 @@ void *mountproc_umntall_3_svc(U(void *argp), struct svc_req *rqstp)
 
     /* if no more mounts are active, flush all open file descriptors */
     if (mount_cnt == 0)
-	fd_cache_purge();
+        fd_cache_purge();
 
     return &result;
 }

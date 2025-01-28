@@ -45,27 +45,27 @@ int want_cluster(const char *path)
 
     /* if path is too long, play it safe */
     if (strlen(opt_cluster_path) + 1 > NFS_MAXPATHLEN)
-	return TRUE;
+        return TRUE;
 
     strcpy(buf, opt_cluster_path);
     last = buf;
 
     /* iterate over colon-seperated list */
     do {
-	next = strchr(last, ':');
-	if (next)
-	    *next = 0;
+        next = strchr(last, ':');
+        if (next)
+            *next = 0;
 
-	if (strstr(path, last) == path)
-	    return TRUE;
+        if (strstr(path, last) == path)
+            return TRUE;
 
-	if (next) {
-	    last = next + 1;
-	    if (strlen(last) == 0)
-		last = NULL;
-	} else {
-	    last = NULL;
-	}
+        if (next) {
+            last = next + 1;
+            if (strlen(last) == 0)
+                last = NULL;
+        } else {
+            last = NULL;
+        }
     } while (last);
 
     return FALSE;
@@ -83,14 +83,14 @@ static char *get_host(const struct in6_addr *remote)
     entry = gethostbyaddr(&remote, sizeof(struct in6_addr), AF_INET6);
 
     if (entry) {
-	strcpy(buf, entry->h_name);
+        strcpy(buf, entry->h_name);
 
-	/* have the name string end at the first dot */
-	dot = strchr(buf, '.');
-	if (dot)
-	    *dot = 0;
+        /* have the name string end at the first dot */
+        dot = strchr(buf, '.');
+        if (dot)
+            *dot = 0;
 
-	return buf;
+        return buf;
     }
 
     return NULL;
@@ -102,7 +102,7 @@ static char *get_host(const struct in6_addr *remote)
 int is_host(const char *name)
 {
     return (int) (strstr(name, "$$HOST=") && name[strlen(name) - 1] == '$' &&
-		  name[strlen(name) - 2] == '$');
+                  name[strlen(name) - 2] == '$');
 }
 
 /*
@@ -115,7 +115,7 @@ char *match_host(const char *hname, const char *entry)
 
     /* check for presence of hostname tag */
     if (!is_host(entry))
-	return NULL;
+        return NULL;
 
     part = strstr(entry, "$$HOST=");
 
@@ -125,16 +125,16 @@ char *match_host(const char *hname, const char *entry)
 
     /* exact match? */
     if (strcmp(buf, hname) == 0)
-	return part;
+        return part;
 
     /* wildcard pattern? */
     if (buf[strlen(buf) - 1] != '*')
-	return NULL;
+        return NULL;
 
     /* if wildcard, check for matching prefix */
     buf[strlen(buf) - 1] = 0;
     if (strstr(hname, buf) == hname)
-	return part;
+        return part;
 
     return NULL;
 }
@@ -168,10 +168,10 @@ void cluster_freedir(void)
 {
     /* only if it was really allocated before */
     if (cluster_dirents) {
-	while (cluster_count--)
-	    free(cluster_dirents[cluster_count]);
-	free(cluster_dirents);
-	cluster_dirents = NULL;
+        while (cluster_count--)
+            free(cluster_dirents[cluster_count]);
+        free(cluster_dirents);
+        cluster_dirents = NULL;
     }
 }
 
@@ -189,8 +189,8 @@ int compar(const void *x, const void *y)
 static void reset_ids(uid_t euid, gid_t egid)
 {
     if (backend_setegid(egid) || backend_seteuid(euid)) {
-	logmsg(LOG_EMERG, "euid/egid switching failed, aborting");
-	daemon_exit(CRISIS);
+        logmsg(LOG_EMERG, "euid/egid switching failed, aborting");
+        daemon_exit(CRISIS);
     }
 }
 
@@ -208,7 +208,7 @@ void cluster_scandir(const char *path)
 
     strcpy(prefix, cluster_basename(path));
 
-    /* 
+    /*
      * need to read directory as root, temporarily switch back
      */
     euid = backend_geteuid();
@@ -218,36 +218,36 @@ void cluster_scandir(const char *path)
 
     scan = backend_opendir(cluster_dirname(path));
     if (!scan) {
-	cluster_count = -1;
-	reset_ids(euid, egid);
-	return;
+        cluster_count = -1;
+        reset_ids(euid, egid);
+        return;
     }
 
     cluster_count = 0;
     while ((entry = backend_readdir(scan))) {
-	if (strstr(entry->d_name, prefix) != entry->d_name &&
-	    strcmp(entry->d_name, "$$CREATE=IP$$") != 0 &&
-	    strcmp(entry->d_name, "$$CREATE=CLIENT$$") != 0 &&
-	    strcmp(entry->d_name, "$$ALWAYS=IP$$") != 0 &&
-	    strcmp(entry->d_name, "$$ALWAYS=CLIENT$$") != 0)
-	    continue;
+        if (strstr(entry->d_name, prefix) != entry->d_name &&
+            strcmp(entry->d_name, "$$CREATE=IP$$") != 0 &&
+            strcmp(entry->d_name, "$$CREATE=CLIENT$$") != 0 &&
+            strcmp(entry->d_name, "$$ALWAYS=IP$$") != 0 &&
+            strcmp(entry->d_name, "$$ALWAYS=CLIENT$$") != 0)
+            continue;
 
-	name = malloc(strlen(entry->d_name) + 1);
-	new = realloc(cluster_dirents, (cluster_count + 1) * sizeof(char *));
-	if (!new || !name) {
-	    cluster_freedir();
-	    cluster_count = -1;
-	    free(new);
-	    free(name);
-	    backend_closedir(scan);
-	    reset_ids(euid, egid);
-	    return;
-	}
+        name = malloc(strlen(entry->d_name) + 1);
+        new = realloc(cluster_dirents, (cluster_count + 1) * sizeof(char *));
+        if (!new || !name) {
+            cluster_freedir();
+            cluster_count = -1;
+            free(new);
+            free(name);
+            backend_closedir(scan);
+            reset_ids(euid, egid);
+            return;
+        }
 
-	strcpy(name, entry->d_name);
-	cluster_dirents = new;
-	cluster_dirents[cluster_count] = name;
-	cluster_count++;
+        strcpy(name, entry->d_name);
+        cluster_dirents = new;
+        cluster_dirents[cluster_count] = name;
+        cluster_count++;
     }
 
     backend_closedir(scan);
@@ -267,9 +267,9 @@ int match_suffix(const char *master, const char *suffix, const char *entry)
     sprintf(obj, "%s%s", master, suffix);
 
     if (strcmp(entry, obj) == 0)
-	return CLU_SLAVE;
+        return CLU_SLAVE;
     else
-	return FALSE;
+        return FALSE;
 }
 
 /*
@@ -286,21 +286,21 @@ void cluster_netmask(char *buf, const char *remote, int n)
 
     /* skip to desired dot position */
     for (i = 0; i < n; i++)
-	buf = strchr(buf, '.') + 1;
+        buf = strchr(buf, '.') + 1;
 
     *buf-- = 0;
 
     /* append trailer of netmask string */
     switch (n) {
-	case 3:
-	    strcat(buf, "0_24$$");
-	    break;
-	case 2:
-	    strcat(buf, "0.0_16$$");
-	    break;
-	case 1:
-	    strcat(buf, "0.0.0_8$$");
-	    break;
+        case 3:
+            strcat(buf, "0_24$$");
+            break;
+        case 2:
+            strcat(buf, "0.0_16$$");
+            break;
+        case 1:
+            strcat(buf, "0.0.0_8$$");
+            break;
     }
 }
 
@@ -318,89 +318,89 @@ int cluster_lookup_lowlevel(char *path, struct svc_req *rqstp)
     cluster_scandir(path);
 
     if (cluster_count == -1)
-	return CLU_IO;
+        return CLU_IO;
     else if (cluster_count == 0)
-	return CLU_MASTER;
+        return CLU_MASTER;
 
     raddr = get_remote(rqstp);	       /* remote IP address */
     master = cluster_basename(path);   /* master file name */
     remote = inet_ntoa(raddr);	       /* remote IP address string */
     hname = get_host(raddr);	       /* remote hostname */
 
-    /* 
-     * traversal in reverse alphanumerical order, so that 
+    /*
+     * traversal in reverse alphanumerical order, so that
      *  IP is encountered before HOST, HOST before CLIENT,
      *  CLIENT before ALWAYS, and also subnets are encountered
      *  in the right order
      */
     i = cluster_count;
     while (i--) {
-	entry = cluster_dirents[i];
+        entry = cluster_dirents[i];
 
-	/* match specific IP address */
-	sprintf(buf, "$$IP=%s$$", remote);
-	if ((res = match_suffix(master, buf, entry)))
-	    break;
+        /* match specific IP address */
+        sprintf(buf, "$$IP=%s$$", remote);
+        if ((res = match_suffix(master, buf, entry)))
+            break;
 
-	/* always match IP file */
-	if ((res = match_suffix(master, "$$ALWAYS=IP$$", entry)))
-	    break;
-	if (strcmp("$$ALWAYS=IP$$", entry) == 0) {
-	    res = CLU_SLAVE;
-	    break;
-	}
+        /* always match IP file */
+        if ((res = match_suffix(master, "$$ALWAYS=IP$$", entry)))
+            break;
+        if (strcmp("$$ALWAYS=IP$$", entry) == 0) {
+            res = CLU_SLAVE;
+            break;
+        }
 
-	/* match all clients */
-	strcpy(buf, "$$CLIENT$$");
-	if ((res = match_suffix(master, buf, entry)))
-	    break;
+        /* match all clients */
+        strcpy(buf, "$$CLIENT$$");
+        if ((res = match_suffix(master, buf, entry)))
+            break;
 
-	/* always match CLIENT file */
-	if ((res = match_suffix(master, "$$ALWAYS=CLIENT$$", entry)))
-	    break;
-	if (strcmp("$$ALWAYS=CLIENT$$", entry) == 0) {
-	    res = CLU_SLAVE;
-	    break;
-	}
+        /* always match CLIENT file */
+        if ((res = match_suffix(master, "$$ALWAYS=CLIENT$$", entry)))
+            break;
+        if (strcmp("$$ALWAYS=CLIENT$$", entry) == 0) {
+            res = CLU_SLAVE;
+            break;
+        }
 
-	/* match 24 bit network address */
-	cluster_netmask(buf, remote, 3);
-	if ((res = match_suffix(master, buf, entry)))
-	    break;
+        /* match 24 bit network address */
+        cluster_netmask(buf, remote, 3);
+        if ((res = match_suffix(master, buf, entry)))
+            break;
 
-	/* match 16 bit network address */
-	cluster_netmask(buf, remote, 2);
-	if ((res = match_suffix(master, buf, entry)))
-	    break;
+        /* match 16 bit network address */
+        cluster_netmask(buf, remote, 2);
+        if ((res = match_suffix(master, buf, entry)))
+            break;
 
-	/* match 8 bit network address */
-	cluster_netmask(buf, remote, 1);
-	if ((res = match_suffix(master, buf, entry)))
-	    break;
+        /* match 8 bit network address */
+        cluster_netmask(buf, remote, 1);
+        if ((res = match_suffix(master, buf, entry)))
+            break;
 
-	/* match hostname pattern */
-	if (!is_host(master)) {
-	    match = match_host(hname, entry);
-	    if (match) {
-		res = CLU_SLAVE;
-		strcpy(buf, match);
-		break;
-	    }
-	}
+        /* match hostname pattern */
+        if (!is_host(master)) {
+            match = match_host(hname, entry);
+            if (match) {
+                res = CLU_SLAVE;
+                strcpy(buf, match);
+                break;
+            }
+        }
     }
 
     /* append suffix if possible */
     if (res == CLU_SLAVE) {
-	if (strlen(path) + strlen(buf) + 1 < NFS_MAXPATHLEN)
-	    strcat(path, buf);
-	else
-	    res = CLU_TOOLONG;
+        if (strlen(path) + strlen(buf) + 1 < NFS_MAXPATHLEN)
+            strcat(path, buf);
+        else
+            res = CLU_TOOLONG;
     } else {
-	/* res will be 0 after above loop */
-	res = CLU_MASTER;
+        /* res will be 0 after above loop */
+        res = CLU_MASTER;
     }
 
-    /* 
+    /*
      * dirent array not freed here since cluster_create may need
      * to look at it afterwards
      */
@@ -416,28 +416,28 @@ void cluster_lookup(char *path, struct svc_req *rqstp, nfsstat3 * nstat)
     int res;
 
     if (!opt_cluster)
-	return;
+        return;
 
     if (!path)
-	return;
+        return;
 
     if (*nstat != NFS3_OK)
-	return;
+        return;
 
     if (!want_cluster(path))
-	return;
+        return;
 
     res = strlen(path);
     if (strstr(path, "$$$$") == path + res - 4) {
-	*(path + res - 4) = 0;
-	return;
+        *(path + res - 4) = 0;
+        return;
     }
 
     res = cluster_lookup_lowlevel(path, rqstp);
     if (res == CLU_TOOLONG)
-	*nstat = NFS3ERR_NAMETOOLONG;
+        *nstat = NFS3ERR_NAMETOOLONG;
     else if (res == CLU_IO)
-	*nstat = NFS3ERR_IO;
+        *nstat = NFS3ERR_IO;
 }
 
 /*
@@ -450,63 +450,63 @@ void cluster_create(char *path, struct svc_req *rqstp, nfsstat3 * nstat)
     char *master, *entry;
 
     if (!opt_cluster)
-	return;
+        return;
 
     if (*nstat != NFS3_OK)
-	return;
+        return;
 
     if (!want_cluster(path))
-	return;
+        return;
 
     res = cluster_lookup_lowlevel(path, rqstp);
 
     if (res == CLU_TOOLONG) {
-	*nstat = NFS3ERR_NAMETOOLONG;
-	return;
+        *nstat = NFS3ERR_NAMETOOLONG;
+        return;
     } else if (res == CLU_IO) {
-	*nstat = NFS3ERR_IO;
-	return;
+        *nstat = NFS3ERR_IO;
+        return;
     } else if (res == CLU_SLAVE)
-	return;
+        return;
 
     master = cluster_basename(path);
 
     /* look for create tag */
     i = cluster_count;
     while (i--) {
-	entry = cluster_dirents[i];
+        entry = cluster_dirents[i];
 
-	/* always create IP file */
-	sprintf(buf, "$$IP=%s$$", inet_ntoa(get_remote(rqstp)));
-	if ((res = match_suffix(master, "$$CREATE=IP$$", entry)) ||
-	    (res = match_suffix(master, "$$ALWAYS=IP$$", entry)))
-	    break;
-	if ((strcmp("$$CREATE=IP$$", entry) == 0) ||
-	    (strcmp("$$ALWAYS=IP$$", entry) == 0)) {
-	    res = CLU_SLAVE;
-	    break;
-	}
+        /* always create IP file */
+        sprintf(buf, "$$IP=%s$$", inet_ntoa(get_remote(rqstp)));
+        if ((res = match_suffix(master, "$$CREATE=IP$$", entry)) ||
+            (res = match_suffix(master, "$$ALWAYS=IP$$", entry)))
+            break;
+        if ((strcmp("$$CREATE=IP$$", entry) == 0) ||
+            (strcmp("$$ALWAYS=IP$$", entry) == 0)) {
+            res = CLU_SLAVE;
+            break;
+        }
 
-	/* always create CLIENT file */
-	sprintf(buf, "$$CLIENT$$");
-	if ((res = match_suffix(master, "$$CREATE=CLIENT$$", entry)) ||
-	    (res = match_suffix(master, "$$ALWAYS=CLIENT$$", entry)))
-	    break;
-	if ((strcmp("$$CREATE=CLIENT$$", entry) == 0) ||
-	    (strcmp("$$ALWAYS=CLIENT$$", entry) == 0)) {
-	    res = CLU_SLAVE;
-	    break;
-	}
+        /* always create CLIENT file */
+        sprintf(buf, "$$CLIENT$$");
+        if ((res = match_suffix(master, "$$CREATE=CLIENT$$", entry)) ||
+            (res = match_suffix(master, "$$ALWAYS=CLIENT$$", entry)))
+            break;
+        if ((strcmp("$$CREATE=CLIENT$$", entry) == 0) ||
+            (strcmp("$$ALWAYS=CLIENT$$", entry) == 0)) {
+            res = CLU_SLAVE;
+            break;
+        }
     }
 
     if (res != CLU_SLAVE)
-	return;
+        return;
 
     /* append suffix if possible */
     if (strlen(path) + strlen(buf) + 1 < NFS_MAXPATHLEN)
-	strcat(path, buf);
+        strcat(path, buf);
     else
-	*nstat = NFS3ERR_NAMETOOLONG;
+        *nstat = NFS3ERR_NAMETOOLONG;
 }
 
 #endif
