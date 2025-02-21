@@ -32,6 +32,10 @@
 #include <time.h>
 #include <unistd.h>
 #include <errno.h>
+#include <unistd.h>
+#ifdef HAVE_LIBPROC_H
+#include <libproc.h>
+#endif
 
 #ifdef HAVE_RPC_SVC_SOC_H
 # include <rpc/svc_soc.h>
@@ -687,6 +691,30 @@ static void mountprog_3(struct svc_req *rqstp, register SVCXPRT * transp)
     return;
 }
 
+static int
+_socket_getdomain(int socket, int *domain, socklen_t *len)
+{
+#ifdef SO_DOMAIN
+    return getsockopt(socket, SOL_SOCKET, SO_DOMAIN, &domain, &len);
+#elif defined(PROC_PIDFDSOCKETINFO)
+    struct socket_fdinfo info;
+    int ret;
+    ret = proc_pidfdinfo(getpid(), socket, PROC_PIDFDSOCKETINFO, &info,
+                         sizeof info);
+    /* returns bytes written; if we didn't write info, it's a failure */
+    if (ret <= 0)
+        return -1;
+    /* we will always be getting an int, the domain */
+    if (*len < sizeof(int))
+        return -1;
+    *domain = info.psi.soi_family;
+    return 0;
+#else
+#error no way to get socket domain
+#endif
+}
+
+
 static void _register_service(SVCXPRT *transp,
                               const rpcprog_t prognum,
                               const char *progname,
@@ -733,7 +761,7 @@ static void _register_service(SVCXPRT *transp,
         return;
 
     len = sizeof(domain);
-    if (getsockopt(transp->xp_fd, SOL_SOCKET, SO_DOMAIN, &domain, &len)) {
+    if (_socket_getdomain (transp->xp_fd, &domain, &len)) {
         perror("getsockopt");
         fprintf(stderr, "unable to register (%s, %s).\n",
                 progname, versname);
@@ -834,7 +862,7 @@ static SVCXPRT *create_udp_transport(unsigned int port)
     struct sockaddr_in6 sin6;
 
     len = sizeof(domain);
-    if (getsockopt(sock, SOL_SOCKET, SO_DOMAIN, &domain, &len)) {
+    if (_socket_getdomain(sock, &domain, &len)) {
         perror("getsockopt");
         fprintf(stderr, "Couldn't create a listening udp socket\n");
         exit(1);
@@ -914,7 +942,7 @@ static SVCXPRT *create_tcp_transport(unsigned int port)
     struct sockaddr_in6 sin6;
 
     len = sizeof(domain);
-    if (getsockopt(sock, SOL_SOCKET, SO_DOMAIN, &domain, &len)) {
+    if (_socket_getdomain (sock, &domain, &len)) {
         perror("getsockopt");
         fprintf(stderr, "Couldn't create a listening tcp socket\n");
         exit(1);
