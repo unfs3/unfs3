@@ -37,24 +37,9 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Download libtirpc
-        run: |
-          curl --location --remote-name \
-            https://downloads.sourceforge.net/libtirpc/libtirpc-1.3.6.tar.bz2
-          tar -xvf libtirpc-1.3.6.tar.bz2
-      - name: Build libtirpc
-        working-directory: libtirpc-1.3.6
-        run: |
-          ./configure --prefix=/opt/homebrew
-          # FIXME: Upstream botched a macOS fix before release
-          echo '#define __APPLE_USE_RFC_3542 1' >> config.h
-          make
-      - name: Install libtirpc
-        working-directory: libtirpc-1.3.6
-        run: sudo make install
       - name: Install dependencies
         run: |
-          brew install autoconf automake
+          brew install autoconf automake libtirpc
       - name: Bootstrap
         run: ./bootstrap
       - name: Configure
