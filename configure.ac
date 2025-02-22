@@ -14,6 +14,8 @@ AC_PROG_YACC
 case $host in
 	*-mingw*)
 		LIBS="$LIBS -lws2_32"
+		# Needed for IPv6 support
+		AC_DEFINE([_WIN32_WINNT], [0x0600], [Require Windows Vista])
 		;;
 esac
 
