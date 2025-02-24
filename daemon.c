@@ -722,6 +722,15 @@ _socket_getdomain(int socket)
     if (ret <= 0)
         return -1;
     return info.psi.soi_family;
+#elif defined(SO_PROTOCOL_INFO)
+    WSAPROTOCOL_INFO info;
+    socklen_t len;
+
+    len = sizeof(info);
+    if (getsockopt(socket, SOL_SOCKET, SO_PROTOCOL_INFO, &info, &len))
+       return -1;
+
+    return info.iAddressFamily;
 #else
 #error no way to get socket domain
 #endif
