@@ -695,7 +695,7 @@ static int
 _socket_getdomain(int socket, int *domain, socklen_t *len)
 {
 #ifdef SO_DOMAIN
-    return getsockopt(socket, SOL_SOCKET, SO_DOMAIN, &domain, &len);
+    return getsockopt(socket, SOL_SOCKET, SO_DOMAIN, domain, len);
 #elif defined(PROC_PIDFDSOCKETINFO)
     struct socket_fdinfo info;
     int ret;
