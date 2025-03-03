@@ -12,7 +12,7 @@ OBJS = afsgettimes.o afssupport.o attr.o daemon.o error.o fd_cache.o fh.o fh_cac
        md5.o mount.o nfs.o password.o readdir.o user.o xdr.o winsupport.o
 CONFOBJ = Config/lib.a
 EXTRAOBJ = @EXTRAOBJ@
-LDFLAGS = @LDFLAGS@ @LIBS@ @LEXLIB@ @AFS_LIBS@ @TIRPC_LIBS@
+LDFLAGS = @LDFLAGS@ @LIBS@ @AFS_LIBS@ @TIRPC_LIBS@
 EXEEXT = @EXEEXT@
 
 srcdir = @srcdir@
