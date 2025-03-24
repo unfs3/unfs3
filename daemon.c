@@ -703,10 +703,16 @@ static void mountprog_3(struct svc_req *rqstp, register SVCXPRT * transp)
 }
 
 static int
-_socket_getdomain(int socket, int *domain, socklen_t *len)
+_socket_getdomain(int socket)
 {
 #ifdef SO_DOMAIN
-    return getsockopt(socket, SOL_SOCKET, SO_DOMAIN, domain, len);
+    int ret, domain;
+    socklen_t len;
+    len = sizeof(domain);
+    ret = getsockopt(socket, SOL_SOCKET, SO_DOMAIN, &domain, &len);
+    if (ret == -1)
+        return -1;
+    return domain;
 #elif defined(PROC_PIDFDSOCKETINFO)
     struct socket_fdinfo info;
     int ret;
@@ -715,11 +721,7 @@ _socket_getdomain(int socket, int *domain, socklen_t *len)
     /* returns bytes written; if we didn't write info, it's a failure */
     if (ret <= 0)
         return -1;
-    /* we will always be getting an int, the domain */
-    if (*len < sizeof(int))
-        return -1;
-    *domain = info.psi.soi_family;
-    return 0;
+    return info.psi.soi_family;
 #else
 #error no way to get socket domain
 #endif
@@ -771,9 +773,9 @@ static void _register_service(SVCXPRT *transp,
     if (nconf == NULL)
         return;
 
-    len = sizeof(domain);
-    if (_socket_getdomain (transp->xp_fd, &domain, &len)) {
-        perror("getsockopt");
+    domain = _socket_getdomain(transp->xp_fd);
+    if (domain == -1) {
+        perror("_socket_getdomain");
         fprintf(stderr, "unable to register (%s, %s).\n",
                 progname, versname);
         daemon_exit(0);
@@ -864,7 +866,6 @@ static SVCXPRT *create_udp_transport(unsigned int port)
     }
 
     int domain;
-    socklen_t len;
     const int on = 1;
 
     const struct sockaddr *sin;
@@ -872,9 +873,9 @@ static SVCXPRT *create_udp_transport(unsigned int port)
     struct sockaddr_in sin4;
     struct sockaddr_in6 sin6;
 
-    len = sizeof(domain);
-    if (_socket_getdomain(sock, &domain, &len)) {
-        perror("getsockopt");
+    domain = _socket_getdomain(sock);
+    if (domain == -1) {
+        perror("_socket_getdomain");
         fprintf(stderr, "Couldn't create a listening udp socket\n");
         exit(1);
     }
@@ -944,7 +945,6 @@ static SVCXPRT *create_tcp_transport(unsigned int port)
     }
 
     int domain;
-    socklen_t len;
     const int on = 1;
 
     const struct sockaddr *sin;
@@ -952,9 +952,9 @@ static SVCXPRT *create_tcp_transport(unsigned int port)
     struct sockaddr_in sin4;
     struct sockaddr_in6 sin6;
 
-    len = sizeof(domain);
-    if (_socket_getdomain (sock, &domain, &len)) {
-        perror("getsockopt");
+    domain = _socket_getdomain(sock);
+    if (domain == -1) {
+        perror("_socket_getdomain");
         fprintf(stderr, "Couldn't create a listening tcp socket\n");
         exit(1);
     }
