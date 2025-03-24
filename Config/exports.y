@@ -395,7 +395,7 @@ static unsigned long make_prefix(const char *mask) {
         uint32_t haddr;
         int i, prefix;
 
-        if (!inet_aton(mask, &addr)) {
+        if (!inet_pton(AF_INET, mask, &addr)) {
                 logmsg(LOG_CRIT, "could not parse IPv4 network mask '%s'", mask);
                 e_error = TRUE;
                 return 0;
