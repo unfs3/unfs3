@@ -2,6 +2,7 @@ aclocal.m4
 configure
 config.*
 autom4te.cache
+install-sh
 Makefile
 lex.yy.c
 y.tab.*
