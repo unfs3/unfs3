@@ -8,6 +8,10 @@
 
 #include "config.h"
 
+#ifdef WIN32
+#include <ws2tcpip.h>
+#endif
+
 #include <sys/file.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -18,8 +22,6 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <syslog.h>
-#else				       /* WIN32 */
-#include <winsock.h>
 #endif				       /* WIN32 */
 
 #include <fcntl.h>

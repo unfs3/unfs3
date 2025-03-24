@@ -6,6 +6,10 @@
  */
 #include "config.h"
 
+#ifdef WIN32
+#include <ws2tcpip.h>
+#endif
+
 #include <assert.h>
 #include <rpc/rpc.h>
 #include <limits.h>
