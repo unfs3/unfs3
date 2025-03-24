@@ -1,6 +1,7 @@
 AC_INIT([unfs3],[0.10.0])
 AC_CONFIG_MACRO_DIRS([m4])
 AC_CONFIG_HEADERS([config.h])
+
 AC_PROG_INSTALL
 AC_PROG_CC([gcc egcs kgcc cc])
 AC_CHECK_TOOL([AR], [ar])
@@ -9,6 +10,13 @@ AS_IF([test "x$LEX" == "x:"], [
   AC_MSG_ERROR([flex or lex missing.])
 ])
 AC_PROG_YACC
+
+case $host in
+	*-mingw*)
+		LIBS="$LIBS -lws2_32"
+		;;
+esac
+
 AC_SYS_LARGEFILE
 AC_SEARCH_LIBS(xdr_int, nsl)
 AC_SEARCH_LIBS(socket, socket)
