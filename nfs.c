@@ -516,6 +516,8 @@ CREATE3res *nfsproc3_create_3_svc(CREATE3args * argp, struct svc_req * rqstp)
     if (argp->how.mode != EXCLUSIVE) {
         new_attr = argp->how.createhow3_u.obj_attributes;
         result.status = join(result.status, atomic_attr(new_attr));
+    } else {
+        new_attr.mode.set_it = FALSE;
     }
 
     /* Try to open the file */
