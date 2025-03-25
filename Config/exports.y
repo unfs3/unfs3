@@ -6,6 +6,10 @@
  */
 #include "config.h"
 
+#ifdef WIN32
+#include <ws2tcpip.h>
+#endif
+
 #include <assert.h>
 #include <rpc/rpc.h>
 #include <limits.h>
@@ -395,7 +399,7 @@ static unsigned long make_prefix(const char *mask) {
         uint32_t haddr;
         int i, prefix;
 
-        if (!inet_aton(mask, &addr)) {
+        if (!inet_pton(AF_INET, mask, &addr)) {
                 logmsg(LOG_CRIT, "could not parse IPv4 network mask '%s'", mask);
                 e_error = TRUE;
                 return 0;

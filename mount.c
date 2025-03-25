@@ -7,6 +7,10 @@
 
 #include "config.h"
 
+#ifdef WIN32
+#include <ws2tcpip.h>
+#endif
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <rpc/rpc.h>

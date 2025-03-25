@@ -1,6 +1,7 @@
 AC_INIT([unfs3],[0.10.0])
 AC_CONFIG_MACRO_DIRS([m4])
 AC_CONFIG_HEADERS([config.h])
+
 AC_PROG_INSTALL
 AC_PROG_CC([gcc egcs kgcc cc])
 AC_CHECK_TOOL([AR], [ar])
@@ -9,10 +10,18 @@ AS_IF([test "x$LEX" == "x:"], [
   AC_MSG_ERROR([flex or lex missing.])
 ])
 AC_PROG_YACC
+
+case $host in
+	*-mingw*)
+		LIBS="$LIBS -lws2_32"
+		# Needed for IPv6 support
+		AC_DEFINE([_WIN32_WINNT], [0x0600], [Require Windows Vista])
+		;;
+esac
+
 AC_SYS_LARGEFILE
 AC_SEARCH_LIBS(xdr_int, nsl)
 AC_SEARCH_LIBS(socket, socket)
-AC_SEARCH_LIBS(inet_aton, resolv)
 AC_CHECK_HEADERS(libproc.h,,,[#include <stdio.h>])
 AC_CHECK_HEADERS(mntent.h,,,[#include <stdio.h>])
 AC_CHECK_HEADERS(stdint.h,,,[#include <stdio.h>])
