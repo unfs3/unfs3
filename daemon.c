@@ -878,6 +878,7 @@ static SVCXPRT *create_udp_transport(unsigned int port)
 
     int domain;
     const int on = 1;
+    const int off = 0;
 
     const struct sockaddr *sin;
     size_t sin_len;
@@ -892,6 +893,8 @@ static SVCXPRT *create_udp_transport(unsigned int port)
     }
 
     if (domain == PF_INET6) {
+        setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, &off, sizeof(off));
+
         /* Make sure we null the entire sockaddr_in6 structure */
         memset(&sin6, 0, sizeof(struct sockaddr_in6));
 
@@ -957,6 +960,7 @@ static SVCXPRT *create_tcp_transport(unsigned int port)
 
     int domain;
     const int on = 1;
+    const int off = 0;
 
     const struct sockaddr *sin;
     size_t sin_len;
@@ -971,6 +975,8 @@ static SVCXPRT *create_tcp_transport(unsigned int port)
     }
 
     if (domain == PF_INET6) {
+        setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, &off, sizeof(off));
+
         /* Make sure we null the entire sockaddr_in6 structure */
         memset(&sin6, 0, sizeof(struct sockaddr_in6));
 
