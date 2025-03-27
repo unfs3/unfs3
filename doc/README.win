@@ -4,11 +4,13 @@ Building unfs3 for Windows
 
 Building unfs3 using MinGW
 --------------------------
-1. Build and install the oncrpc-ms library (http://oncrpc-ms.sourceforge.net/)
+1. Build and install the oncrpc-ms library (https://github.com/unfs3/oncrpc-ms)
 
 2. Configure unfs3 with:
 
-LIBS="/myprefix/oncrpc-ms/lib/liboncrpc.a -lwsock32" CFLAGS="-I/myprefix/oncrpc-ms/include -DONCRPCDLL" ./configure --host=`gcc -dumpmachine`
+./configure \
+  TIRPC_CFLAGS="-I/myprefix/oncrpc-ms/include" \
+  TIRPC_LIBS="-L/myprefix/oncrpc-ms/lib -loncrpc"
 
 
 Using unfs3 on Windows
