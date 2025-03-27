@@ -730,7 +730,7 @@ _socket_getdomain(int socket)
 
     len = sizeof(info);
     if (getsockopt(socket, SOL_SOCKET, SO_PROTOCOL_INFO, &info, &len))
-       return -1;
+        return -1;
 
     return info.iAddressFamily;
 #else
