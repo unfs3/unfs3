@@ -61,3 +61,55 @@ jobs:
         with:
           name: macOS
           path: build/unfs3-*.tar.xz
+
+  build-windows:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: msys2/setup-msys2@v2
+      - name: Install dependencies
+        run: |
+          pacman --sync --noconfirm --needed \
+            make flex bison git \
+            mingw-w64-x86_64-toolchain mingw-w64-x86_64-autotools
+      - name: Fetch oncrpc-ms
+        uses: actions/checkout@v4
+        with:
+          path: oncrpc-ms
+          repository: unfs3/oncrpc-ms
+      - name: Build oncrpc-ms
+        working-directory: oncrpc-ms
+        run: |
+          ./bootstrap
+          ./configure
+          make
+      - name: Install oncrpc-ms
+        working-directory: oncrpc-ms
+        run: make install
+      - name: Bootstrap
+        run: ./bootstrap
+      - name: Configure
+        run: |
+          mkdir build
+          cd build
+          ../configure \
+            TIRPC_CFLAGS=-I/mingw64/include \
+            TIRPC_LIBS="-L/mingw64/lib -loncrpc"
+      - name: Build
+        working-directory: build
+        run: make
+      - name: Install
+        working-directory: build
+        run: |
+          NAME=unfs3-`arch`-g`git rev-parse --short HEAD`
+          mkdir $NAME
+          make install DESTDIR=`pwd`/$NAME
+          install -c /mingw64/bin/liboncrpc-*.dll $NAME
+          tar -acf $NAME.tar.xz $NAME
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Windows
+          path: build/unfs3-*.tar.xz
