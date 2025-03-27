@@ -31,6 +31,8 @@
 
 #include "winerrno.h"
 
+#ifndef S_IRWXG
+
 #define S_IRWXG 0
 #define S_IXGRP S_IRGRP
 #define S_IRGRP 0
@@ -40,6 +42,8 @@
 #define S_IXOTH S_IROTH
 #define S_IROTH 0
 #define S_IWOTH 0
+
+#endif
 
 #define S_IFLNK 0
 #define S_IFSOCK 0
