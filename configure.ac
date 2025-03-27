@@ -2,6 +2,8 @@ AC_INIT([unfs3],[0.10.0])
 AC_CONFIG_MACRO_DIRS([m4])
 AC_CONFIG_HEADERS([config.h])
 
+AC_CANONICAL_HOST
+
 AC_PROG_INSTALL
 AC_PROG_CC([gcc egcs kgcc cc])
 AC_CHECK_TOOL([AR], [ar])
