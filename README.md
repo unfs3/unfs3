@@ -36,10 +36,8 @@ have been successfully tested on NetBSD, FreeBSD, Solaris, AIX,
 Irix, and Mac OS X. There is also some support for running on
 Windows, see doc/README.win for details.
 
-Releases are tested by trying to compile them on Linux using both
-GNU make and FreeBSD make. The basic tests of the Connectathon
-NFS testsuite are then used to very basic functionality of the
-server.
+Releases are tested by trying to compile them on Linux, macOS and
+Windows.
 
 If unfs3 doesn't build or work on a Unix system, a problem
 report is appreciated.
@@ -47,7 +45,8 @@ report is appreciated.
 
 ## Building from source
 
-You will need gcc, lex (flex), and yacc (bison) to compile UNFS3.
+You will need gcc, lex (flex), yacc (bison), and libtirpc to compile
+UNFS3.
 
     ./bootstrap   # (only when building from git)
     ./configure
