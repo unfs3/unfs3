@@ -171,7 +171,7 @@ int get_socket_type(struct svc_req *rqstp)
 
     l = sizeof(v);
 
-    res = getsockopt(rqstp->rq_xprt->xp_fd, SOL_SOCKET, SO_TYPE, &v, &l);
+    res = getsockopt(rqstp->rq_xprt->xp_fd, SOL_SOCKET, SO_TYPE, (void*)&v, &l);
 
     if (res < 0) {
         logmsg(LOG_CRIT, "Unable to determine socket type");
@@ -711,7 +711,7 @@ _socket_getdomain(int socket)
     int ret, domain;
     socklen_t len;
     len = sizeof(domain);
-    ret = getsockopt(socket, SOL_SOCKET, SO_DOMAIN, &domain, &len);
+    ret = getsockopt(socket, SOL_SOCKET, SO_DOMAIN, (void*)&domain, &len);
     if (ret == -1)
         return -1;
     return domain;
@@ -729,7 +729,7 @@ _socket_getdomain(int socket)
     socklen_t len;
 
     len = sizeof(info);
-    if (getsockopt(socket, SOL_SOCKET, SO_PROTOCOL_INFO, &info, &len))
+    if (getsockopt(socket, SOL_SOCKET, SO_PROTOCOL_INFO, (void*)&info, &len))
         return -1;
 
     return info.iAddressFamily;
@@ -752,7 +752,7 @@ static void _register_service(SVCXPRT *transp,
     struct netconfig *nconf = NULL;
 
     len = sizeof(type);
-    if (getsockopt(transp->xp_fd, SOL_SOCKET, SO_TYPE, &type, &len)) {
+    if (getsockopt(transp->xp_fd, SOL_SOCKET, SO_TYPE, (void*)&type, &len)) {
         perror("getsockopt");
         fprintf(stderr, "Unable to register (%s, %s).\n",
                 progname, versname);
@@ -893,7 +893,7 @@ static SVCXPRT *create_udp_transport(unsigned int port)
     }
 
     if (domain == PF_INET6) {
-        setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, &off, sizeof(off));
+        setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, (void*)&off, sizeof(off));
 
         /* Make sure we null the entire sockaddr_in6 structure */
         memset(&sin6, 0, sizeof(struct sockaddr_in6));
@@ -925,7 +925,7 @@ static SVCXPRT *create_udp_transport(unsigned int port)
         sin_len = sizeof(sin4);
     }
 
-    setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (const char *) &on, sizeof(on));
+    setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (void*)&on, sizeof(on));
     if (bind(sock, sin, sin_len)) {
         perror("bind");
         fprintf(stderr, "Couldn't bind to udp port %d\n", port);
@@ -975,7 +975,7 @@ static SVCXPRT *create_tcp_transport(unsigned int port)
     }
 
     if (domain == PF_INET6) {
-        setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, &off, sizeof(off));
+        setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, (void*)&off, sizeof(off));
 
         /* Make sure we null the entire sockaddr_in6 structure */
         memset(&sin6, 0, sizeof(struct sockaddr_in6));
@@ -1007,7 +1007,7 @@ static SVCXPRT *create_tcp_transport(unsigned int port)
         sin_len = sizeof(sin4);
     }
 
-    setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (const char *) &on, sizeof(on));
+    setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (void*)&on, sizeof(on));
     if (bind(sock, sin, sin_len)) {
         perror("bind");
         fprintf(stderr, "Couldn't bind to tcp port %d\n", port);
