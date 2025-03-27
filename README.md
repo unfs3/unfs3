@@ -1,6 +1,6 @@
 # UNFS3, a User-Space NFSv3 Server
 
-(C) 2003-2009, Pascal Schmidt <unfs3-server@ewetel.net>
+(C) 2003-2025, various authors
 
 UNFS3 is a user-space implementation of the NFSv3 server
 specification.
