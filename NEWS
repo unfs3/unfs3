@@ -1,19 +1,3 @@
-What's new or changed in 0.10.0
-===============================
-
-Daniel Richard G. provided a large patch to allow better
-support for exporting files from AFS network filesystems.
-The new code provides the basis for avoiding inode number
-clashes on AFS files, which could otherwise lead to clients
-confusing different files.
-
-Integrated a patch from Michael Tokarev for using
-svc_getreq_poll() when provided by the operating system.
-
-Applied a patch from Dai Lin to allow serving files larger
-than 4GB from Windows.
-
-
 ChangeLog
 =========
 
