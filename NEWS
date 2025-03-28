@@ -1,6 +1,16 @@
 ChangeLog
 =========
 
+Version 0.11.0
+
+  - fixes to make sure unfs3 works on macOS and Windows again
+  - 32-bit mode can now be enabled at any time, for compatibility with
+    very old NFS clients
+  - starting unfsd now gives a reliable error code if it fails to start
+  - fix incorrect file mode when doing exclusive create
+  - fix to correctly update the time on symlinks, not what they point to
+  - Flex' libfl is no longer needed
+
 Version 0.10.0
 
   - switched to libtirpc as a base requirement

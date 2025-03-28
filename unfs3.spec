@@ -1,4 +1,4 @@
-%define version 0.10.0
+%define version 0.11.0
 Summary: UNFS3 user-space NFSv3 server
 Group: Applications/System
 Name: unfs3
