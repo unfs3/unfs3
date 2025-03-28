@@ -96,7 +96,6 @@ unfs3-$(VERSION).tar.gz:
 	#
 	#
 	tar zcf unfs3-$(VERSION).tar.gz \
-	 unfs3-$(VERSION)/BRANCHES \
 	 unfs3-$(VERSION)/CREDITS \
 	 unfs3-$(VERSION)/Config/Makefile.in \
 	 unfs3-$(VERSION)/Config/exports.h \
@@ -121,7 +120,9 @@ unfs3-$(VERSION).tar.gz:
 	 unfs3-$(VERSION)/backend_unix.h \
 	 unfs3-$(VERSION)/backend_win32.h \
 	 unfs3-$(VERSION)/bootstrap \
+	 unfs3-$(VERSION)/config.guess \
 	 unfs3-$(VERSION)/config.h.in \
+	 unfs3-$(VERSION)/config.sub \
 	 unfs3-$(VERSION)/configure \
 	 unfs3-$(VERSION)/configure.ac \
 	 unfs3-$(VERSION)/contrib/nfsotpclient/README \
