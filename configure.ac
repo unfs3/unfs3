@@ -8,10 +8,9 @@ AC_PROG_INSTALL
 AC_PROG_CC([gcc egcs kgcc cc])
 AC_CHECK_TOOL([AR], [ar])
 AC_PROG_LEX([noyywrap])
-AS_IF([test "x$LEX" == "x:"], [
-  AC_MSG_ERROR([flex or lex missing.])
-])
-AC_PROG_YACC
+AS_IF([test "x$LEX" == "x:"], [AC_MSG_ERROR([flex or lex missing.])])
+AC_CHECK_PROGS([YACC], ['bison -y' byacc yacc])
+AS_IF([test "x$YACC" == "x"], [AC_MSG_ERROR([bison, byacc, or yacc missing.])])
 
 case $host in
 	*-mingw*)
